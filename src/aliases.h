@@ -101,11 +101,4 @@ namespace asmrunner
 	typedef std::vector<UPString>::iterator Filename_Vec_Iter;
 }
 
-/* Namespace aliases for old names of namespaces
- * mips_tools -> priscas
- * mipsshell -> priscas
- */
-namespace mips_tools = priscas;
-namespace mipsshell = priscas;
-
 #endif

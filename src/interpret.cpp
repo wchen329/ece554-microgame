@@ -18,6 +18,9 @@
 //    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 //////////////////////////////////////////////////////////////////////////////
+#include "format_chk.h"
+#include "microgame.h"
+#include "primitives.h"
 #include <memory>
 
 namespace priscas

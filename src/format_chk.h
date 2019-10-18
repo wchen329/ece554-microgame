@@ -18,49 +18,26 @@
 //    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 //////////////////////////////////////////////////////////////////////////////
-#ifndef __SHELL_H__
-#define __SHELL_H__
+#ifndef __FORMAT_CHK_H__
+#define __FORMAT_CHK_H__
 
-#include <set>
-#include <queue>
-#include <map>
-#include <string>
-#include <vector>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <memory>
-#include "mtsstream.h"
-#include "primitives.h"
-#include "syms_table.h"
-#include "env.h"
+#include <vector>
+#include "mt_exception.h"
+#include "aliases.h"
 
-namespace asmrunner
+namespace priscas
 {
-	/* Divides a string based on whitespace, tabs, commas and newlines
-	 * Acknowledges escaping \ and quotes
-	 */
-	std::vector<std::string> chop_string(std::string & input);
 
-	/* A single instance of a Shell
-	 * -
-	 * The shell allows easy and direct access to utilizing a processor.
-	 */
-	class Shell
-	{
+	// From a register specifier, i.e. %so get an integer representation
+	int get_reg_num(const char *);
+	
+	// From a immediate string, get an immediate value.
+	int get_imm(const char *);
 
-		public:
-			void Run();
-			void SetArgs(std::vector<std::string> & args) { this->args = args; }
-			Shell();
-		private:
-			std::vector<std::string> args;
-			void WriteToError(std::string& e);
-			void WriteToError(const char* e);
-			void WriteToOutput(std::string& o);
-			void WriteToOutput(const char* o);
-			FILE* inst_file;
-			std::unique_ptr<asm_ostream> out_stream;
-			Env shEnv;
-			priscas::syms_table jump_syms;
-	};
 }
 
 #endif

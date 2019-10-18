@@ -27,9 +27,9 @@
 #include <cstdarg>
 #include <string>
 #include <memory>
+#include "microgame.h"
 #include "mt_exception.h"
-//#include "mtsstream.h"
-//#include "interpret.h"
+#include "mtsstream.h"
 #include "shell.h"
 
 namespace asmrunner
@@ -66,6 +66,7 @@ namespace asmrunner
 			else
 			{
 				inst_file = fopen(shEnv.get_asmFilenames()[0].c_str(), "r");
+				this->out_stream = std::unique_ptr<asmrunner::asm_ostream>(new asm_ostream("a.bin"));
 			}
 
 			if(inst_file == NULL)
@@ -77,13 +78,9 @@ namespace asmrunner
 
 		else
 		{
-			inst_file = stdin;
 			WriteToOutput("Usage: mgassemble -i [source filename] -o [binary output filename]\n");
+			return;
 		}
-
-		/* Actual Execution Portion
-		 */
-
 
 		/* First, if an input file was specified
 		 * (1) collect file symbols
@@ -113,7 +110,7 @@ namespace asmrunner
 					
 					if(parts[0][parts[0].size() - 1] == ':')
 					{
-					//	this->jump_syms.insert(parts[0].substr(0, parts[0].size() - 1), equiv_pc);
+						this->jump_syms.insert(parts[0].substr(0, parts[0].size() - 1), equiv_pc);
 						continue;
 					}
 
@@ -137,7 +134,7 @@ namespace asmrunner
 				std::shared_ptr<priscas::BW> inst;
 				try
 				{
-					//inst = dcpuisa.assemble(asm_args, asm_pc, jump_syms);
+					inst = assemble(asm_args, asm_pc, jump_syms);
 				}
 
 				catch(priscas::mt_exception& e)
@@ -155,7 +152,7 @@ namespace asmrunner
 
 				priscas::BW_32& thirty_two = dynamic_cast<priscas::BW_32&>(*inst);
 				asm_pc.AsUInt32() += 4;
-				
+				this->out_stream->append(thirty_two);
 			}
 			
 		}

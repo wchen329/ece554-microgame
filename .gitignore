@@ -1,0 +1,8 @@
+mg_assembler/Debug/*
+mg_assembler/mg_assembler/Debug/*
+mg_assembler/Release/*
+mg_assembler/mg_assembler/Release/*
+*.user
+*.db
+*.opendb
+*.swp

@@ -16,7 +16,7 @@ namespace asmrunner
 				// Set file name
 				if((argind + 1) < argc)
 				{
-					this->asmInputs.push_back(args[argind+1]); // todo store this value
+					this->asmInputs.push_back(args[argind+1]);
 					this->has_AsmInput_Value = true;
 				}
 			}

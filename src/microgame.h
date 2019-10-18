@@ -200,28 +200,6 @@ namespace priscas
 		}
 	};
 
-	/* Decoding unit for MIPS-32
-	 *
-	 */
-	class mips_decoding_unit_32
-	{
-		public:
-			void decode(	BW_32 inst_word,
-							format& fm,
-							opcode& op,
-							int& rs,
-							int& rt,
-							int& rd,
-							funct& funct,
-							int32_t& shamt,
-							int32_t& imm );
-	};
-
-	class mips_cu
-	{
-		
-	};
-
 	// Format check functions
 	/* Checks if an instruction is I formatted.
 	 */

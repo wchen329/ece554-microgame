@@ -52,20 +52,6 @@ namespace priscas
 			std::map<std::string, uint32_t> syms_to_PC;
 			
 	};
-
-	/* Monodirectional Symbol Table
-	 * This symbol table only allows lookup from PC to symbols.
-	 * However, this way a symbol can be assigned to many PCs (such as directives which are not necessarily unique).
-	 */
-	class mono_syms_table
-	{
-		public:
-			void insert(std::string key, unsigned long PC);
-			bool has(unsigned long pc) { return this->PC_to_syms.count(pc) > 0; }
-			std::vector<std::string>& lookup_from_PC(unsigned long PC) { return this->PC_to_syms.at(PC); }
-		private:
-			std::map<uint32_t, std::vector<std::string>> PC_to_syms;
-	};
 }
 
 #endif

@@ -63,33 +63,6 @@ namespace asmrunner
 	 */
 	typedef std::vector<UPString>::iterator Name_Vec_Iter;
 
-	/* Name-Value String Pair
-	 * A pair of two strings with additional interfaces
-	 * to enhance clarity
-	 */
-	class NameValue_StrPair : public std::pair<UPString, UPString>
-	{
-		public:
-			const UPString& get_Name() const { return first; }
-			const UPString& get_Value() const { return second; }
-			UPString& get_Name() { return first; }
-			UPString& get_Value() { return second; }
-			NameValue_StrPair(const UPString& name, const UPString& value) { first = name; second = value; }
-			NameValue_StrPair() {}
-	};
-
-	/* Name Value String Pair List
-	 */
-	typedef std::list<NameValue_StrPair> NameValueStr_List;
-
-	/* Name Value String Pair List Iterator
-	 */
-	typedef std::list<NameValue_StrPair>::iterator NameValueStr_List_Iter;
-
-	/* Name Value String Pair List Const Iterator
-	 */
-	typedef std::list<NameValue_StrPair>::const_iterator NameValueStr_List_CIter;
-
 	/* Filename Vector
 	 * Contains a list of filenames
 	 */

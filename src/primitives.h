@@ -119,48 +119,6 @@ namespace priscas
 
 	};
 
-	class BW_16 : public BW
-	{
-		public:
-			char b_0() { return *(w_addr());}
-			char b_1() { return *(w_addr() + 1);}
-			BW_16() { w.i16 = 0; }
-			BW_16(int16_t data){ w.i16 = data; }
-			BW_16(uint16_t data) { w.ui16 = data; }
-			BW_16(char b_0, char b_1);
-
-			std::string toHexString() { return genericHexBuilder<int16_t, 16>(this->w.i16); }
-			int16_t& AsInt16() { return w.i16; }
-			uint16_t& AsUInt16() { return w.ui16; }
-			int32_t& AsInt32() { signedTrunc(); return w.i32; } // Always truncate first (by sign extending), and return
-			uint32_t& AsUInt32() { signedTrunc(); return w.ui32; }
-			float& AsSPFloat() { signedTrunc(); return w.fp32; }
-
-			bool operator==(BW& bw2) { return (this->AsInt16() == bw2.AsInt16()); }
-			bool operator!=(BW& bw2) { return (this->AsInt16() != bw2.AsInt16()); }
-
-		private:
-			char * w_addr() { return (char*)&w.i16; }
-
-			union BW_16_internal
-			{
-				int16_t i16;
-				uint16_t ui16;
-				int32_t i32;
-				uint32_t ui32;
-				float fp32;
-			};
-
-			
-			BW_16_internal w;
-
-			void signedTrunc()
-			{
-				w.i32 = ((w.i32 << 15) >> 15);
-			}
-
-	};
-
 	class BW_32 : public BW
 	{
 		public:
@@ -199,38 +157,6 @@ namespace priscas
 			};
 
 			BW_32_internal w;
-	};
-
-	/* Just a collection of two strings
-	 * Name - the name of this object
-	 * Description - description of this object
-	 */
-	class NameDescPair
-	{
-		public:
-			std::string& getName() { return this->name; }
-			std::string& getDescription() { return this->desc; }
-			const std::string& getName() const { return this->name; }
-			const std::string& getDescription() const { return this->desc; }
-			NameDescPair(std::string name_of, std::string desc_of) : name(name_of), desc(desc_of) {}
-		private:
-			std::string name;
-			std::string desc;
-	};
-
-	/* Just a collection of two strings
-	 * Name - the name of this object
-	 * Value - the string value of this object
-	 */
-	class NameValueStringPair
-	{
-		public:
-			std::string& getName() { return this->name; }
-			std::string& getValue() { return this->value; }
-			NameValueStringPair(std::string name_of, std::string value_of) : name(name_of), value(value_of) {}
-		private:
-			std::string name;
-			std::string value;
 	};
 }
 

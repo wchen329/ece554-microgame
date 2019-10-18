@@ -60,28 +60,4 @@ namespace priscas
 		this->syms_to_PC.insert(in_2);
 
 	}
-
-	void mono_syms_table::insert(std::string key, unsigned long PC)
-	{
-
-		// Allows lookup from PC to symbol
-
-		// case: not yet allocated, create a new entry
-		if(!this->has(PC))
-		{
-			std::pair<unsigned long, std::vector<std::string>> in;
-			in.first = PC;
-			in.second = std::vector<std::string>();
-			in.second.push_back(key);
-			this->PC_to_syms.insert(in);
-		}
-
-
-		// other case: PC entry already there, just create a new entry
-		else
-		{
-			// Allows lookup from PC to symbol
-			this->PC_to_syms.at(PC).push_back(key);
-		}
-	}
 }

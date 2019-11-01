@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-//    PRISCAS - Computer architecture simulator
-//    Copyright (C) 2019 Winor Chen
+//    Microgame Assembler
+//    (derived from MIPS Tools) Copyright (C) 2019 Winor Chen
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -23,9 +23,9 @@
 namespace asmrunner
 {
 
-	void asm_ostream::append(priscas::BW_32 data)
+	void asm_ostream::append(asmrunner::BW_32 data)
 	{
-		fwrite(&data, sizeof(priscas::BW_32), 1, this->f);
+		fwrite(&data, sizeof(asmrunner::BW_32), 1, this->f);
 	}
 
 	asm_ostream::asm_ostream(char * filename)

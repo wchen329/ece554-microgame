@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-//    PRISCAS - Computer architecture simulator
-//    Copyright (C) 2019 Winor Chen
+//    Microgame Assembler
+//    (derived from MIPS Tools) Copyright (C) 2019 Winor Chen
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////
 #include "primitives.h"
 
-namespace priscas
+namespace asmrunner
 {
 	BW_32::BW_32(char b_0, char b_1, char b_2, char b_3)
 	{

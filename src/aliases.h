@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-//    PRISCAS - Computer architecture simulator
-//    Copyright (C) 2019 Winor Chen
+//    Microgame Assembler
+//    (derived from MIPS Tools) Copyright (C) 2019 Winor Chen
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -25,20 +25,14 @@
 #include <string>
 #include <vector>
 
-/* Intended Global defines for PRISCAS Core, in all header files
- * wchen329
- */
-
 namespace asmrunner
 {
 
-	/* Universal PRISCAS String
-	 * Currently just a typedef, this will most likely change in the future
+	/* String Typedef
 	 */
 	typedef std::string UPString;
 
-	/* Universal PRISCAS Char
-	 * Currently a typedef, will change in future most likely
+	/* Char Typedef
 	 */
 	typedef char UPChar;
 
@@ -72,6 +66,10 @@ namespace asmrunner
 	 *
 	 */
 	typedef std::vector<UPString>::iterator Filename_Vec_Iter;
+
+	/* Compatibility Namespace Alias from Import
+	 */
+	namespace priscas = asmrunner;
 }
 
 #endif

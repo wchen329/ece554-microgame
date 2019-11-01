@@ -23,7 +23,7 @@
 #include "primitives.h"
 #include <memory>
 
-namespace priscas
+namespace asmrunner
 {
 
 	// Main interpretation routine

@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-//    PRISCAS - Computer architecture simulator
-//    Copyright (C) 2019 Winor Chen
+//    Microgame Assembler
+//    (derived from MIPS Tools) Copyright (C) 2019 Winor Chen
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ namespace asmrunner
 {
 	/* Env 
 	 * -
-	 * Describes the current status of various parts of the PRISCAS environment
+	 * Describes the current status of various parts of the parser
 	 */
 	class Env
 	{

@@ -32,45 +32,51 @@ namespace asmrunner
 		if(args.size() < 1)
 			return std::shared_ptr<BW>(new BW_32());
 
-		priscas::opcode current_op = priscas::SYS_RES;
-		priscas::funct f_code = priscas::NONE;
+		priscas::opcode current_op = NOP;
 
 		int rs = 0;
 		int rt = 0;
 		int rd = 0;
 		int imm = 0;
+		int cc = 0;
+		int rsprite = 0;
+		int x = 0;
+		int y = 0;
 
 		// Mnemonic resolution
 		
-		if("add" == args[0]) { current_op = priscas::R_FORMAT; f_code = priscas::ADD; }
-		else if("addiu" == args[0]) { current_op = priscas::ADDIU; }
-		else if("addu" == args[0]) { current_op = priscas::R_FORMAT; f_code = priscas::ADDU; }
-		else if("addi" == args[0]) { current_op = priscas::ADDI; }
-		else if("beq" == args[0]) { current_op = priscas::BEQ; }
-		else if("bne" == args[0]) { current_op = priscas::BNE; }
-		else if("sub" == args[0]) { current_op = priscas::R_FORMAT; f_code = priscas::SUB; }
-		else if("and" == args[0]) { current_op = priscas::R_FORMAT; f_code = priscas::AND; }
-		else if("andi" == args[0]) { current_op = priscas::ANDI; }
-		else if("or" == args[0]) { current_op = priscas::R_FORMAT; f_code = priscas::OR; }	
-		else if("ori" == args[0]) { current_op = priscas::ORI; }	
-		else if("nor" == args[0]) { current_op = priscas::R_FORMAT; f_code = priscas::NOR; }	
-		else if("xori" ==  args[0]) { current_op = priscas::XORI; }
-		else if("lbu" == args[0]) { current_op = priscas::LBU; }
-		else if("lhu" == args[0]) { current_op = priscas::LHU; }
-		else if("lw" == args[0]) { current_op = priscas::LW; }
-		else if("sb" == args[0]) { current_op = priscas::SB; }
-		else if("sh" == args[0]) { current_op = priscas::SH; }
-		else if("sw" == args[0]) { current_op = priscas::SW; }
-		else if("sll" == args[0]) { current_op = priscas::R_FORMAT; f_code = priscas::SLL; }
-		else if("srl" == args[0]) { current_op = priscas::R_FORMAT; f_code = priscas::SRL; }
-		else if("slt" == args[0]) { current_op = priscas::R_FORMAT; f_code = priscas::SLT; }	
-		else if("slti" == args[0]) { current_op = priscas::SLTI;}
-		else if("sltiu" == args[0]) { current_op = priscas::SLTIU; }	
-		else if("sltu" == args[0]) { current_op = priscas::R_FORMAT; f_code = priscas::SLTU; }
-		else if("subu" == args[0]) { current_op = priscas::R_FORMAT; f_code = priscas::SUBU; }
-		else if("j" == args[0]) { current_op = priscas::JUMP;}
-		else if("jal" == args[0]) { current_op = priscas::JAL;}	
-		else if("jr" == args[0]) { current_op = priscas::R_FORMAT; f_code = priscas::JR;}
+		if("add" == args[0]) { current_op = ADD; }
+		else if("addi" == args[0]) { current_op = ADDI; }
+		else if("sub" == args[0]) { current_op = SUB; }
+		else if("and" == args[0]) { current_op = AND; }
+		else if("andi" == args[0]) { current_op = ANDI; }
+		else if("or" == args[0]) { current_op = OR; }
+		else if("ori" == args[0]) { current_op = ORI; }
+		else if("xor" ==  args[0]) { current_op = XOR; }
+		else if("sll" == args[0]) { current_op = SLL; }
+		else if("srl" == args[0]) { current_op = SRL; }
+		else if("sra" == args[0]) { current_op = SRA; }
+		else if("lli" == args[0]) { current_op = LLI; }
+		else if("lui" == args[0]) { current_op = LUI; }
+		else if("lw" == args[0]) { current_op = LW; }
+		else if("sw" == args[0]) { current_op = SW; }
+		else if("lwo" == args[0]) { current_op = LWO; }
+		else if("swo" == args[0]) { current_op = SWO; }
+		else if("b" == args[0]) { current_op = B; }
+		else if("jl" == args[0]) { current_op = JL; }
+		else if("ret" == args[0]) { current_op = RET; }
+		else if("wfb" == args[0]) { current_op = WFB; }
+		else if("dfb" == args[0]) { current_op = DFB; }
+		else if("ls" == args[0]) { current_op = LS; }
+		else if("cs" == args[0]) { current_op = CS; }
+		else if("ds" == args[0]) { current_op = DS; }
+		else if("rs" == args[0]) { current_op = RS; }
+		else if("sat" == args[0]) { current_op = SAT; }
+		else if("dc" == args[0]) { current_op = DC; }
+		else if("tim" == args[0]) { current_op = TIM; }
+		else if("r" == args[0]) { current_op = R; }
+		else if("sr" == args[0]) { current_op = SR; }
+		else if("nop" == args[0]) { current_op = NOP; }
 		else
 		{
 			throw mt_bad_mnemonic();
@@ -80,8 +86,7 @@ namespace asmrunner
 		if(args.size() >= 1)
 		{
 			if	(
-					(r_inst(current_op) && args.size() != 4 && f_code != priscas::JR) ||
-					(r_inst(current_op) && args.size() != 2 && f_code == priscas::JR) ||
+					(r_inst(current_op) && args.size() != 4) ||
 					(i_inst(current_op) && args.size() != 4 && !mem_inst(current_op)) ||
 					(i_inst(current_op) && args.size() != 3 && mem_inst(current_op)) ||
 					(j_inst(current_op) && args.size() != 2)				
@@ -93,17 +98,8 @@ namespace asmrunner
 			// Now first argument parsing
 			if(r_inst(current_op))
 			{
-					if(f_code == priscas::JR)
-					{
-						if((rs = priscas::friendly_to_numerical(args[1].c_str())) <= priscas::INVALID)
-						rs = priscas::get_reg_num(args[1].c_str());
-					}
-
-					else
-					{
-						if((rd = priscas::friendly_to_numerical(args[1].c_str())) <= priscas::INVALID)
+					if((rd = priscas::friendly_to_numerical(args[1].c_str())) <= priscas::INVALID)
 						rd = priscas::get_reg_num(args[1].c_str());
-					}
 			}
 
 			else if(i_inst(current_op))
@@ -139,11 +135,8 @@ namespace asmrunner
 		{
 			if(r_inst(current_op))
 			{
-				if (f_code != priscas::JR)
-				{
-					if((rs = priscas::friendly_to_numerical(args[2].c_str())) <= priscas::INVALID)
-						rs = priscas::get_reg_num(args[2].c_str());
-				}
+				if((rs = priscas::friendly_to_numerical(args[2].c_str())) <= priscas::INVALID)
+					rs = priscas::get_reg_num(args[2].c_str());
 			}
 						
 			else if(i_inst(current_op))
@@ -193,19 +186,8 @@ namespace asmrunner
 			// Third Argument Parsing
 			if(r_inst(current_op))
 			{
-				if(f_code != priscas::JR)
-				{
-					if(shift_inst(f_code))
-					{
-						imm = priscas::get_imm(args[3].c_str());
-					}
-
-					else
-					{	
-						if((rt = priscas::friendly_to_numerical(args[3].c_str())) <= priscas::INVALID)
-							rt = priscas::get_reg_num(args[3].c_str());
-					}
-				}
+				if((rt = priscas::friendly_to_numerical(args[3].c_str())) <= priscas::INVALID)
+					rt = priscas::get_reg_num(args[3].c_str());
 			}
 						
 			else if(i_inst(current_op))
@@ -228,7 +210,7 @@ namespace asmrunner
 		}
 
 		// Pass the values of rs, rt, rd to the processor's encoding function
-		BW_32 inst = generic_mips32_encode(rs, rt, rd, f_code, imm, current_op);
+		BW_32 inst = generic_mips32_encode(rs, rt, rd, imm, cc, rsprite, current_op, x, y);
 
 		return std::shared_ptr<BW>(new BW_32(inst));
 	}

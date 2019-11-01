@@ -114,8 +114,7 @@ namespace asmrunner
 			id == 17 ? "$s1" :
 			id == 18 ? "$s2" :
 			id == 19 ? "$s3" :
-			id == 20 ? "$s4" :
-			id == 21 ? "$s5" :
+			id == 20 ? "$s4" : id == 21 ? "$s5" :
 			id == 22 ? "$s6" :
 			id == 23 ? "$s7" :
 			id == 24 ? "$t8" :
@@ -139,7 +138,12 @@ namespace asmrunner
 	{
 		return
 		
-			operation == R_FORMAT ? true :
+			operation == ADD ? true :
+			operation == SUB? true :
+			operation == AND ? true :
+			operation == OR ? true :
+			operation == XOR ? true :
+			operation == DC ? true :
 			false ;
 	}
 
@@ -147,96 +151,66 @@ namespace asmrunner
 	{
 		return
 			operation == ADDI ? true :
-			operation == ADDIU ? true:
 			operation == ANDI ? true :
-			operation == ORI ? true :
-			operation == XORI ? true :
-			operation == LB ? true :
-			operation == LBU ? true :
-			operation == LH ? true :
-			operation == LHU ? true :
+			operation == SLL ? true :
+			operation == SRA ? true :
+			operation == SRL ? true :
+			operation == LWO ? true :
+			operation == SWO ? true :
+			false ;
+	}
+
+	bool m_inst(opcode operation)
+	{
+		return
 			operation == LUI ? true :
+			operation == LLI ? true :
 			operation == LW ? true :
-			operation == LWL ? true :
-			operation == SB ? true :
-			operation == SH ? true :
 			operation == SW ? true :
-			operation == BEQ ? true :
-			operation == BNE ? true :
-			operation == BLEZ ? true :
-			operation == BGTZ ? true :
-			operation == SLTI ? true :
-			operation == SLTIU ? true :
-			operation == SWL ? true : false ;
+			operation == LK ? true :
+			operation == R ? true :
+			operation == SR ? true :
+			false;
+	}
+
+	bool b_inst(opcode operation)
+	{
+		return
+			operation == B ? true :
+			operation == JL ? true :
+			operation == RET ? true :
+			false;
+	}
+
+	bool s_inst(opcode operation)
+	{
+		return
+			operation == WFB ? true :
+			operation == DFB ? true :
+			operation == LS ? true :
+			operation == DS ? true :
+			operation == CS ? true :
+			operation == RS ? true :
+			operation == SAT ? true :
+			false;
 	}
 
 	bool j_inst(opcode operation)
 	{
-		return
-			operation == JUMP ? true :
-			operation == JAL ? true: false;
+		return b_inst(operation);
 	}
 
 	bool mem_inst(opcode operation)
 	{
-		return
-			(mem_write_inst(operation) || mem_read_inst(operation))?
-			true : false;
+		return operation == LWO || operation == SWO;
 	}
 
-	bool mem_write_inst(opcode operation)
-	{
-		return
-			(operation == SW || operation == SB || operation == SH )?
-			true : false;
-	}
-
-	bool mem_read_inst(opcode operation)
-	{
-		return
-			(operation == LW || operation == LBU || operation == LHU )?
-			true : false;
-	}
-
-	bool reg_write_inst(opcode operation, funct func)
-	{
-		return
-			(mem_read_inst(operation)) || (operation == R_FORMAT && func != JR) || (operation == ADDI) || (operation == ORI)
-			|| (operation == ANDI) || (operation == XORI) || (operation == SLTI) || (operation == SLTIU) || (operation == ADDIU) || (operation == JAL);
-	}
-
-	bool shift_inst(funct f)
-	{
-		return
-			f == SLL ? true :
-			f == SRL ? true :
-			false;
-	}
-
-	bool jorb_inst(opcode operation, funct fcode)
-	{
-		// First check jumps
-		bool is_jump = j_inst(operation);
-
-		bool is_jr = operation == R_FORMAT && fcode == JR;
-
-		bool is_branch =
-			operation == BEQ ? true :
-			operation == BNE ? true :
-			operation == BLEZ ? true :
-			operation == BGTZ ? true : false;
-
-		return is_jump || is_branch || is_jr;
-	}
-
-	BW_32 generic_mips32_encode(int rs, int rt, int rd, int funct, int imm_shamt_jaddr, opcode op)
+	BW_32 generic_mips32_encode(int rs, int rt, int rd, int imm, int cc, int rsprite, opcode op, int x, int y)
 	{
 		BW_32 w = 0;
 
 		if(r_inst(op))
 		{
-			w = (w.AsInt32() | (funct & ((1 << 6) - 1)  ));
-			w = (w.AsInt32() | ((imm_shamt_jaddr & ((1 << 5) - 1) ) << 6 ));
 			w = (w.AsInt32() | ((rd & ((1 << 5) - 1) ) << 11 ));
 			w = (w.AsInt32() | ((rt & ((1 << 5) - 1) ) << 16 ));
 			w = (w.AsInt32() | ((rs & ((1 << 5) - 1) ) << 21 ));
@@ -245,7 +219,7 @@ namespace asmrunner
 
 		if(i_inst(op))
 		{
-			w = (w.AsInt32() | (imm_shamt_jaddr & ((1 << 16) - 1)));
+			w = (w.AsInt32() | (imm & ((1 << 16) - 1)));
 			w = (w.AsInt32() | ((rt & ((1 << 5) - 1) ) << 16 ));
 			w = (w.AsInt32() | ((rs & ((1 << 5) - 1) ) << 21 ));
 			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
@@ -253,7 +227,25 @@ namespace asmrunner
 
 		if(j_inst(op))
 		{
-			w = (w.AsInt32() | (imm_shamt_jaddr & ((1 << 26) - 1)));
+			w = (w.AsInt32() | (imm & ((1 << 26) - 1)));
+			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
+		}
+
+		if(m_inst(op))
+		{
+			w = (w.AsInt32() | (imm & ((1 << 26) - 1)));
+			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
+		}
+
+		if(b_inst(op))
+		{
+			w = (w.AsInt32() | (imm & ((1 << 26) - 1)));
+			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
+		}
+
+		if(s_inst(op))
+		{
+			w = (w.AsInt32() | (imm & ((1 << 26) - 1)));
 			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
 		}
 

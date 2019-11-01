@@ -18,8 +18,8 @@
 //    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 //////////////////////////////////////////////////////////////////////////////
-#ifndef __PRISCAS_GLOBAL_H__
-#define __PRISCAS_GLOBAL_H__
+#ifndef __ALIASES_H__
+#define __ALIASES_H__
 #include <list>
 #include <map>
 #include <string>

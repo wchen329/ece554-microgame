@@ -6,3 +6,7 @@ mg_assembler/mg_assembler/Release/*
 *.db
 *.opendb
 *.swp
+*.o
+*.s
+*.bin
+mgs

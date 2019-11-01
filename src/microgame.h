@@ -18,8 +18,8 @@
 //    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 //
 //////////////////////////////////////////////////////////////////////////////
-#ifndef __MIPS_H__
-#define __MIPS_H__
+#ifndef __MICROGAME_H__
+#define __MICROGAME_H__
 
 
 /* A header for mips specifc details
@@ -27,10 +27,12 @@
  * and a jump list for functional routines
  *
  * Instruction Formats:
- * R - 6 opcode, 5 rs, 5 rt, 5 rd, 5 shamt, 6 funct
- * I - 6 opcode, 5 rs, 5 rt, 16 imm
- * J - 6 opcode, 26 addr
- *
+ * R - 6 opcode, 5 rs, 5 rt, 5 rd (Register)
+ * I - 6 opcode, 5 r1, 5 r1, 16 imm / addr (Immediate)
+ * M - 6 opcode, 5 r1, 5 unused, 16 addr / imm / unused (Mono-Register)
+ * B - 6 opcode, 3 cc, 8 unused, 16 addr (Branch)
+ * S - 6 opcode, 3 rsprite / unused, 2 cc / unused, 8 unused, 8 axis_1, 8 axis_2 (Special)
+ * 
  *
  * wchen329
  */
@@ -69,8 +71,7 @@ namespace asmrunner
 		$s2 = 18,
 		$s3 = 19,
 		$s4 = 20,
-		$s5 = 21,
-		$s6 = 22,
+		$s5 = 21, $s6 = 22,
 		$s7 = 23,
 		$t8 = 24,
 		$t9 = 25,
@@ -83,123 +84,47 @@ namespace asmrunner
 		INVALID = -1
 	};
 
-	// instruction formats
-	enum format
-	{
-		R, I, J	
-	};
-
 	// MIPS Processor Opcodes
 	enum opcode
 	{
-		R_FORMAT = 0,
-		DUMMY = 1,
-		JUMP = 2,
-		JAL = 3,
-		BEQ = 4,
-		BNE = 5,
-		BLEZ = 6,
-		BGTZ = 7,
-		ADDI =  8,
-		ADDIU = 9,
-		SLTI = 10,
-		SLTIU = 11,
-		ANDI = 12,
-		ORI = 13,
-		XORI = 14,
-		LUI = 15,
-		LB = 32,
-		LH = 33,
-		LWL = 34,
-		LW = 35,
-		LBU = 36,
-		LHU = 37,
-		LWR = 38,
-		SB = 40,
-		SH = 41,
-		SWL = 42,
-		SW = 43,
-		SYS_RES = -1	// system reserved for shell interpreter
-	};
-
-	// Function codes for R-Format Instructions
-	enum funct
-	{
-		SLL = 0,
-		SRL = 2,
-		JR = 8,
-		ADD = 32,
-		ADDU = 33,
-		SUB = 34,
-		SUBU = 35,
-		AND = 36,
-		OR = 37,
-		NOR = 39,
-		SLT = 42,
-		SLTU = 43,
-		NONE = -1	// default, if not R format
+		ADD = 0,
+		ADDI = 1,
+		SUB = 2,
+		AND = 3,
+		ANDI = 4,
+		OR = 5,
+		ORI = 99,
+		XOR = 6,
+		SLL = 7,
+		SRL = 8,
+		SRA = 9,
+		LUI = 10,
+		LLI = 11,
+		LW = 12,
+		SW = 13,
+		LWO = 14,
+		SWO = 15,
+		B = 16,
+		JL = 101,
+		RET = 100,
+		LK = 17,
+		WFB = 18,
+		DFB = 19,
+		LS = 20,
+		DS = 21,
+		CS = 22,
+		RS = 23,
+		SAT = 24,
+		DC = 25,
+		TIM = 26,
+		R = 27,
+		SR = 28,
+		NOP =  -1
 	};
 
 	int friendly_to_numerical(const char *);
 
 	
-	namespace ALU
-	{
-		enum ALUOp
-		{
-					ADD = 0,
-					SUB = 1,
-					SLL = 2,
-					SRL = 3,
-					OR = 4,
-					AND = 5,
-					XOR = 6
-		};
-	}
-
-	/* Generic ALU with four operations:
-	 * ADD, SUB, SLL, SRL
-	 */
-	template <class in_t> class mips_alu
-	{
-
-		public:
-		in_t execute(ALU::ALUOp op, in_t arg1, in_t arg2, bool unsigned_op)
-		{
-			in_t ret;
-
-			switch(op)
-			{
-				case ALU::ADD:
-					ret = arg1 + arg2;
-					break;
-				case ALU::SUB:
-					ret = arg1 - arg2;
-					break;
-				case ALU::SLL:
-					ret = arg1 << arg2;
-					break;
-				case ALU::SRL:
-					ret = ((arg1 >> arg2) & ((1 << (32 - arg2)) - 1));
-					break;
-				case ALU::OR:
-					ret = (arg1 | arg2);
-					break;
-				case ALU::AND:
-					ret = (arg1 & arg2);
-					break;
-				case ALU::XOR:
-					ret = (arg1 ^ arg2);
-					break;
-
-				default:
-				throw new mt_exception();
-			}
-
-			return ret;
-		}
-	};
-
 	// Format check functions
 	/* Checks if an instruction is I formatted.
 	 */
@@ -209,44 +134,31 @@ namespace asmrunner
 	 */
 	bool r_inst(opcode operation);
 
-	/* Checks if an instruction is J formatted.
+	/* Checks if an instruction is M formatted.
+	 */
+	bool m_inst(opcode operation);
+
+	/* Checks if an instruction is B formatted.
+	 */
+	bool b_inst(opcode operation);
+
+	/* Checks if an instruction is S formatted.
+	 */
+	bool s_inst(opcode operation);
+
+	/* Alias for b inst.
+	 *
 	 */
 	bool j_inst(opcode operation);
 
-	/* Checks if an instruction performs
-	 * memory access
+	/* Check if a MEMORY OFFSET instruction
 	 */
 	bool mem_inst(opcode operation);
-
-	/* Checks if an instruction performs
-	 * memory write
-	 */
-	bool mem_write_inst(opcode operation);
-
-	/* Checks if an instruction performs
-	 * memory read
-	 */
-	bool mem_read_inst(opcode operation);
-
-	/* Checks if an instruction performs
-	 * a register write
-	 */
-	bool reg_write_inst(opcode operation, funct func);
-
-	/* Check if a special R-format
-	 * shift instruction
-	 */
-	bool shift_inst(funct f);
-
-	/* Check if a Jump or
-	 * Branch Instruction
-	 */
-	bool jorb_inst(opcode operation, funct fcode);
 
 	/* "Generic" MIPS-32 architecture
 	 * encoding function asm -> binary
 	 */
-	BW_32 generic_mips32_encode(int rs, int rt, int rd, int funct, int imm_shamt_jaddr, opcode op);
+	BW_32 generic_mips32_encode(int rs, int rt, int rd, int imm, int cc, int rsprite, opcode op, int x, int y);
 
 	/* For calculating a label offset in branches
 	 */

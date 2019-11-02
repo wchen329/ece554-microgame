@@ -10,3 +10,12 @@ mg_assembler/mg_assembler/Release/*
 *.s
 *.bin
 mgs
+
+# ignore vsim files
+**/work
+**/*.mti
+**/*.mpf
+**/transcript
+
+# ignore nfs files
+**/.nfs*

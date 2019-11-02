@@ -31,7 +31,8 @@
  * I - 6 opcode, 5 r1, 5 r1, 16 imm / addr (Immediate)
  * M - 6 opcode, 5 r1, 5 unused, 16 addr / imm / unused (Mono-Register)
  * B - 6 opcode, 3 cc, 8 unused, 16 addr (Branch)
- * S - 6 opcode, 3 rsprite / unused, 2 cc / unused, 8 unused, 8 axis_1, 8 axis_2 (Special)
+ * S - 6 opcode, 3 rsprite / unused, 2 cc / unused, 8 unused, 8 axis_1 / unused, 8 axis_2 / unused (Special)
+ * N - 6 opcode (SiNgleton Operand)
  * 
  *
  * wchen329
@@ -145,6 +146,10 @@ namespace asmrunner
 	/* Checks if an instruction is S formatted.
 	 */
 	bool s_inst(opcode operation);
+
+	/* Checks if an instruction is N formatted.
+	 */
+	bool n_inst(opcode operation);
 
 	/* Alias for b inst.
 	 *

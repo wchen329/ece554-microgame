@@ -89,14 +89,17 @@ namespace asmrunner
 					(r_inst(current_op) && args.size() != 4) ||
 					(i_inst(current_op) && args.size() != 4 && !mem_inst(current_op)) ||
 					(i_inst(current_op) && args.size() != 3 && mem_inst(current_op)) ||
-					(j_inst(current_op) && args.size() != 2)				
+					(j_inst(current_op) && args.size() != 2) ||
+					(m_inst(current_op) && args.size() != 3 && !(current_op == R || current_op == LK || current_op == SR || current_op == SAT)) ||
+					(m_inst(current_op) && args.size() != 2 && (current_op == R || current_op == LK || current_op == SR || current_op == SAT)) ||
+					(n_inst(current_op) && args.size() != 1)
 				)
 			{
 				throw priscas::mt_asm_bad_arg_count();
 			}
 
 			// Now first argument parsing
-			if(r_inst(current_op))
+			if(r_inst(current_op) || (m_inst(current_op)))
 			{
 					if((rd = priscas::friendly_to_numerical(args[1].c_str())) <= priscas::INVALID)
 						rd = priscas::get_reg_num(args[1].c_str());
@@ -176,6 +179,11 @@ namespace asmrunner
 					if((rs = priscas::friendly_to_numerical(args[2].c_str())) <= priscas::INVALID)
 					rs = priscas::get_reg_num(args[2].c_str());
 				}
+			}
+
+			else if(m_inst(current_op))
+			{
+				imm = get_imm(args[2].c_str());
 			}
 
 			else if(j_inst(current_op)){}

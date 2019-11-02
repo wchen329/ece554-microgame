@@ -16,6 +16,10 @@ all: $(OBJS)
 clean:
 	@echo "Cleaning..."
 	@if rm *.o ;\
-		then echo "Successfully cleaned.";\
-	else echo "Nothing to clean. Skipping...";\
+		then echo "Successfully cleaned build intermediates.";\
+	else echo "No intermediates found. Skipping...";\
+	fi
+	@if rm mgs ;\
+		then echo "Successfully cleaned assembler executable.";\
+	else echo "No executable found. Skipping...";\
 	fi

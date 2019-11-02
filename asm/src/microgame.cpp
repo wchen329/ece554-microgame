@@ -169,6 +169,7 @@ namespace asmrunner
 			operation == SW ? true :
 			operation == LK ? true :
 			operation == R ? true :
+			operation == SAT ? true :
 			operation == SR ? true :
 			false;
 	}
@@ -178,7 +179,6 @@ namespace asmrunner
 		return
 			operation == B ? true :
 			operation == JL ? true :
-			operation == RET ? true :
 			false;
 	}
 
@@ -186,18 +186,24 @@ namespace asmrunner
 	{
 		return
 			operation == WFB ? true :
-			operation == DFB ? true :
 			operation == LS ? true :
 			operation == DS ? true :
 			operation == CS ? true :
 			operation == RS ? true :
-			operation == SAT ? true :
 			false;
 	}
 
 	bool j_inst(opcode operation)
 	{
 		return b_inst(operation);
+	}
+
+	bool n_inst(opcode operation)
+	{
+		return
+			operation == RET ? true :
+			operation == DFB ? true :
+			false;
 	}
 
 	bool mem_inst(opcode operation)
@@ -225,27 +231,22 @@ namespace asmrunner
 			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
 		}
 
-		if(j_inst(op))
+		if(b_inst(op))
 		{
-			w = (w.AsInt32() | (imm & ((1 << 26) - 1)));
+			w = (w.AsInt32() | (imm & ((1 << 16) - 1)));
+			w = (w.AsInt32() | ((cc & ((1 << 3) - 1) ) << 23 ));
 			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
 		}
 
 		if(m_inst(op))
 		{
-			w = (w.AsInt32() | (imm & ((1 << 26) - 1)));
+			w = (w.AsInt32() | (imm & ((1 << 16) - 1)));
+			w = (w.AsInt32() | ((rd & ((1 << 5) - 1) ) << 21 ));
 			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
 		}
 
-		if(b_inst(op))
+		if(n_inst(op))
 		{
-			w = (w.AsInt32() | (imm & ((1 << 26) - 1)));
-			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
-		}
-
-		if(s_inst(op))
-		{
-			w = (w.AsInt32() | (imm & ((1 << 26) - 1)));
 			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
 		}
 

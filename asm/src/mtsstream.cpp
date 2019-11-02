@@ -25,7 +25,8 @@ namespace asmrunner
 
 	void asm_ostream::append(asmrunner::BW_32 data)
 	{
-		fwrite(&data, sizeof(asmrunner::BW_32), 1, this->f);
+		uint32_t out = data.AsUInt32();
+		fwrite(&out, sizeof(out), 1, this->f);
 	}
 
 	asm_ostream::asm_ostream(char * filename)

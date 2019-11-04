@@ -5,26 +5,28 @@
  */
 module sprite_command_fifo(
 	input clk, rst_n,
-	input [45:0] cmd,
+	input [42:0] cmd,
 	input read, write,
-	output [45:0] next_cmd
+	output [42:0] curr_cmd
 );
 
-logic [0:`SPRITE_CMD_FIFO_SIZE-1] [45:0] buffer;
+logic [0:`SPRITE_CMD_FIFO_SIZE-1] [42:0] buffer;
 logic [$clog2(`SPRITE_CMD_FIFO_SIZE)-1:0] read_ptr, write_ptr;
 logic empty, full;
 
 assign full = read_ptr == write_ptr + 1;
 assign empty = read_ptr == write_ptr;
-assign next_cmd = buffer[read_ptr];
+assign curr_cmd = buffer[read_ptr];
 
+// read_ptr
 always_ff @(posedge clk, negedge rst_n) begin
 	if(!rst_n)
 		read_ptr <= 0;
-	else if(read && !full)
+	else if(read && !empty)
 		read_ptr <= read_ptr + 1;
 end
 
+// write_ptr
 always_ff @(posedge clk, negedge rst_n) begin
 	if(!rst_n)
 		write_ptr <= 0;
@@ -32,6 +34,7 @@ always_ff @(posedge clk, negedge rst_n) begin
 		write_ptr <= write_ptr + 1;
 end
 
+// write
 always_ff @(posedge clk, negedge rst_n) begin
 	if(!rst_n)
 		buffer <= 0;

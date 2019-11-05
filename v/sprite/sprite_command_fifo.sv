@@ -11,10 +11,11 @@ module sprite_command_fifo(
 );
 
 logic [0:`SPRITE_CMD_FIFO_SIZE-1] [42:0] buffer;
-logic [$clog2(`SPRITE_CMD_FIFO_SIZE)-1:0] read_ptr, write_ptr;
+logic [$clog2(`SPRITE_CMD_FIFO_SIZE)-1:0] read_ptr, write_ptr, next_write_ptr;
 logic empty, full;
 
-assign full = read_ptr == write_ptr + 1;
+assign next_write_ptr = write_ptr + 1;
+assign full = read_ptr == next_write_ptr;
 assign empty = read_ptr == write_ptr;
 assign curr_cmd = buffer[read_ptr];
 

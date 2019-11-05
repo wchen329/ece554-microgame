@@ -12,14 +12,18 @@
  * CS:  { 3'opcode, 8'x, 8'y }
  * RS:  { 3'opcode, 3'sprite_reg, 2'orientation }
  */
-module sprite_command_fifo_front_end(
+module sprite_command_controller(
 	input clk, rst_n,
+	input write_cmd,
 	input [2:0] display_op,
 	input [2:0] sprite_reg,
 	input [1:0] orientation,
 	input [7:0] x, y,
 	input [15:0] address,
-	input [7:0] r, g, b
+	input [7:0] r, g, b,
+	input [31:0] mem_in,
+	output logic [15:0] mem_address,
+	output logic mem_read
 );
 
 // cmd signals
@@ -78,11 +82,9 @@ cmd_fifo sprite_command_fifo(
 	.rst_n(rst_n),
 	.cmd(cmd),
 	.read(fifo_read),
-	.write(fifo_write),
+	.write(write_cmd),
 	.curr_cmd(curr_cmd)
 );
-// TODO: ensure opcode only valid for one cycle
-assign fifo_write = display_op > 0;
 
 genvar i;
 generate
@@ -145,17 +147,14 @@ always_ff @(posedge clk)
 	else
 		sb_px_count <= 0;
 
-// TODO: how to read mem / 1 cycle?
-// TODO: is mem packed every 24 bits?
-/*
+// read from mem
+// colors are stored as { 8'?, 8'r, 8'g, 8'b }
+assign mem_address = cmd_address + sb_px_count;
 always_ff @(posedge clk)
 	if(state == LS)
-		{ sb_r, sb_g, sb_b } = MEM[cmd_address + (sb_px_count * 24)];
+		{ sb_r, sb_g, sb_b } = mem_in[23:0];
 	else
 		{ sb_r, sb_g, sb_b } = 0;
-*/
-always_ff @(posedge clk)
-	{ sb_r, sb_g, sb_b } = 0;
 
 always_comb begin
 	next_state = IDLE;
@@ -165,6 +164,7 @@ always_comb begin
 	sb_write = 0;
 	sb_read = 0;
 	fifo_read = 0;
+	mem_read = 0;
 
 	case(state)
 		IDLE: begin
@@ -181,6 +181,7 @@ always_comb begin
 					next_state = LS;
 					sb_set_ori[cmd_sprite_reg] = 1;
 					sb_write[cmd_sprite_reg] = 1;
+					mem_read = 1;
 				end
 				`SPRITE_DS: begin
 					next_state = DS;
@@ -210,8 +211,10 @@ always_comb begin
 			// wait until done writing to sprite buffer
 			if(sb_px_count == 63)
 				fifo_read = 1;
-			else
+			else begin
 				next_state = LS;
+				mem_read = 1;
+			end
 		end
 		DS: begin
 			// wait until done reading/writing from/to sprite/frame buffer

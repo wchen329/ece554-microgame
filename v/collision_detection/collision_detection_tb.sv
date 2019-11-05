@@ -50,7 +50,6 @@ initial begin
 	
 	$display("All tests passed.");
 	$stop();
-
 end
 
 task check_collision(

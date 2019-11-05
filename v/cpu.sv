@@ -33,15 +33,17 @@ logic mem_stall_request;
 
 // program counter
 
-logic update_pc;
-logic [INSTRUCTION_ADDRESS_WIDTH-1:0] next_pc;
+logic branch;
+logic [INSTRUCTION_ADDRESS_WIDTH-1:0] branch_address;
 reg [INSTRUCTION_ADDRESS_WIDTH-1:0] pc;
 
 always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		pc <= 0;
-	end else if(update_pc) begin
-		pc <= next_pc;
+	end else if(branch) begin
+		pc <= branch_address;
+	end else begin
+		pc <= pc + 1;
 	end
 end
 
@@ -61,18 +63,14 @@ memory instruction_memory(
 // linking register
 
 logic link;
+logic [INSTRUCTION_ADDRESS_WIDTH-1:0] link_address;
 reg [INSTRUCTION_ADDRESS_WIDTH-1:0] linking_register;
 
 always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		linking_register <= 0;
 	end else if(link) begin
-		/* Because branch and link happens during the decode stage, the program
-		 * counter will have already been incremented by one instruction
-		 * meaning that the instruction we actually want to link to is the
-		 * current program counter.
-		 */
-		linking_register <= pc;
+		linking_register <= next_link;
 	end
 end
 
@@ -83,14 +81,18 @@ end
 logic if_id_flush;
 logic if_id_stall;
 reg [31:0] if_id_encoded_instruction;
+reg [INSTRUCTION_ADDRESS_WIDTH-1:0] if_id_pc;
 
 always_ff @(posedge clk or negedge rst_n) begin : if_id_reg
 	if(~rst_n) begin
 		if_id_encoded_instruction <= 0;
+		if_id_pc <= 0;
 	end else if(if_id_flush) begin
 		if_id_encoded_instruction <= 0;
+		if_id_pc <= 0;
 	end else if(~if_id_stall) begin
 		if_id_encoded_instruction <= instruction;
+		if_id_pc <= pc;
 	end
 end
 
@@ -153,6 +155,9 @@ assign extended_immediate = {16{immediate[15]}, immediate};
 
 // control
 
+logic id_branch;
+logic id_link;
+
 logic ex_select_random;
 logic ex_select_time;
 logic ex_select_input;
@@ -162,6 +167,9 @@ logic ex_update_cc;
 logic ex_enable_collision;
 
 always_comb begin
+	id_branch = 0;
+	id_link = 0;
+
 	ex_select_random = 0;
 	ex_select_time = 0;
 	ex_select_input = 0;
@@ -252,9 +260,12 @@ always_comb begin
 		end
 		5'b10001:begin
 			// b
+			id_branch = 1;
 		end
 		5'b10010:begin
 			// bl
+			id_branch = 1;
+			id_link = 1;
 		end
 		5'b10011:begin
 			// ret
@@ -302,6 +313,59 @@ always_comb begin
 		end
 	endcase
 end
+
+
+// branch checking logic
+
+logic [2:0] branch_case;
+logic should_branch;
+
+assign branch_case = if_id_encoded_instruction[26:24];
+
+always_comb begin
+	should_branch = 0;
+
+	case(branch_case)
+		3'b000:begin
+			// bne
+			should_branch = ~cc_zero;
+		end
+		3'b001:begin
+			// beq
+			should_branch = cc_zero;
+		end
+		3'b010:begin
+			// bgt
+			should_branch = ~cc_zero && ~cc_sign;
+		end
+		3'b011:begin
+			// blt
+			should_branch = ~cc_zero && cc_sign;
+		end
+		3'b100:begin
+			// bge
+			should_branch = cc_zero || ~cc_sign;
+		end
+		3'b101:begin
+			// ble
+			should_branch = cc_zero || cc_sign;
+		end
+		3'b110:begin
+			// bover
+			should_branch = cc_overflow;
+		end
+		3'b111:begin
+			// unconditional
+			should_branch = 1;
+		end
+	endcase
+end
+
+// conditional dependencies are hazard detected and stalled
+assign link = id_link && should_branch;
+assign link_address = if_id_pc + 1;
+assign branch = id_branch && should_branch;;
+assign branch_address = if_id_pc + 1 + extended_immediate;
 
 ///////////////////////////////////////////////////////////////////////////////
 

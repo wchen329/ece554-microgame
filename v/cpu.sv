@@ -25,6 +25,7 @@ logic mem_wb_fw_mem_enable;
 logic [31:0] mem_wb_fw_mem;
 
 // stall request declarations
+logic id_stall_request;
 logic ex_stall_request;
 logic mem_stall_request;
 
@@ -86,17 +87,21 @@ logic if_id_flush;
 logic if_id_stall;
 reg [31:0] if_id_encoded_instruction;
 reg [INSTRUCTION_ADDRESS_WIDTH-1:0] if_id_pc;
+reg if_id_is_no_op;
 
 always_ff @(posedge clk or negedge rst_n) begin : if_id_reg
 	if(~rst_n) begin
 		if_id_encoded_instruction <= 0;
 		if_id_pc <= 0;
+		if_id_is_no_op <= 1;
 	end else if(if_id_flush) begin
 		if_id_encoded_instruction <= 0;
 		if_id_pc <= 0;
+		if_id_is_no_op <= 1;
 	end else if(~if_id_stall) begin
 		if_id_encoded_instruction <= instruction;
 		if_id_pc <= pc;
+		if_id_is_no_op <= 0;
 	end
 end
 
@@ -386,6 +391,8 @@ assign branch = id_branch && should_branch;
 assign branch_address = if_id_pc + 1 + extended_immediate;
 assign link_return = id_return;
 
+assign if_id_flush = branch || link_return;
+
 
 // operand locations
 
@@ -402,6 +409,7 @@ assign rf_read_reg_2 =
 logic id_ex_stall;
 reg [31:0] id_ex_reg_1, id_ex_reg_2;
 reg [31:0] id_ex_immediate;
+reg id_ex_is_no_op;
 
 reg ctrl_ex_select_random;
 reg ctrl_ex_select_time;
@@ -418,6 +426,7 @@ always_ff @(posedge clk or negedge rst_n) begin
 		id_ex_reg_1 <= 0;
 		id_ex_reg_2 <= 0;
 		id_ex_immediate <= 0;
+		id_ex_is_no_op <= 1;
 
 		ctrl_ex_select_random <= 0;
 		ctrl_ex_select_time <= 0;
@@ -432,6 +441,7 @@ always_ff @(posedge clk or negedge rst_n) begin
 		id_ex_reg_1 <= rf_reg_1;
 		id_ex_reg_2 <= rf_reg_2;
 		id_ex_immediate <= extended_immediate;
+		id_ex_is_no_op <= if_id_is_no_op;
 
 		ctrl_ex_select_random <= ex_select_random;
 		ctrl_ex_select_time <= ex_select_time;
@@ -585,7 +595,7 @@ assign alu_operand_2 =
 assign ex_stall_request = collision_state;
 
 assign cc_update =
-	ctrl_ex_update_cc && (ctrl_ex_enable_collision ^~ collision_state) && ~id_ex_stall;
+	ctrl_ex_update_cc && (ctrl_ex_enable_collision ^~ collision_state) && ~id_ex_stall && ~id_ex_is_no_op;
 
 assign cc_next_zero = ctrl_ex_enable_collision ? cd_collision : alu_zero;
 assign cc_next_sign = ctrl_ex_enable_collision ? 0 : alu_sign;
@@ -598,6 +608,7 @@ assign cc_next_overflow = ctrl_ex_enable_collision ? 0 : alu_overflow;
 logic ex_mem_stall;
 reg [31:0] ex_mem_result;
 reg [31:0] ex_mem_store_source;
+reg ex_mem_is_no_op;
 
 reg ctrl_mem_write_memory;
 
@@ -605,11 +616,13 @@ always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		ex_mem_result <= 0;
 		ex_mem_store_source <= 0;
+		ex_mem_is_no_op <= 1;
 
 		ctrl_mem_write_memory <= 0;
 	end else if(~ex_mem_stall) begin
 		ex_mem_result <= ex_result;
 		ex_mem_store_source <= id_ex_reg_2;
+		ex_mem_is_no_op <= id_ex_is_no_op;
 
 		ctrl_mem_write_memory <= ctrl_mem_ex_write_memory;
 	end
@@ -641,7 +654,15 @@ memory data_memory(
 
 // MEM/WB register
 
-logic mem_wb_stall;
+reg mem_wb_is_no_op;
+
+always @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		mem_wb_is_no_op <= 1;
+	end else begin
+		mem_wb_is_no_op <= ex_mem_is_no_op;
+	end
+end
 
 ///////////////////////////////////////////////////////////////////////////////
 // Write Back
@@ -654,5 +675,15 @@ logic mem_wb_stall;
 // forwarding logic
 
 assign ex_mem_fw_ex = ex_mem_result;
+assign mem_wb_fw_ex = 
+assign mem_wb_fw_mem = 
+
+
+// stalling logic
+
+assign ex_mem_stall = mem_stall_request;
+assign id_ex_stall = ex_stall_request || (mem_stall_request && ~id_ex_is_no_op);
+assign if_id_stall = id_stall_request || (ex_stall_request && ~if_id_is_no_op);
+
 
 endmodule

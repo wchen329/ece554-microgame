@@ -1,6 +1,7 @@
 module cpu
 #(
 	parameter INSTRUCTION_ADDRESS_WIDTH=16,
+	parameter USER_ADDRESS_WIDTH=16,
 	parameter NUM_INPUT_BITS=5
 )(
 	input clk, rst_n
@@ -164,6 +165,7 @@ assign extended_immediate = {16{immediate[15]}, immediate};
 logic id_branch;
 logic id_link;
 logic id_return;
+logic id_use_destination_as_op_2;
 
 logic ex_select_random;
 logic ex_select_time;
@@ -256,6 +258,7 @@ always_comb begin
 		end
 		5'b01110:begin
 			// sw
+			id_use_destination_as_op_2 = 1;
 		end
 		5'b01111:begin
 			// lwo
@@ -264,6 +267,7 @@ always_comb begin
 		5'b10000:begin
 			// swo
 			ex_alu_use_immediate = 1;
+			id_use_destination_as_op_2 = 1;
 		end
 		5'b10001:begin
 			// b
@@ -375,6 +379,15 @@ assign link_address = if_id_pc + 1;
 assign branch = id_branch && should_branch;
 assign branch_address = if_id_pc + 1 + extended_immediate;
 assign link_return = id_return;
+
+
+// operand locations
+
+assign rf_read_reg_1 =
+	if_id_encoded_instruction[21:17];
+assign rf_read_reg_2 =
+	id_use_destination_as_op_2 ? if_id_encoded_instruction[26:22] :
+	if_id_encoded_instruction[16:12];
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -557,7 +570,7 @@ assign alu_operand_2 =
 assign ex_stall_request = collision_state == 1;
 
 assign cc_update =
-	ctrl_ex_update_cc && (ctrl_ex_enable_collision ^~ collision_state) && ~id_ex_stall
+	ctrl_ex_update_cc && (ctrl_ex_enable_collision ^~ collision_state) && ~id_ex_stall;
 
 assign cc_next_zero = ctrl_ex_enable_collision ? cd_collision : alu_zero;
 assign cc_next_sign = ctrl_ex_enable_collision ? 0 : alu_sign;
@@ -569,12 +582,15 @@ assign cc_next_overflow = ctrl_ex_enable_collision ? 0 : alu_overflow;
 
 logic ex_mem_stall;
 reg [31:0] ex_mem_result;
+reg [31:0] ex_mem_store_source;
 
 always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		ex_mem_result <= 0;
+		ex_mem_store_source <= 0;
 	end else if(~ex_mem_stall) begin
 		ex_mem_result <= ex_result;
+		ex_mem_store_source <= id_ex_reg_2;
 	end
 end
 
@@ -584,13 +600,17 @@ end
 
 // data memory
 
-logic 
+logic [USER_ADDRESS_WIDTH-1:0] user_memory_address;
+
+assign user_memory_address = ex_mem_result[USER_ADDRESS_WIDTH-1:0];
 
 memory data_memory(
 	.clk(clk),
 	.rst_n(rst_n),
-	.address(pc),
-	.data(instruction),
+	.address(ex_mem_result),
+	.data_in(ex_mem_store_source),
+	.write(),
+	.data_out(),
 	.stall()
 );
 

@@ -40,7 +40,7 @@
 //   V1.0 :| Johnny FAN Peli Li:| 22/07/2010:| Initial Revision
 // --------------------------------------------------------------------
 
-module	VGA_Controller(	//	Host Side
+module	vga_controller(	//	Host Side
 						oRequest,
 						//	VGA Side
 						oVGA_R,

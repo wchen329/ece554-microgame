@@ -83,11 +83,11 @@ namespace asmrunner
 			throw mt_bad_mnemonic();
 		}
 
-		// Check for insufficient arguments
+		// Check for insufficient arguments TODO: simplify
 		if(args.size() >= 1)
 		{
 			if	(
-					(r_inst(current_op) && args.size() != 4) ||
+					(r_inst(current_op) && args.size() != 4 && current_op != DC) ||
 					(i_inst(current_op) && args.size() != 4 && !mem_inst(current_op)) ||
 					(i_inst(current_op) && args.size() != 3 && mem_inst(current_op)) ||
 					(j_inst(current_op) && args.size() != 2) ||
@@ -139,7 +139,7 @@ namespace asmrunner
 
 				if(current_op == RS || current_op == LS)
 				{
-					rsprite = get_reg_num(args[2].c_str());
+					rsprite = get_reg_num_sprite(args[2].c_str());
 				}
 			}
 
@@ -251,7 +251,7 @@ namespace asmrunner
 
 			else if(current_op == DS)
 			{
-				rsprite = get_reg_num(args[3].c_str());
+				rsprite = get_reg_num_sprite(args[3].c_str());
 			}
 
 			else if(j_inst(current_op)){}

@@ -63,6 +63,44 @@ namespace asmrunner
 		return num;
 	}
 
+	// Returns register number corresponding with argument if any
+	// Returns -1 if invalid or out of range, uses the sprite (#) TODO: combine with other register get-num above
+	int get_reg_num_sprite(const char * reg_str)
+	{
+		std::vector<char> numbers;
+		int len = strlen(reg_str);
+		if(len <= 1) throw priscas::mt_bad_imm();
+		if(reg_str[0] != '#') throw priscas::mt_parse_unexpected("#", reg_str);
+		for(int i = 1; i < len; i++)
+		{
+			if(reg_str[i] >= '0' && reg_str[i] <= '9')
+			{
+				numbers.push_back(reg_str[i]);
+			}
+
+			else throw priscas::mt_bad_reg_format();
+		}
+
+		int num = -1;
+
+		if(numbers.empty()) throw priscas::mt_bad_reg_format();
+		else
+		{
+			char * num_str = new char[numbers.size()];
+
+			int k = 0;
+			for(std::vector<char>::iterator itr = numbers.begin(); itr < numbers.end(); itr++)
+			{
+				num_str[k] = *itr;
+				k++;
+			}
+			num = atoi(num_str);
+			delete[] num_str;
+		}
+
+		return num;
+	}
+
 	// Returns immediate value if valid
 	int get_imm(const char * str)
 	{

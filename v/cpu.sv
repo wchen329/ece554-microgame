@@ -34,6 +34,7 @@ logic mem_stall_request;
 // program counter
 
 logic branch;
+logic link_return;
 logic [INSTRUCTION_ADDRESS_WIDTH-1:0] branch_address;
 reg [INSTRUCTION_ADDRESS_WIDTH-1:0] pc;
 
@@ -42,6 +43,8 @@ always_ff @(posedge clk or negedge rst_n) begin
 		pc <= 0;
 	end else if(branch) begin
 		pc <= branch_address;
+	end else if(link_return) begin
+		pc <= linking_register;
 	end else begin
 		pc <= pc + 1;
 	end
@@ -136,7 +139,10 @@ always_ff @(posedge clk or negedge rst_n) begin
 			rf[itter_rf_i] <= 0;
 		end
 	end else if(rf_write) begin
-		rf[rf_write_reg] <= rf_write_reg_data;
+		if(rf_write_reg != 5'b00000) begin
+			// zero register is tied to zero
+			rf[rf_write_reg] <= rf_write_reg_data;
+		end
 	end
 end
 
@@ -157,6 +163,7 @@ assign extended_immediate = {16{immediate[15]}, immediate};
 
 logic id_branch;
 logic id_link;
+logic id_return;
 
 logic ex_select_random;
 logic ex_select_time;
@@ -269,6 +276,7 @@ always_comb begin
 		end
 		5'b10011:begin
 			// ret
+			id_return = 1;
 		end
 		5'b10100:begin
 			// lk
@@ -364,8 +372,9 @@ end
 // conditional dependencies are hazard detected and stalled
 assign link = id_link && should_branch;
 assign link_address = if_id_pc + 1;
-assign branch = id_branch && should_branch;;
+assign branch = id_branch && should_branch;
 assign branch_address = if_id_pc + 1 + extended_immediate;
+assign link_return = id_return;
 
 ///////////////////////////////////////////////////////////////////////////////
 

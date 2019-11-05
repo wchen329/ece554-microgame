@@ -1,0 +1,543 @@
+module cpu
+#(
+	parameter INSTRUCTION_ADDRESS_WIDTH=16,
+	parameter NUM_INPUT_BITS=5
+)(
+	input clk, rst_n
+);
+
+
+// forwarding declarations
+
+// EX to EX forwarding
+logic ex_mem_fw_ex_enable_op_1;
+logic ex_mem_fw_ex_enable_op_2;
+logic [31:0] ex_mem_fw_ex;
+
+// MEM to EX forwarding
+logic mem_wb_fw_ex_enable_op_1;
+logic mem_wb_fw_ex_enable_op_2;
+logic [31:0] mem_wb_fw_ex;
+
+// MEM to MEM forwarding
+logic mem_wb_fw_mem_enable;
+logic [31:0] mem_wb_fw_mem;
+
+// stall request declarations
+logic ex_stall_request;
+logic mem_stall_request;
+
+///////////////////////////////////////////////////////////////////////////////
+// Instruction Fetch
+/////////////////////////////////////////////////////////////////////////////
+
+// program counter
+
+logic update_pc;
+logic [INSTRUCTION_ADDRESS_WIDTH-1:0] next_pc;
+reg [INSTRUCTION_ADDRESS_WIDTH-1:0] pc;
+
+always_ff @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		pc <= 0;
+	end else if(update_pc) begin
+		pc <= next_pc;
+	end
+end
+
+
+// instruction memory
+
+logic [31:0] instruction
+
+memory instruction_memory(
+	.clk(clk),
+	.rst_n(rst_n),
+	.address(pc),
+	.data(instruction)
+);
+
+
+// linking register
+
+logic link;
+reg [INSTRUCTION_ADDRESS_WIDTH-1:0] linking_register;
+
+always_ff @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		linking_register <= 0;
+	end else if(link) begin
+		/* Because branch and link happens during the decode stage, the program
+		 * counter will have already been incremented by one instruction
+		 * meaning that the instruction we actually want to link to is the
+		 * current program counter.
+		 */
+		linking_register <= pc;
+	end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+
+// IF/ID register
+
+logic if_id_flush;
+logic if_id_stall;
+reg [31:0] if_id_encoded_instruction;
+
+always_ff @(posedge clk or negedge rst_n) begin : if_id_reg
+	if(~rst_n) begin
+		if_id_encoded_instruction <= 0;
+	end else if(if_id_flush) begin
+		if_id_encoded_instruction <= 0;
+	end else if(~if_id_stall) begin
+		if_id_encoded_instruction <= instruction;
+	end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Instruction Decode
+/////////////////////////////////////////////////////////////////////////////
+
+// status register
+
+logic cc_update;
+logic cc_next_zero, cc_next_sign, cc_next_overflow;
+reg cc_zero, cc_sign, cc_overflow;
+
+always_ff @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		cc_zero <= 0;
+		cc_sign <= 0;
+		cc_overflow <= 0;
+	end else if(cc_update) begin
+		cc_zero <= cc_next_zero;
+		cc_sign <= cc_next_sign;
+		cc_overflow <= cc_next_overflow;
+	end
+end
+
+
+// register file
+
+logic [4:0] rf_read_reg_1, rf_read_reg_2;
+logic [31:0] rf_reg_1, rf_reg_2;
+logic rf_write;
+logic [4:0] rf_write_reg;
+logic [31:0] rf_write_reg_data;
+
+reg [32][31:0] rf;
+
+integer itter_rf_i;
+always_ff @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		for(itter_rf_i=0; itter_rf_i<$size(rf); itter_rf_i=itter_rf_i+1) begin
+			rf[itter_rf_i] <= 0;
+		end
+	end else if(rf_write) begin
+		rf[rf_write_reg] <= rf_write_reg_data;
+	end
+end
+
+assign rf_reg_1 = rf[rf_read_reg_1];
+assign rf_reg_2 = rf[rf_read_reg_2];
+
+
+// sign extension for immediate
+
+logic [15:0] immediate;
+logic [31:0] extended_immediate;
+
+assign immediate = if_id_encoded_instruction[15:0];
+assign extended_immediate = {16{immediate[15]}, immediate};
+
+
+// control
+
+logic ex_select_random;
+logic ex_select_time;
+logic ex_select_input;
+logic [3:0] ex_alu_op_code;
+logic ex_alu_use_immediate;
+logic ex_update_cc;
+logic ex_enable_collision;
+
+always_comb begin
+	ex_select_random = 0;
+	ex_select_time = 0;
+	ex_select_input = 0;
+	ex_alu_op_code = 4'b0000;
+	ex_alu_use_immediate = 0;
+	ex_update_cc = 0;
+	ex_enable_collision = 0;
+
+	// switch on opcode
+	case(if_id_encoded_instruction[31:27])
+		5'b00000:begin
+			// add
+			ex_alu_op_code = 4'b0000;
+			ex_update_cc = 1;
+		end
+		5'b00001:begin
+			// addi
+			ex_alu_op_code = 4'b0001;
+			ex_alu_use_immediate = 1;
+			ex_update_cc = 1;
+		end
+		5'b00010:begin
+			// sub
+			ex_alu_op_code = 4'b0010;
+			ex_update_cc = 1;
+		end
+		5'b00011:begin
+			// and
+			ex_alu_op_code = 4'b0011;
+			ex_update_cc = 1;
+		end
+		5'b00100:begin
+			// andi
+			ex_alu_op_code = 4'b0100;
+			ex_alu_use_immediate = 1;
+			ex_update_cc = 1;
+		end
+		5'b00101:begin
+			// or
+			ex_alu_op_code = 4'b0101;
+			ex_update_cc = 1;
+		end
+		5'b00110:begin
+			// ori
+			ex_alu_op_code = 4'b0110;
+			ex_alu_use_immediate = 1;
+			ex_update_cc = 1;
+		end
+		5'b00111:begin
+			// xor
+			ex_alu_op_code = 4'b0111;
+			ex_update_cc = 1;
+		end
+		5'b01000:begin
+			// sll
+			ex_alu_op_code = 4'b1000;
+			ex_update_cc = 1;
+		end
+		5'b01001:begin
+			// srl
+			ex_alu_op_code = 4'b1001;
+			ex_update_cc = 1;
+		end
+		5'b01010:begin
+			// sra
+			ex_alu_op_code = 4'b1010;
+			ex_update_cc = 1;
+		end
+		5'b01011:begin
+			// lli
+		end
+		5'b01100:begin
+			// lui
+		end
+		5'b01101:begin
+			// lw
+		end
+		5'b01110:begin
+			// sw
+		end
+		5'b01111:begin
+			// lwo
+			ex_alu_use_immediate = 1;
+		end
+		5'b10000:begin
+			// swo
+			ex_alu_use_immediate = 1;
+		end
+		5'b10001:begin
+			// b
+		end
+		5'b10010:begin
+			// bl
+		end
+		5'b10011:begin
+			// ret
+		end
+		5'b10100:begin
+			// lk
+			ex_select_input = 1;
+		end
+		5'b10101:begin
+			// wfb
+		end
+		5'b10110:begin
+			// dfb
+		end
+		5'b10111:begin
+			// ls
+		end
+		5'b11000:begin
+			// ds
+		end
+		5'b11001:begin
+			// cs
+		end
+		5'b11010:begin
+			// rs
+		end
+		5'b11011:begin
+			// sat
+		end
+		5'b11100:begin
+			// dc
+			ex_update_cc = 1;
+			ex_enable_collision = 1;
+		end
+		5'b11101:begin
+			// tim
+			ex_select_time = 1;
+		end
+		5'b11110:begin
+			// r
+			ex_select_random = 1;
+		end
+		5'b11111:begin
+			// sr
+		end
+	endcase
+end
+
+///////////////////////////////////////////////////////////////////////////////
+
+// ID/EX register
+
+logic id_ex_stall;
+reg [31:0] id_ex_reg_1, id_ex_reg_2;
+reg [31:0] id_ex_immediate;
+reg ctrl_ex_select_random;
+reg ctrl_ex_select_time;
+reg ctrl_ex_select_input;
+reg [3:0] ctrl_ex_alu_op_code;
+reg ctrl_ex_alu_use_immediate;
+reg ctrl_ex_update_cc;
+reg ctrl_ex_enable_collision;
+
+always_ff @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		id_ex_reg_1 <= 0;
+		id_ex_reg_2 <= 0;
+		id_ex_immediate <= 0;
+		ctrl_ex_select_random <= 0;
+		ctrl_ex_select_time <= 0;
+		ctrl_ex_select_input <= 0;
+		ctrl_ex_alu_op_code <= 0;
+		ctrl_ex_alu_use_immediate <= 0;
+		ctrl_ex_update_cc <= 0;
+		ctrl_ex_enable_collision <= 0;
+	end else if(~id_ex_stall) begin
+		id_ex_reg_1 <= rf_reg_1;
+		id_ex_reg_2 <= rf_reg_2;
+		id_ex_immediate <= extended_immediate;
+		ctrl_ex_select_random <= ex_select_random;
+		ctrl_ex_select_time <= ex_select_time;
+		ctrl_ex_select_input <= ex_select_input;
+		ctrl_ex_alu_op_code <= ex_alu_op_code;
+		ctrl_ex_alu_use_immediate <= ex_alu_use_immediate;
+		ctrl_ex_update_cc <= ex_update_cc;
+		ctrl_ex_enable_collision <= ex_enable_collision;
+	end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Execute
+/////////////////////////////////////////////////////////////////////////////
+
+// ALU
+
+logic [31:0] alu_operand_1, alu_operand_2;
+logic [31:0] alu_result;
+logic alu_zero, alu_sign, alu_overflow;
+
+alu alu(
+	.alu_op(ctrl_ex_alu_op_code),
+	.operand_a(alu_operand_1),
+	.operand_b(alu_operand_2),
+	.result(alu_result),
+	.zero(alu_zero),
+	.sign(alu_sign),
+	.overflow(alu_overflow)
+);
+
+
+// collision detector
+
+logic [7:0] cd_a_x, cd_a_y, cd_a_width, cd_a_height;
+logic [7:0] cd_b_x, cd_b_y, cd_b_width, cd_b_height;
+logic cd_collision;
+
+collision_detectection cd(
+	.clk(clk),
+	.rst_n(rst_n),
+	.a_x(cd_a_x),
+	.a_y(cd_a_y),
+	.a_width(cd_a_width),
+	.a_height(cd_a_height),
+	.b_x(cd_b_x),
+	.b_y(cd_b_y),
+	.b_width(cd_b_width),
+	.b_height(cd_b_height),
+	.collision(cd_collision)
+);
+
+assign cd_a_x = alu_operand_1[31:24];
+assign cd_a_y = alu_operand_1[23:16];
+assign cd_a_width = alu_operand_1[15:8];
+assign cd_a_height = alu_operand_1[7:0];
+assign cd_b_x = alu_operand_2[31:24];
+assign cd_b_y = alu_operand_2[23:16];
+assign cd_b_width = alu_operand_2[15:8];
+assign cd_b_height = alu_operand_2[7:0];
+
+reg collision_state;
+
+always_ff @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		collision_state <= 0;
+	end else if(ctrl_ex_enable_collision) begin
+		collision_state <= ~collision_state;
+	end
+end
+
+
+// user input
+
+logic [NUM_INPUT_BITS-1:0] user_input;
+
+input_buffer user_input_buffer(
+	.clk(clk),
+	.rst_n(rst_n),
+	.clear(ctrl_ex_select_input),
+	.up(user_input[4]),
+	.right(user_input[3]),
+	.down(user_input[2]),
+	.left(user_input[1]),
+	.space(user_inpu[0])
+);
+
+
+// audio control
+
+logic set_tone;
+logic [31:0] tone;
+
+audio_controller audio(
+	.clk(clk),
+	.rst_n(rst_n),
+	.set_tone(set_tone),
+	.tone(tone)
+);
+
+
+// random number generator
+
+logic set_seed;
+logic [31:0] seed;
+logic [31:0] random;
+
+random randy(
+	.clk(clk),
+	.rst_n(rst_n),
+	.set_seed(set_seed),
+	.seed(seed),
+	.random(random)
+);
+
+
+// system time
+
+logic [31:0] time_ms;
+
+system_time timer(
+	.clk(clk),
+	.rst_n(rst_n),
+	.ms(time_ms)
+);
+
+
+// control
+
+logic [31:0] ex_result;
+
+assign ex_result =
+	ctrl_ex_select_random ? random :
+	ctrl_ex_select_input ? time_ms :
+	ctrl_ex_select_input ? {(32-NUM_INPUT_BITS){0}, user_input} :
+	alu_result;
+
+assign alu_operand_1 =
+	ex_mem_fw_ex_enable_op_1 ? ex_mem_fw_ex :
+	mem_wb_fw_ex_enable_op_1 ? mem_wb_fw_ex :
+	id_ex_reg_1;
+
+assign alu_operand_2 =
+	ctrl_ex_alu_use_immediate ? id_ex_immediate :
+	ex_mem_fw_ex_enable_op_2 ? ex_mem_fw_ex :
+	mem_wb_fw_ex_enable_op_2 ? mem_wb_fw_ex :
+	id_ex_reg_2;
+
+assign ex_stall_request = collision_state == 1;
+
+assign cc_update =
+	ctrl_ex_update_cc && (ctrl_ex_enable_collision ^~ collision_state) && ~id_ex_stall
+
+assign cc_next_zero = ctrl_ex_enable_collision ? cd_collision : alu_zero;
+assign cc_next_sign = ctrl_ex_enable_collision ? 0 : alu_sign;
+assign cc_next_overflow = ctrl_ex_enable_collision ? 0 : alu_overflow;
+
+///////////////////////////////////////////////////////////////////////////////
+
+// EX/MEM register
+
+logic ex_mem_stall;
+reg [31:0] ex_mem_result;
+
+always_ff @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		ex_mem_result <= 0;
+	end else if(~ex_mem_stall) begin
+		ex_mem_result <= ex_result;
+	end
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Memory
+/////////////////////////////////////////////////////////////////////////////
+
+// data memory
+
+logic 
+
+memory data_memory(
+	.clk(clk),
+	.rst_n(rst_n),
+	.address(pc),
+	.data(instruction),
+	.stall()
+);
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+// MEM/WB register
+
+logic mem_wb_stall;
+
+///////////////////////////////////////////////////////////////////////////////
+// Write Back
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+// forwarding logic
+
+assign ex_mem_fw_ex = ex_mem_result;
+
+endmodule

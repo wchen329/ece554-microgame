@@ -63,8 +63,22 @@ namespace asmrunner
 		else if("sw" == args[0]) { current_op = SW; }
 		else if("lwo" == args[0]) { current_op = LWO; }
 		else if("swo" == args[0]) { current_op = SWO; }
-		else if("b" == args[0]) { current_op = B; }
-		else if("jl" == args[0]) { current_op = JL; }
+		else if("bne" == args[0]) { current_op = B; cc = CCNE; }
+		else if("beq" == args[0]) { current_op = B; cc = CCEQ; }
+		else if("bgt" == args[0]) { current_op = B; cc = CCGT; }
+		else if("blt" == args[0]) { current_op = B; cc = CCLT; }
+		else if("bgte" == args[0]) { current_op = B; cc = CCGTE; }
+		else if("blte" == args[0]) { current_op = B; cc = CCLTE; }
+		else if("bov" == args[0]) { current_op = B; cc = CCOFLOW; }
+		else if("b" == args[0]) { current_op = B; cc = CCUNCOND; }
+		else if("blne" == args[0]) { current_op = JL; cc = CCNE; }
+		else if("bleq" == args[0]) { current_op = JL; cc = CCEQ; }
+		else if("blgt" == args[0]) { current_op = JL; cc = CCGT; }
+		else if("bllt" == args[0]) { current_op = JL; cc = CCLT; }
+		else if("bgte" == args[0]) { current_op = JL; cc = CCGTE; }
+		else if("blte" == args[0]) { current_op = JL; cc = CCLTE; }
+		else if("blov" == args[0]) { current_op = JL; cc = CCOFLOW; }
+		else if("bl" == args[0]) { current_op = JL; cc = CCUNCOND; }
 		else if("ret" == args[0]) { current_op = RET; }
 		else if("wfb" == args[0]) { current_op = WFB; }
 		else if("dfb" == args[0]) { current_op = DFB; }

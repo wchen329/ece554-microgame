@@ -189,6 +189,18 @@ namespace asmrunner
 			static const unsigned PC_BIT_WIDTH = 32;
 			static const unsigned UNIVERSAL_REG_BW = 32;
 	};
+
+	enum CondCondes
+	{
+		CCNE = 0,
+		CCEQ = 1,
+		CCGT = 2,
+		CCLT = 3,
+		CCGTE = 4,
+		CCLTE = 5,
+		CCOFLOW = 6,
+		CCUNCOND = 7
+	};
 }
 
 #endif

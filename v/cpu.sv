@@ -175,6 +175,8 @@ logic ex_alu_use_immediate;
 logic ex_update_cc;
 logic ex_enable_collision;
 
+logic mem_write_memory;
+
 always_comb begin
 	id_branch = 0;
 	id_link = 0;
@@ -186,6 +188,8 @@ always_comb begin
 	ex_alu_use_immediate = 0;
 	ex_update_cc = 0;
 	ex_enable_collision = 0;
+
+	mem_write_memory = 0;
 
 	// switch on opcode
 	case(if_id_encoded_instruction[31:27])
@@ -259,6 +263,7 @@ always_comb begin
 		5'b01110:begin
 			// sw
 			id_use_destination_as_op_2 = 1;
+			mem_write_memory = 1;
 		end
 		5'b01111:begin
 			// lwo
@@ -268,6 +273,7 @@ always_comb begin
 			// swo
 			ex_alu_use_immediate = 1;
 			id_use_destination_as_op_2 = 1;
+			mem_write_memory = 1;
 		end
 		5'b10001:begin
 			// b
@@ -396,6 +402,7 @@ assign rf_read_reg_2 =
 logic id_ex_stall;
 reg [31:0] id_ex_reg_1, id_ex_reg_2;
 reg [31:0] id_ex_immediate;
+
 reg ctrl_ex_select_random;
 reg ctrl_ex_select_time;
 reg ctrl_ex_select_input;
@@ -404,11 +411,14 @@ reg ctrl_ex_alu_use_immediate;
 reg ctrl_ex_update_cc;
 reg ctrl_ex_enable_collision;
 
+reg ctrl_mem_ex_write_memory;
+
 always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		id_ex_reg_1 <= 0;
 		id_ex_reg_2 <= 0;
 		id_ex_immediate <= 0;
+
 		ctrl_ex_select_random <= 0;
 		ctrl_ex_select_time <= 0;
 		ctrl_ex_select_input <= 0;
@@ -416,10 +426,13 @@ always_ff @(posedge clk or negedge rst_n) begin
 		ctrl_ex_alu_use_immediate <= 0;
 		ctrl_ex_update_cc <= 0;
 		ctrl_ex_enable_collision <= 0;
+
+		ctrl_mem_ex_write_memory <= 0;
 	end else if(~id_ex_stall) begin
 		id_ex_reg_1 <= rf_reg_1;
 		id_ex_reg_2 <= rf_reg_2;
 		id_ex_immediate <= extended_immediate;
+
 		ctrl_ex_select_random <= ex_select_random;
 		ctrl_ex_select_time <= ex_select_time;
 		ctrl_ex_select_input <= ex_select_input;
@@ -427,6 +440,8 @@ always_ff @(posedge clk or negedge rst_n) begin
 		ctrl_ex_alu_use_immediate <= ex_alu_use_immediate;
 		ctrl_ex_update_cc <= ex_update_cc;
 		ctrl_ex_enable_collision <= ex_enable_collision;
+
+		ctrl_mem_ex_write_memory <= mem_write_memory;
 	end
 end
 
@@ -567,7 +582,7 @@ assign alu_operand_2 =
 	mem_wb_fw_ex_enable_op_2 ? mem_wb_fw_ex :
 	id_ex_reg_2;
 
-assign ex_stall_request = collision_state == 1;
+assign ex_stall_request = collision_state;
 
 assign cc_update =
 	ctrl_ex_update_cc && (ctrl_ex_enable_collision ^~ collision_state) && ~id_ex_stall;
@@ -584,13 +599,19 @@ logic ex_mem_stall;
 reg [31:0] ex_mem_result;
 reg [31:0] ex_mem_store_source;
 
+reg ctrl_mem_write_memory;
+
 always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		ex_mem_result <= 0;
 		ex_mem_store_source <= 0;
+
+		ctrl_mem_write_memory <= 0;
 	end else if(~ex_mem_stall) begin
 		ex_mem_result <= ex_result;
 		ex_mem_store_source <= id_ex_reg_2;
+
+		ctrl_mem_write_memory <= ctrl_mem_ex_write_memory;
 	end
 end
 
@@ -601,6 +622,7 @@ end
 // data memory
 
 logic [USER_ADDRESS_WIDTH-1:0] user_memory_address;
+logic [31:0] user_memory_data;
 
 assign user_memory_address = ex_mem_result[USER_ADDRESS_WIDTH-1:0];
 
@@ -609,9 +631,9 @@ memory data_memory(
 	.rst_n(rst_n),
 	.address(ex_mem_result),
 	.data_in(ex_mem_store_source),
-	.write(),
-	.data_out(),
-	.stall()
+	.write(ctrl_mem_write_memory),
+	.data_out(user_memory_data),
+	.stall(mem_stall_request)
 );
 
 

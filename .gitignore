@@ -16,6 +16,7 @@ mgs
 **/*.mti
 **/*.mpf
 **/transcript
+**/*.wlf
 
 # ignore nfs files
 **/.nfs*

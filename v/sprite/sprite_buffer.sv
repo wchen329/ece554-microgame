@@ -3,7 +3,6 @@
 /**
  * Buffer to store sprite image
  * Handles reading out in correct orientation
- * TODO: make sure r/w state logic works (otherwise need to change front end)
  *
  * UP:          RIGHT:
  * r 0 -> 8     c 0 -> 8
@@ -35,27 +34,35 @@ logic [1:0] ori;
 logic [0:63] [23:0] buffer;
 logic [5:0] buffer_ptr, sprite_px_ptr;
 logic [2:0] a, b;
-logic signed [1:0] a_inc, b_inc;
 
 typedef enum logic [1:0] { IDLE, WRITE, READ } state_t;
 state_t state, next_state;
 
-assign a_inc = (ori == `UP || `RIGHT) ? 1 : -1;
-assign b_inc = (ori == `UP || `LEFT) ? 1 : -1;
-assign sprite_px_ptr = (ori == `UP || `DOWN) ? (a << 3) + b : (b << 3) + a;
+// pixel = row * 8 + col
+assign sprite_px_ptr = (ori == `UP || ori == `DOWN) ? { a, b } : { b, a };
+assign {o_r, o_g, o_b} = buffer[sprite_px_ptr];
 
 // read ori logic
 always_ff @(posedge clk)
 	if(state == READ) begin
-		b = b + b_inc;
-		if(buffer_ptr[2:0] == 'd7)
-			a = a + a_inc;
+		// inc b
+		if(ori == `UP || ori == `LEFT)
+			b = b + 1;
+		else
+			b = b - 1;
+		if(buffer_ptr[2:0] == 'd7) begin
+			// inc a
+			if(ori == `UP || ori == `RIGHT)
+				a = a + 1;
+			else
+				a = a - 1;
+		end
 	end else
 		case(ori)
 			`UP:    { a, b } <= 0;
-			`RIGHT: { a, b } <= { 8'd0, 8'd7 };
-			`DOWN:  { a, b } <= { 8'd7, 8'd7 };
-			`LEFT:  { a, b } <= { 8'd7, 8'd0 };
+			`RIGHT: { a, b } <= { 3'd0, 3'd7 };
+			`DOWN:  { a, b } <= { 3'd7, 3'd7 };
+			`LEFT:  { a, b } <= { 3'd7, 3'd0 };
 		endcase
 
 // orientation flop
@@ -77,13 +84,6 @@ always_ff @(posedge clk)
 	if(state == WRITE)
 		buffer[buffer_ptr] <= { i_r, i_g, i_b };
 
-// buffer reading
-always_ff @(posedge clk, negedge rst_n)
-	if(!rst_n)
-		{ o_r, o_g, o_b } <= 0;
-	else if(state == READ)
-		{o_r, o_g, o_b} <= buffer[sprite_px_ptr];
-
 // state machine
 always_ff @(posedge clk, negedge rst_n)
 	if(!rst_n)
@@ -92,14 +92,14 @@ always_ff @(posedge clk, negedge rst_n)
 		state <= next_state;
 
 always_comb begin
-	next_state <= IDLE;
+	next_state = IDLE;
 
 	case(state)
 		IDLE:
 			if(write)
-				next_state <= WRITE;
+				next_state = WRITE;
 			else if(read)
-				next_state <= READ;
+				next_state = READ;
 		WRITE:
 			if(buffer_ptr != 63)
 				next_state = WRITE;

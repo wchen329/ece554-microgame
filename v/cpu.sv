@@ -146,6 +146,8 @@ logic [31:0] rf_reg1_data;
 logic [31:0] rf_reg2_data;
 logic [4:0] rf_write_address;
 logic [31:0] rf_write_data;
+logic rf_write_lower;
+logic rf_write_upper;
 logic rf_write;
 
 reg [32][31:0] rf;
@@ -157,9 +159,15 @@ always_ff @(posedge clk or negedge rst_n) begin
 			rf[itter_rf_i] <= 0;
 		end
 	end else if(rf_write) begin
+		// zero register is tied to zero
 		if(rf_write_address != 5'b00000) begin
-			// zero register is tied to zero
-			rf[rf_write_address] <= rf_write_data;
+			if(rf_write_lower) begin
+				rf[rf_write_address][15:0] <= rf_write_data[15:0];
+			end else if(rf_write_upper) begin
+				rf[rf_write_address][31:16] <= rf_write_data[15:0];
+			end else begin
+				rf[rf_write_address] <= rf_write_data;
+			end
 		end
 	end
 end
@@ -184,6 +192,7 @@ typedef struct packed {
 	logic select_time,
 	logic select_input,
 	logic select_collision,
+	logic select_immediate,
 	logic [3:0] alu_op,
 	logic alu_use_immediate,
 	logic update_conditionals
@@ -192,14 +201,17 @@ typedef struct packed {
 ex_control_t init_ex_control;
 
 typedef struct packed {
-	logic write_memory
+	logic write_memory,
+	logic use_memory_result
 } mem_control_t;
 
 mem_control_t init_mem_control;
 
 typedef struct packed {
 	logic [4:0] dest_reg,
-	logic write_reg
+	logic write_reg,
+	logic write_lower,
+	logic write_upper
 } wb_control_t;
 
 wb_control_t init_wb_control;
@@ -311,14 +323,20 @@ always_comb begin
 		end
 		5'b01011:begin
 			// lli
-			init_wb_control.write_reg = 1;
+			init_ex_control.select_immediate = 1;
+
+			init_wb_control.write_lower = 1;
 		end
 		5'b01100:begin
 			// lui
-			init_wb_control.write_reg = 1;
+			init_ex_control.select_immediate = 1;
+
+			init_wb_control.write_upper = 1;
 		end
 		5'b01101:begin
 			// lw
+			init_mem_control.use_memory_result = 1;
+
 			init_wb_control.write_reg = 1;
 		end
 		5'b01110:begin
@@ -330,6 +348,8 @@ always_comb begin
 		5'b01111:begin
 			// lwo
 			init_ex_control.alu_use_immediate = 1;
+
+			init_mem_control.use_memory_result = 1;
 
 			init_wb_control.write_reg = 1;
 		end
@@ -490,7 +510,7 @@ reg [31:0] idex_op2;
 reg [31:0] idex_immediate;
 reg idex_is_no_op;
 
-reg [$bits(ex_control_t)-1:0] ex_control;
+reg [$bits(ex_control_t)-1:0] idex_ex_control;
 reg [$bits(mem_control_t)-1:0] idex_mem_control;
 reg [$bits(wb_control_t)-1:0] ides_wb_control;
 
@@ -501,7 +521,7 @@ always_ff @(posedge clk or negedge rst_n) begin
 		idex_immediate <= 0;
 		idex_is_no_op <= 1;
 
-		ex_control <= 0;
+		idex_ex_control <= 0;
 		idex_mem_control <= 0;
 		idex_wb_control <= 0;
 	end else if(~idex_stall && (ifid_is_no_op || ifid_stall)) begin
@@ -510,7 +530,7 @@ always_ff @(posedge clk or negedge rst_n) begin
 		idex_immediate <= 0;
 		idex_is_no_op <= 1;
 
-		ex_control <= 0;
+		idex_ex_control <= 0;
 		idex_mem_control <= 0;
 		idex_wb_control <= 0;
 	end else if(~idex_stall) begin
@@ -519,7 +539,7 @@ always_ff @(posedge clk or negedge rst_n) begin
 		idex_immediate <= immediate;
 		idex_is_no_op <= 0;
 
-		ex_control <= init_ex_control;
+		idex_ex_control <= init_ex_control;
 		idex_mem_control <= init_mem_control;
 		idex_wb_control <= init_wb_control;
 	end
@@ -529,6 +549,11 @@ end
 ///////////////////////////////////////////////////////////////////////////////
 // Execute
 /////////////////////////////////////////////////////////////////////////////
+
+
+ex_control_t ex_control;
+
+assign ex_control = idex_ex_control;
 
 
 // ALU
@@ -659,10 +684,11 @@ system_time timer(
 
 logic [31:0] execute_result;
 
-assign ex_result =
+assign execute_result =
 	ex_control.select_random ? random :
 	ex_control.select_time ? time_ms :
-	ctrl_ex_select_input ? {(32-NUM_INPUT_BITS){0}, user_input} :
+	ex_control.select_input ? {(32-NUM_INPUT_BITS){0}, user_input} :
+	ex_control.select_immediate ? idex_immediate :
 	alu_result;
 
 assign ex_stall_request = ~collision_state && ex_control.select_collision;
@@ -685,7 +711,7 @@ reg [31:0] exmem_result;
 reg [31:0] exmem_store_data;
 reg exmem_is_no_op;
 
-reg [$bits(mem_control_t)-1:0] mem_control;
+reg [$bits(mem_control_t)-1:0] exmem_mem_control;
 reg [$bits(wb_control_t)-1:0] exmem_wb_control;
 
 always_ff @(posedge clk or negedge rst_n) begin
@@ -694,20 +720,20 @@ always_ff @(posedge clk or negedge rst_n) begin
 		exmem_store_data <= 0;
 		exmem_is_no_op <= 1;
 
-		mem_control <= 0;
+		exmem_mem_control <= 0;
 		exmem_wb_control <= 0;
 	end else if(~exmem_stall && (idex_is_no_op || idex_stall)) begin
 		exmem_result <= 0;
 		exmem_store_data <= 0;
 		exmem_is_no_op <= 1;
 
-		mem_control <= 0;
+		exmem_mem_control <= 0;
 		exmem_wb_control <= 0;
 	end else if(~exmem_stall) begin
 		exmem_result <= execute_result;
 		exmem_store_data <= idex_op2;
 
-		mem_control <= idex_mem_control;
+		exmem_mem_control <= idex_mem_control;
 		exmem_wb_control <= idex_wb_control;
 	end
 end
@@ -716,6 +742,11 @@ end
 ///////////////////////////////////////////////////////////////////////////////
 // Memory
 /////////////////////////////////////////////////////////////////////////////
+
+
+mem_control_t mem_control;
+
+assign mem_control = exmem_mem_control;
 
 
 // data memory
@@ -745,7 +776,9 @@ memory data_memory(
 
 logic memory_result;
 
-assign memory_result = user_memory_data_out;
+assign memory_result =
+	mem_control.use_memory_result ? user_memory_data_out :
+	exmem_result;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -753,27 +786,27 @@ assign memory_result = user_memory_data_out;
 
 // MEM/WB register
 
-reg [31:0] memwb_memory_result;
+reg [31:0] memwb_result;
 reg memwb_is_no_op;
 
-reg [$bits(wb_control_t)-1:0] wb_control;
+reg [$bits(wb_control_t)-1:0] memwb_wb_control;
 
 always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
-		memwb_memory_result <= 0;
+		memwb_result <= 0;
 		memwb_is_no_op <= 1;
 
-		wb_control <= 0;
+		memwb_wb_control <= 0;
 	end else if(exmem_is_no_op || exmem_stall) begin
-		memwb_memory_result <= 0;
+		memwb_result <= 0;
 		memwb_is_no_op <= 1;
 
-		wb_control <= 0;
+		memwb_wb_control <= 0;
 	end else begin
-		memwb_memory_result <= memory_result;
+		memwb_result <= memory_result;
 		memwb_is_no_op <= 0;
 
-		wb_control <= exmem_wb_control;
+		memwb_wb_control <= exmem_wb_control;
 	end
 end
 
@@ -782,6 +815,18 @@ end
 // Write Back
 /////////////////////////////////////////////////////////////////////////////
 
+
+wb_control_t wb_control;
+
+assign wb_control = memwb_wb_control;
+
+
+// register writing
+
+assign rf_write_address = wb_control.dest_reg;
+assign rf_write = wb_control.write_reg && ~memwb_is_no_op;
+assign rf_write_lower = wb_control.write_lower;
+assign rf_write_upper = wb_control.write_upper;
 
 
 ///////////////////////////////////////////////////////////////////////////////

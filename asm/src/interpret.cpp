@@ -58,12 +58,27 @@ namespace asmrunner
 		else if("sra" == args[0]) { current_op = SRA; }
 		else if("lli" == args[0]) { current_op = LLI; }
 		else if("lui" == args[0]) { current_op = LUI; }
+		else if("lk" == args[0]) { current_op = LK; }
 		else if("lw" == args[0]) { current_op = LW; }
 		else if("sw" == args[0]) { current_op = SW; }
 		else if("lwo" == args[0]) { current_op = LWO; }
 		else if("swo" == args[0]) { current_op = SWO; }
-		else if("b" == args[0]) { current_op = B; }
-		else if("jl" == args[0]) { current_op = JL; }
+		else if("bne" == args[0]) { current_op = B; cc = CCNE; }
+		else if("beq" == args[0]) { current_op = B; cc = CCEQ; }
+		else if("bgt" == args[0]) { current_op = B; cc = CCGT; }
+		else if("blt" == args[0]) { current_op = B; cc = CCLT; }
+		else if("bgte" == args[0]) { current_op = B; cc = CCGTE; }
+		else if("blte" == args[0]) { current_op = B; cc = CCLTE; }
+		else if("bov" == args[0]) { current_op = B; cc = CCOFLOW; }
+		else if("b" == args[0]) { current_op = B; cc = CCUNCOND; }
+		else if("blne" == args[0]) { current_op = JL; cc = CCNE; }
+		else if("bleq" == args[0]) { current_op = JL; cc = CCEQ; }
+		else if("blgt" == args[0]) { current_op = JL; cc = CCGT; }
+		else if("bllt" == args[0]) { current_op = JL; cc = CCLT; }
+		else if("bgte" == args[0]) { current_op = JL; cc = CCGTE; }
+		else if("blte" == args[0]) { current_op = JL; cc = CCLTE; }
+		else if("blov" == args[0]) { current_op = JL; cc = CCOFLOW; }
+		else if("bl" == args[0]) { current_op = JL; cc = CCUNCOND; }
 		else if("ret" == args[0]) { current_op = RET; }
 		else if("wfb" == args[0]) { current_op = WFB; }
 		else if("dfb" == args[0]) { current_op = DFB; }
@@ -82,17 +97,20 @@ namespace asmrunner
 			throw mt_bad_mnemonic();
 		}
 
-		// Check for insufficient arguments
+		// Check for insufficient arguments TODO: simplify
 		if(args.size() >= 1)
 		{
 			if	(
-					(r_inst(current_op) && args.size() != 4) ||
+					(r_inst(current_op) && args.size() != 4 && current_op != DC) ||
 					(i_inst(current_op) && args.size() != 4 && !mem_inst(current_op)) ||
 					(i_inst(current_op) && args.size() != 3 && mem_inst(current_op)) ||
 					(j_inst(current_op) && args.size() != 2) ||
 					(m_inst(current_op) && args.size() != 3 && !(current_op == R || current_op == LK || current_op == SR || current_op == SAT)) ||
 					(m_inst(current_op) && args.size() != 2 && (current_op == R || current_op == LK || current_op == SR || current_op == SAT)) ||
-					(n_inst(current_op) && args.size() != 1)
+					(n_inst(current_op) && args.size() != 1) ||
+					((current_op == WFB || current_op == CS || current_op == LS || current_op == RS) && args.size() != 2) ||
+					((current_op == DS) && args.size() != 3) 
+					
 				)
 			{
 				throw priscas::mt_asm_bad_arg_count();
@@ -126,6 +144,19 @@ namespace asmrunner
 				}
 			}
 	
+			else if(s_inst(current_op))
+			{
+				if(current_op == WFB || current_op == CS || current_op == DS)
+				{
+					rt = get_reg_num(args[1].c_str());
+				}
+
+				if(current_op == RS || current_op == LS)
+				{
+					rsprite = get_reg_num_sprite(args[2].c_str());
+				}
+			}
+
 			else
 			{
 				priscas::mt_bad_mnemonic();
@@ -187,6 +218,24 @@ namespace asmrunner
 			}
 
 			else if(j_inst(current_op)){}
+
+			else if(s_inst(current_op))
+			{
+				if(current_op == WFB || current_op == CS || current_op == DS)
+				{
+					rs = get_reg_num(args[2].c_str());
+				}
+
+				else if(current_op == LS)
+				{
+					imm = priscas::get_imm(args[1].c_str());
+				}
+
+				else if(current_op == RS)
+				{
+					cc = priscas::get_imm(args[1].c_str());
+				}
+			}
 		}
 
 		if(args.size() > 3)
@@ -212,6 +261,11 @@ namespace asmrunner
 				{
 					imm = priscas::get_imm(args[3].c_str());
 				}
+			}
+
+			else if(current_op == DS)
+			{
+				rsprite = get_reg_num_sprite(args[3].c_str());
 			}
 
 			else if(j_inst(current_op)){}

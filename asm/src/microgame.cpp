@@ -203,6 +203,7 @@ namespace asmrunner
 		return
 			operation == RET ? true :
 			operation == DFB ? true :
+			operation == NOP ? true :
 			false;
 	}
 
@@ -217,37 +218,63 @@ namespace asmrunner
 
 		if(r_inst(op))
 		{
-			w = (w.AsInt32() | ((rd & ((1 << 5) - 1) ) << 11 ));
-			w = (w.AsInt32() | ((rt & ((1 << 5) - 1) ) << 16 ));
-			w = (w.AsInt32() | ((rs & ((1 << 5) - 1) ) << 21 ));
-			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
+			w = (w.AsInt32() | ((rd & ((1 << 5) - 1) ) << 12 ));
+			w = (w.AsInt32() | ((rt & ((1 << 5) - 1) ) << 17 ));
+			w = (w.AsInt32() | ((rs & ((1 << 5) - 1) ) << 22 ));
+			w = (w.AsInt32() | ((op & ((1 << 5) - 1) ) << 27 ));
 		}
 
 		if(i_inst(op))
 		{
 			w = (w.AsInt32() | (imm & ((1 << 16) - 1)));
-			w = (w.AsInt32() | ((rt & ((1 << 5) - 1) ) << 16 ));
-			w = (w.AsInt32() | ((rs & ((1 << 5) - 1) ) << 21 ));
-			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
+			w = (w.AsInt32() | ((rt & ((1 << 5) - 1) ) << 17 ));
+			w = (w.AsInt32() | ((rs & ((1 << 5) - 1) ) << 22 ));
+			w = (w.AsInt32() | ((op & ((1 << 5) - 1) ) << 27 ));
 		}
 
 		if(b_inst(op))
 		{
 			w = (w.AsInt32() | (imm & ((1 << 16) - 1)));
-			w = (w.AsInt32() | ((cc & ((1 << 3) - 1) ) << 23 ));
-			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
+			w = (w.AsInt32() | ((cc & ((1 << 3) - 1) ) << 24 ));
+			w = (w.AsInt32() | ((op & ((1 << 5) - 1) ) << 27 ));
 		}
 
 		if(m_inst(op))
 		{
 			w = (w.AsInt32() | (imm & ((1 << 16) - 1)));
-			w = (w.AsInt32() | ((rd & ((1 << 5) - 1) ) << 21 ));
-			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
+			w = (w.AsInt32() | ((rd & ((1 << 5) - 1) ) << 22 ));
+			w = (w.AsInt32() | ((op & ((1 << 5) - 1) ) << 27 ));
 		}
 
 		if(n_inst(op))
 		{
-			w = (w.AsInt32() | ((op & ((1 << 6) - 1) ) << 26 ));
+			w = (w.AsInt32() | ((op & ((1 << 5) - 1) ) << 27 ));
+		}
+
+		/* "S Instructions"
+		 * These instructions don't really share a shared format, but for organization purposes are grouped together
+		 */	
+		if(s_inst(op))
+		{
+			w = (w.AsInt32() | ((op & ((1 << 5) - 1) ) << 27 ));
+			w = (w.AsInt32() | ((rsprite & ((1 << 3) - 1) ) << 24 ));
+
+			if(op == WFB || op == DS || op == CS)
+			{
+				w = (w.AsInt32() | ((rs & ((1 << 5) - 1) ) << 19 ));
+				w = (w.AsInt32() | ((rt & ((1 << 5) - 1) ) << 14 ));
+			}
+
+			else if(op == LS)
+			{
+				w = (w.AsInt32() | (imm & ((1 << 16) - 1)));
+			}
+
+			else if(op == RS)
+			{
+				w = (w.AsInt32() | ((rsprite & ((1 << 3) - 1) ) << 25 ));
+			}
+			
 		}
 
 		return w;

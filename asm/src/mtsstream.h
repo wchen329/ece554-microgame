@@ -21,6 +21,7 @@
 #ifndef __MTSSTREAM_H__
 #define __MTSSTREAM_H__
 #include <cstdio>
+#include <list>
 #include "primitives.h"
 
 namespace asmrunner
@@ -34,8 +35,10 @@ namespace asmrunner
 			~asm_ostream();
 		private:
 			FILE * f;
+			std::list<std::string> instl;
 			asm_ostream(asm_ostream &);
 			asm_ostream& operator=(asm_ostream &);
+			int ind;
 	};
 }
 

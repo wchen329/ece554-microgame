@@ -34,6 +34,9 @@ namespace asmrunner
 
 	// From a register specifier, i.e. %so get an integer representation
 	int get_reg_num(const char *);
+
+	// From a register specifier, i.e. %so get an integer representation sprite
+	int get_reg_num_sprite(const char *);
 	
 	// From a immediate string, get an immediate value.
 	int get_imm(const char *);

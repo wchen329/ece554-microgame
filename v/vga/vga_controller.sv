@@ -61,7 +61,17 @@ module	VGA_Controller(	//	Host Side
 					
 						rst_n,
 						//iRST_N,
-						iZOOM_MODE_SW
+						iZOOM_MODE_SW,
+						
+						x_write,
+						y_write,
+						r,
+						g,
+						b,
+						write,
+						display,
+						busy,
+						
 							);
 
 //	Horizontal Parameter	( Pixel )
@@ -85,6 +95,12 @@ parameter	Y_START		=	V_SYNC_CYC+V_SYNC_BACK;
 
 
 input data, command, consume;
+
+input 	[7:0]		x_write, y_write, r, g, b;
+input					write, display;
+
+output busy;
+
 output vga_clk;
 
 //output	reg			oRequest;
@@ -119,10 +135,19 @@ wire	[12:0]		v_mask;
 
 logic [12:0] x, y, x_index, y_index;
 
+logic [7:0] display_count;
+logic 		disp, disp_rst_n;
+logic displaying;
+
 //create Frame buffer
-logic 	[255:0][255:0][11:0]		fb_r	= '0;
-logic 	[255:0][255:0][11:0]		fb_g	= '0;
-logic 	[255:0][255:0][11:0]		fb_b 	= '0;
+logic 	[255:0][255:0][7:0]		fb_r	= '0;
+logic 	[255:0][255:0][7:0]		fb_g	= '0;
+logic 	[255:0][255:0][7:0]		fb_b 	= '0;
+
+//create display buffer
+logic 	[255:0][255:0][7:0]		db_r	= '0;
+logic 	[255:0][255:0][7:0]		db_g	= '0;
+logic 	[255:0][255:0][7:0]		db_b 	= '0;
 
 
 //============================================================
@@ -161,6 +186,11 @@ sdram_pll 			u6	(
 						);
 
 
+//============================================================
+
+
+
+
 
 
 //test values
@@ -197,16 +227,82 @@ assign x_index = x - 13'd192;
 assign y_index = y - 13'd112;
 
 //only write pixels when in 256x256 box
-assign	mVGA_R	= 	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? fb_r[x_index][y_index] 	:	0;
-assign	mVGA_G	=	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? fb_g[x_index][y_index] 	:	0;
-assign	mVGA_B	=	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? fb_b[x_index][y_index] 	:	0;
+//indexing x_index and y_index should not be a problem because they will only be read if they are within the 256x256 screen size
+assign	mVGA_R	= 	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? db_r[x_index[7:0]][y_index[7:0]] 	:	0;
+assign	mVGA_G	=	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? db_g[x_index[7:0]][y_index[7:0]] 	:	0;
+assign	mVGA_B	=	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? db_b[x_index[7:0]][y_index[7:0]] 	:	0;
 
 assign 	v_mask = 13'd0 ;//iZOOM_MODE_SW ? 13'd0 : 13'd26;
 assign	mVGA_BLANK	=	mVGA_H_SYNC & mVGA_V_SYNC;
 assign	mVGA_SYNC	=	1'b0;
 
+
 //============================================================
-			
+//		Update VGA Values
+//============================================================
+//x_write, y_write
+//r, g, b
+//write, display
+
+//this is designed with 2 frame buffers, one for updateing 
+//and one to read when displaying. to trade memory space for update speed, this could 
+//be designed with 1 frame buffer that gets read and updated between vga clk cycles. 
+
+/*
+logic start; 
+logic print;
+logic display_cycle_completed;
+
+logic disp_start;
+logic disp_end;
+
+assign disp_start = ((x_index == '0) & (y_index == '0));
+assign disp_end = ((x_index == 13'd256) & (y_index == 13'd256));
+assign start = disp & ~displaying;
+
+always @(posedge clk or negedge rst_n) begin
+
+	//goes high and stays high
+	disp <= display ? 1'b1 : disp; 
+
+	//goes high from the start to end of 256 x 256 screen
+	displaying <= disp_start ? 1'b1 
+					: disp_end ? 1'b0
+					: displaying;
+	
+	prev_displaying <= displaying;
+
+	//count number of times prev_x_index is not equal to x_index
+	
+end
+
+*/
+
+always@(posedge clk or negedge rst_n) begin
+	
+	if(~rst_n) begin
+		
+		fb_r <= '0;
+		fb_g <= '0;
+		fb_b <= '0;
+	
+	end
+	else begin
+		fb_r[x_write][y_write] <= (write) ? r : fb_r[x_write][y_write];
+		fb_g[x_write][y_write] <= (write) ? g : fb_g[x_write][y_write];
+		fb_b[x_write][y_write] <= (write) ? b : fb_b[x_write][y_write];
+	end
+	
+end
+
+
+
+
+
+//============================================================
+// 	Output to VGA
+//============================================================
+		
 always@(posedge iCLK or negedge iRST_N)
 	begin
 		if (!iRST_N)

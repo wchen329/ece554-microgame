@@ -40,16 +40,19 @@
 //   V1.0 :| Johnny FAN Peli Li:| 22/07/2010:| Initial Revision
 // --------------------------------------------------------------------
 
-module	vga_controller(	//	Host Side
-						oRequest,
+module	VGA_Controller(	//	Host Side
+						command,
+						data,
+						consume,
+						
 						//	VGA Side
-						oVGA_R,
-						oVGA_G,
-						oVGA_B,			
-						oVGA_H_SYNC,	//o_hs
-						oVGA_V_SYNC,	//o_vs
-						oVGA_SYNC,
-						oVGA_BLANK, 	//o_blanking
+						vga_r,
+						vga_g,
+						vga_b,			
+						vga_hs,	//o_hs
+						vga_vs,	//o_vs
+						vga_sync_n,
+						vga_blank_n, 	//o_blanking
 
 						//	Control Signal
 						iCLK,
@@ -76,22 +79,26 @@ parameter	V_SYNC_TOTAL=	525;
 parameter	X_START		=	H_SYNC_CYC+H_SYNC_BACK;
 parameter	Y_START		=	V_SYNC_CYC+V_SYNC_BACK;
 
-output	reg			oRequest;
+
+input data, command, consume;
+
+
+//output	reg			oRequest;
 //	VGA Side
-output	reg	[9:0]	oVGA_R;
-output	reg	[9:0]	oVGA_G;
-output	reg	[9:0]	oVGA_B;
-output	reg			oVGA_H_SYNC;
-output	reg			oVGA_V_SYNC;
-output	reg			oVGA_SYNC;
-output	reg			oVGA_BLANK;
+output	reg	[9:0]	vga_r;
+output	reg	[9:0]	vga_g;
+output	reg	[9:0]	vga_b;
+output	reg			vga_hs;
+output	reg			vga_vs;
+output	reg			vga_sync_n;
+output	reg			vga_blank_n;
 
 
 wire		[9:0]	mVGA_R;
 wire		[9:0]	mVGA_G;
 wire		[9:0]	mVGA_B;
-reg					mVGA_H_SYNC;
-reg					mVGA_V_SYNC;
+reg				mVGA_H_SYNC;
+reg				mVGA_V_SYNC;
 wire				mVGA_SYNC;
 wire				mVGA_BLANK;
 
@@ -112,6 +119,7 @@ logic [12:0] x, y, x_index, y_index;
 logic 	[255:0][255:0][11:0]		fb_r	= '0;
 logic 	[255:0][255:0][11:0]		fb_g	= '0;
 logic 	[255:0][255:0][11:0]		fb_b 	= '0;
+
 
 //============================================================
 
@@ -167,23 +175,23 @@ always@(posedge iCLK or negedge iRST_N)
 	begin
 		if (!iRST_N)
 			begin
-				oVGA_R <= 0;
-				oVGA_G <= 0;
-                oVGA_B <= 0;
-				oVGA_BLANK <= 0;
-				oVGA_SYNC <= 0;
-				oVGA_H_SYNC <= 0;
-				oVGA_V_SYNC <= 0; 
+				vga_r <= 0;
+				vga_g <= 0;
+            vga_b <= 0;
+				vga_blank_n <= 0;
+				vga_sync_n <= 0;
+				vga_hs <= 0;
+				vga_vs <= 0; 
 			end
 		else
 			begin
-				oVGA_R <= mVGA_R;
-				oVGA_G <= mVGA_G;
-                oVGA_B <= mVGA_B;
-				oVGA_BLANK <= mVGA_BLANK;
-				oVGA_SYNC <= mVGA_SYNC;
-				oVGA_H_SYNC <= mVGA_H_SYNC;
-				oVGA_V_SYNC <= mVGA_V_SYNC;				
+				vga_r <= mVGA_R;
+				vga_g <= mVGA_G;
+            vga_b <= mVGA_B;
+				vga_blank_n <= mVGA_BLANK;
+				vga_sync_n <= mVGA_SYNC;
+				vga_hs <= mVGA_H_SYNC;
+				vga_vs <= mVGA_V_SYNC;				
 			end               
 	end
 
@@ -192,15 +200,18 @@ always@(posedge iCLK or negedge iRST_N)
 //	Pixel LUT Address Generator
 always@(posedge iCLK or negedge iRST_N)
 begin
-	if(!iRST_N)
-	oRequest	<=	0;
+	if(!iRST_N)begin
+		//oRequest	<=	0;
+	end
 	else
 	begin
 		if(	H_Cont>=X_START-2 && H_Cont<X_START+H_SYNC_ACT-2 &&
-			V_Cont>=Y_START && V_Cont<Y_START+V_SYNC_ACT )
-		oRequest	<=	1;
-		else
-		oRequest	<=	0;
+			V_Cont>=Y_START && V_Cont<Y_START+V_SYNC_ACT ) begin
+		//oRequest	<=	1;
+		end
+		else begin
+		//oRequest	<=	0;
+		end
 	end
 end
 

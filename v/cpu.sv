@@ -384,12 +384,11 @@ always_comb begin
 	endcase
 end
 
-// conditional dependencies are hazard detected and stalled
-assign link = id_link && should_branch;
+assign link = id_link && should_branch && ~if_id_stall;
 assign link_address = if_id_pc + 1;
-assign branch = id_branch && should_branch;
+assign branch = id_branch && should_branch && ~if_id_stall;
 assign branch_address = if_id_pc + 1 + extended_immediate;
-assign link_return = id_return;
+assign link_return = id_return && ~if_id_stall;
 
 assign if_id_flush = branch || link_return;
 
@@ -437,11 +436,26 @@ always_ff @(posedge clk or negedge rst_n) begin
 		ctrl_ex_enable_collision <= 0;
 
 		ctrl_mem_ex_write_memory <= 0;
+	end else if(~id_ex_stall && if_id_is_no_op) begin
+		id_ex_reg_1 <= 0;
+		id_ex_reg_2 <= 0;
+		id_ex_immediate <= 0;
+		id_ex_is_no_op <= 1;
+
+		ctrl_ex_select_random <= 0;
+		ctrl_ex_select_time <= 0;
+		ctrl_ex_select_input <= 0;
+		ctrl_ex_alu_op_code <= 0;
+		ctrl_ex_alu_use_immediate <= 0;
+		ctrl_ex_update_cc <= 0;
+		ctrl_ex_enable_collision <= 0;
+
+		ctrl_mem_ex_write_memory <= 0;
 	end else if(~id_ex_stall) begin
 		id_ex_reg_1 <= rf_reg_1;
 		id_ex_reg_2 <= rf_reg_2;
 		id_ex_immediate <= extended_immediate;
-		id_ex_is_no_op <= if_id_is_no_op;
+		id_ex_is_no_op <= 0;
 
 		ctrl_ex_select_random <= ex_select_random;
 		ctrl_ex_select_time <= ex_select_time;
@@ -619,10 +633,16 @@ always_ff @(posedge clk or negedge rst_n) begin
 		ex_mem_is_no_op <= 1;
 
 		ctrl_mem_write_memory <= 0;
+	end else if(~ex_mem_stall && id_ex_is_no_op) begin
+		ex_mem_result <= 0;
+		ex_mem_store_source <= 0;
+		ex_mem_is_no_op <= 1;
+
+		ctrl_mem_write_memory <= 0;
 	end else if(~ex_mem_stall) begin
 		ex_mem_result <= ex_result;
 		ex_mem_store_source <= id_ex_reg_2;
-		ex_mem_is_no_op <= id_ex_is_no_op;
+		ex_mem_is_no_op <= 0;
 
 		ctrl_mem_write_memory <= ctrl_mem_ex_write_memory;
 	end
@@ -659,8 +679,10 @@ reg mem_wb_is_no_op;
 always @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		mem_wb_is_no_op <= 1;
+	end else if(ex_mem_is_no_op) begin
+		mem_wb_is_no_op <= 1;
 	end else begin
-		mem_wb_is_no_op <= ex_mem_is_no_op;
+		mem_wb_is_no_op <= 0;
 	end
 end
 

@@ -11,27 +11,46 @@ module cpu
 // forwarding declarations
 
 // EX to EX forwarding
-logic ex_mem_fw_ex_enable_op_1;
-logic ex_mem_fw_ex_enable_op_2;
-logic [31:0] ex_mem_fw_ex;
+logic exmem_fw_ex_enable_op1;
+logic exmem_fw_ex_enable_op2;
+logic [31:0] exmem_fw_ex;
 
 // MEM to EX forwarding
-logic mem_wb_fw_ex_enable_op_1;
-logic mem_wb_fw_ex_enable_op_2;
-logic [31:0] mem_wb_fw_ex;
+logic memwb_fw_ex_enable_op1;
+logic memwb_fw_ex_enable_op2;
+logic [31:0] memwb_fw_ex;
 
 // MEM to MEM forwarding
-logic mem_wb_fw_mem_enable;
-logic [31:0] mem_wb_fw_mem;
+logic memwb_fw_mem_enable;
+logic [31:0] memwb_fw_mem;
+
 
 // stall request declarations
+
 logic id_stall_request;
 logic ex_stall_request;
 logic mem_stall_request;
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // Instruction Fetch
 /////////////////////////////////////////////////////////////////////////////
+
+
+// linking register
+
+logic link;
+logic [INSTRUCTION_ADDRESS_WIDTH-1:0] link_address;
+reg [INSTRUCTION_ADDRESS_WIDTH-1:0] link_reg;
+
+always_ff @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		link_reg <= 0;
+	end else if(link) begin
+		link_reg <= link_address;
+	end
+end
+
 
 // program counter
 
@@ -46,8 +65,9 @@ always_ff @(posedge clk or negedge rst_n) begin
 	end else if(branch) begin
 		pc <= branch_address;
 	end else if(link_return) begin
-		pc <= linking_register;
+		pc <= link_reg;
 	end else begin
+		// instruction memory is word-addressable
 		pc <= pc + 1;
 	end
 end
@@ -65,49 +85,39 @@ memory instruction_memory(
 );
 
 
-// linking register
-
-logic link;
-logic [INSTRUCTION_ADDRESS_WIDTH-1:0] link_address;
-reg [INSTRUCTION_ADDRESS_WIDTH-1:0] linking_register;
-
-always_ff @(posedge clk or negedge rst_n) begin
-	if(~rst_n) begin
-		linking_register <= 0;
-	end else if(link) begin
-		linking_register <= next_link;
-	end
-end
-
 ///////////////////////////////////////////////////////////////////////////////
+
 
 // IF/ID register
 
-logic if_id_flush;
-logic if_id_stall;
-reg [31:0] if_id_encoded_instruction;
-reg [INSTRUCTION_ADDRESS_WIDTH-1:0] if_id_pc;
-reg if_id_is_no_op;
+logic ifid_flush;
+logic ifid_stall;
 
-always_ff @(posedge clk or negedge rst_n) begin : if_id_reg
+reg [31:0] ifid_instruction;
+reg [INSTRUCTION_ADDRESS_WIDTH-1:0] ifid_pc;
+reg ifid_is_no_op;
+
+always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
-		if_id_encoded_instruction <= 0;
-		if_id_pc <= 0;
-		if_id_is_no_op <= 1;
-	end else if(if_id_flush) begin
-		if_id_encoded_instruction <= 0;
-		if_id_pc <= 0;
-		if_id_is_no_op <= 1;
-	end else if(~if_id_stall) begin
-		if_id_encoded_instruction <= instruction;
-		if_id_pc <= pc;
-		if_id_is_no_op <= 0;
+		ifid_instruction <= 0;
+		ifid_pc <= 0;
+		ifid_pc <= 1;
+	end else if(ifid_flush) begin
+		ifid_instruction <= 0;
+		ifid_pc <= 0;
+		ifid_is_no_op <= 1;
+	end else if(~ifid_stall) begin
+		ifid_instruction <= instruction;
+		ifid_pc <= pc;
+		ifid_is_no_op <= 0;
 	end
 end
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Instruction Decode
 /////////////////////////////////////////////////////////////////////////////
+
 
 // status register
 
@@ -130,11 +140,13 @@ end
 
 // register file
 
-logic [4:0] rf_read_reg_1, rf_read_reg_2;
-logic [31:0] rf_reg_1, rf_reg_2;
+logic [4:0] rf_reg1_address;
+logic [4:0] rf_reg2_address;
+logic [31:0] rf_reg1_data;
+logic [31:0] rf_reg2_data;
+logic [4:0] rf_write_address;
+logic [31:0] rf_write_data;
 logic rf_write;
-logic [4:0] rf_write_reg;
-logic [31:0] rf_write_reg_data;
 
 reg [32][31:0] rf;
 
@@ -145,157 +157,208 @@ always_ff @(posedge clk or negedge rst_n) begin
 			rf[itter_rf_i] <= 0;
 		end
 	end else if(rf_write) begin
-		if(rf_write_reg != 5'b00000) begin
+		if(rf_write_address != 5'b00000) begin
 			// zero register is tied to zero
-			rf[rf_write_reg] <= rf_write_reg_data;
+			rf[rf_write_address] <= rf_write_data;
 		end
 	end
 end
 
-assign rf_reg_1 = rf[rf_read_reg_1];
-assign rf_reg_2 = rf[rf_read_reg_2];
+assign rf_reg1_data = rf[rf_reg1_address];
+assign rf_reg2_data = rf[rf_reg2_address];
 
 
-// sign extension for immediate
+// control signals for all stages here and beyond
 
-logic [15:0] immediate;
-logic [31:0] extended_immediate;
+typedef struct packed {
+	logic branch,
+	logic link,
+	logic link_return,
+	logic use_dest_as_op2
+} id_control_t;
 
-assign immediate = if_id_encoded_instruction[15:0];
-assign extended_immediate = {16{immediate[15]}, immediate};
+id_control_t id_control;
+
+typedef struct packed {
+	logic select_random,
+	logic select_time,
+	logic select_input,
+	logic select_collision,
+	logic [3:0] alu_op,
+	logic alu_use_immediate,
+	logic update_conditionals
+} ex_control_t;
+
+ex_control_t init_ex_control;
+
+typedef struct packed {
+	logic write_memory
+} mem_control_t;
+
+mem_control_t init_mem_control;
+
+typedef struct packed {
+	logic [4:0] dest_reg,
+	logic write_reg
+} wb_control_t;
+
+wb_control_t init_wb_control;
 
 
-// control
+// decode destination register from instruction
 
-logic id_branch;
-logic id_link;
-logic id_return;
-logic id_use_destination_as_op_2;
+logic [4:0] destination_reg = ifid_instruction[26:22];
 
-logic ex_select_random;
-logic ex_select_time;
-logic ex_select_input;
-logic [3:0] ex_alu_op_code;
-logic ex_alu_use_immediate;
-logic ex_update_cc;
-logic ex_enable_collision;
-
-logic mem_write_memory;
 
 always_comb begin
-	id_branch = 0;
-	id_link = 0;
-
-	ex_select_random = 0;
-	ex_select_time = 0;
-	ex_select_input = 0;
-	ex_alu_op_code = 4'b0000;
-	ex_alu_use_immediate = 0;
-	ex_update_cc = 0;
-	ex_enable_collision = 0;
-
-	mem_write_memory = 0;
+	id_control <= 0;
+	init_ex_control <= 0;
+	init_mem_control <= 0;
+	init_wb_control <= 0;
 
 	// switch on opcode
 	case(if_id_encoded_instruction[31:27])
 		5'b00000:begin
 			// add
-			ex_alu_op_code = 4'b0000;
-			ex_update_cc = 1;
+			init_ex_control.alu_op = 4'b0000;
+			init_ex_control.update_conditionals = 1;
+
+			init_wb_control.dest_reg = destination_reg;
+			init_wb_control.write_reg = 1;
 		end
 		5'b00001:begin
 			// addi
-			ex_alu_op_code = 4'b0001;
-			ex_alu_use_immediate = 1;
-			ex_update_cc = 1;
+			init_ex_control.alu_op = 4'b0001;
+			init_ex_control.update_conditionals = 1;
+			init_ex_control.alu_use_immediate = 1;
+			
+			init_wb_control.dest_reg = destination_reg;
+			init_wb_control.write_reg = 1;
 		end
 		5'b00010:begin
 			// sub
-			ex_alu_op_code = 4'b0010;
-			ex_update_cc = 1;
+			init_ex_control.alu_op = 4'b0010;
+			init_ex_control.update_conditionals = 1;
+			
+			init_wb_control.dest_reg = destination_reg;
+			init_wb_control.write_reg = 1;
 		end
 		5'b00011:begin
 			// and
-			ex_alu_op_code = 4'b0011;
-			ex_update_cc = 1;
+			init_ex_control.alu_op = 4'b0011;
+			init_ex_control.update_conditionals = 1;
+			
+			init_wb_control.dest_reg = destination_reg;
+			init_wb_control.write_reg = 1;
 		end
 		5'b00100:begin
 			// andi
-			ex_alu_op_code = 4'b0100;
-			ex_alu_use_immediate = 1;
-			ex_update_cc = 1;
+			init_ex_control.alu_op = 4'b0100;
+			init_ex_control.update_conditionals = 1;
+			init_ex_control.alu_use_immediate = 1;
+			
+			init_wb_control.dest_reg = destination_reg;
+			init_wb_control.write_reg = 1;
 		end
 		5'b00101:begin
 			// or
-			ex_alu_op_code = 4'b0101;
-			ex_update_cc = 1;
+			init_ex_control.alu_op = 4'b0101;
+			init_ex_control.update_conditionals = 1;
+			
+			init_wb_control.dest_reg = destination_reg;
+			init_wb_control.write_reg = 1;
 		end
 		5'b00110:begin
 			// ori
-			ex_alu_op_code = 4'b0110;
-			ex_alu_use_immediate = 1;
-			ex_update_cc = 1;
+			init_ex_control.alu_op = 4'b0110;
+			init_ex_control.update_conditionals = 1;
+			init_ex_control.alu_use_immediate = 1;
+			
+			init_wb_control.dest_reg = destination_reg;
+			init_wb_control.write_reg = 1;
 		end
 		5'b00111:begin
 			// xor
-			ex_alu_op_code = 4'b0111;
-			ex_update_cc = 1;
+			init_ex_control.alu_op = 4'b0111;
+			init_ex_control.update_conditionals = 1;
+			
+			init_wb_control.dest_reg = destination_reg;
+			init_wb_control.write_reg = 1;
 		end
 		5'b01000:begin
 			// sll
-			ex_alu_op_code = 4'b1000;
-			ex_update_cc = 1;
+			init_ex_control.alu_op = 4'b1000;
+			init_ex_control.update_conditionals = 1;
+			
+			init_wb_control.dest_reg = destination_reg;
+			init_wb_control.write_reg = 1;
 		end
 		5'b01001:begin
 			// srl
-			ex_alu_op_code = 4'b1001;
-			ex_update_cc = 1;
+			init_ex_control.alu_op = 4'b1001;
+			init_ex_control.update_conditionals = 1;
+			
+			init_wb_control.dest_reg = destination_reg;
+			init_wb_control.write_reg = 1;
 		end
 		5'b01010:begin
 			// sra
-			ex_alu_op_code = 4'b1010;
-			ex_update_cc = 1;
+			init_ex_control.alu_op = 4'b1010;
+			init_ex_control.update_conditionals = 1;
+			
+			init_wb_control.dest_reg = destination_reg;
+			init_wb_control.write_reg = 1;
 		end
 		5'b01011:begin
 			// lli
+			init_wb_control.write_reg = 1;
 		end
 		5'b01100:begin
 			// lui
+			init_wb_control.write_reg = 1;
 		end
 		5'b01101:begin
 			// lw
+			init_wb_control.write_reg = 1;
 		end
 		5'b01110:begin
 			// sw
-			id_use_destination_as_op_2 = 1;
-			mem_write_memory = 1;
+			id_control.use_dest_as_op2 = 1;
+
+			init_mem_control.write_memory = 1;
 		end
 		5'b01111:begin
 			// lwo
-			ex_alu_use_immediate = 1;
+			init_ex_control.alu_use_immediate = 1;
+
+			init_wb_control.write_reg = 1;
 		end
 		5'b10000:begin
 			// swo
-			ex_alu_use_immediate = 1;
-			id_use_destination_as_op_2 = 1;
-			mem_write_memory = 1;
+			id_control.use_dest_as_op2 = 1;
+
+			init_ex_control.alu_use_immediate = 1;
+
+			init_mem_control.write_memory = 1;
 		end
 		5'b10001:begin
 			// b
-			id_branch = 1;
+			id_control.branch = 1;
 		end
 		5'b10010:begin
 			// bl
-			id_branch = 1;
-			id_link = 1;
+			id_control.branch = 1;
+			id_control.link = 1;
 		end
 		5'b10011:begin
 			// ret
-			id_return = 1;
+			id_control.link_return = 1;
 		end
 		5'b10100:begin
 			// lk
-			ex_select_input = 1;
+			init_ex_control.select_input = 1;
+
+			init_wb_control.write_reg = 1;
 		end
 		5'b10101:begin
 			// wfb
@@ -320,16 +383,20 @@ always_comb begin
 		end
 		5'b11100:begin
 			// dc
-			ex_update_cc = 1;
-			ex_enable_collision = 1;
+			init_ex_control.select_collision = 1;
+			init_ex_control.update_conditionals = 1;
 		end
 		5'b11101:begin
 			// tim
-			ex_select_time = 1;
+			init_ex_control.select_time = 1;
+
+			init_wb_control.write_reg = 1;
 		end
 		5'b11110:begin
 			// r
-			ex_select_random = 1;
+			init_ex_control.select_random = 1;
+
+			init_wb_control.write_reg = 1;
 		end
 		5'b11111:begin
 			// sr
@@ -338,12 +405,13 @@ always_comb begin
 end
 
 
-// branch checking logic
+// branch logic
 
 logic [2:0] branch_case;
-logic should_branch;
 
 assign branch_case = if_id_encoded_instruction[26:24];
+
+logic should_branch;
 
 always_comb begin
 	should_branch = 0;
@@ -384,110 +452,111 @@ always_comb begin
 	endcase
 end
 
-assign link = id_link && should_branch && ~if_id_stall;
-assign link_address = if_id_pc + 1;
-assign branch = id_branch && should_branch && ~if_id_stall;
-assign branch_address = if_id_pc + 1 + extended_immediate;
-assign link_return = id_return && ~if_id_stall;
-
-assign if_id_flush = branch || link_return;
-
 
 // operand locations
 
-assign rf_read_reg_1 =
-	if_id_encoded_instruction[21:17];
-assign rf_read_reg_2 =
-	id_use_destination_as_op_2 ? if_id_encoded_instruction[26:22] :
-	if_id_encoded_instruction[16:12];
+logic [31:0] op1, op2;
+
+assign op1 = ifid_instruction[21:17];
+assign op2 = id_control.use_dest_as_op2 ? ifid_instruction[26:22] : ifid_instruction[16:12];
+
+
+// immediate
+
+logic [31:0] immediate;
+
+assign immediate = {16{ifid_instruction[15]}, ifid_instruction[15:0]};
+
+
+// branching control
+
+assign link           = id_control.link && should_branch && ~ifid_stall;
+assign link_address   = ifid_pc + 1;
+assign branch         = id_control.branch && should_branch && ~ifid_stall;
+assign branch_address = ifid_pc + 1 + immediate;
+assign link_return    = id_control.link_return && ~ifid_stall;
+assign ifid_flush     = branch || link_return;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 
+
 // ID/EX register
 
-logic id_ex_stall;
-reg [31:0] id_ex_reg_1, id_ex_reg_2;
-reg [31:0] id_ex_immediate;
-reg id_ex_is_no_op;
+logic idex_stall;
 
-reg ctrl_ex_select_random;
-reg ctrl_ex_select_time;
-reg ctrl_ex_select_input;
-reg [3:0] ctrl_ex_alu_op_code;
-reg ctrl_ex_alu_use_immediate;
-reg ctrl_ex_update_cc;
-reg ctrl_ex_enable_collision;
+reg [31:0] idex_op1;
+reg [31:0] idex_op2;
+reg [31:0] idex_immediate;
+reg idex_is_no_op;
 
-reg ctrl_mem_ex_write_memory;
+reg [$bits(ex_control_t)-1:0] ex_control;
+reg [$bits(mem_control_t)-1:0] idex_mem_control;
+reg [$bits(wb_control_t)-1:0] ides_wb_control;
 
 always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
-		id_ex_reg_1 <= 0;
-		id_ex_reg_2 <= 0;
-		id_ex_immediate <= 0;
-		id_ex_is_no_op <= 1;
+		idex_op1 <= 0;
+		idex_op2 <= 0;
+		idex_immediate <= 0;
+		idex_is_no_op <= 1;
 
-		ctrl_ex_select_random <= 0;
-		ctrl_ex_select_time <= 0;
-		ctrl_ex_select_input <= 0;
-		ctrl_ex_alu_op_code <= 0;
-		ctrl_ex_alu_use_immediate <= 0;
-		ctrl_ex_update_cc <= 0;
-		ctrl_ex_enable_collision <= 0;
+		ex_control <= 0;
+		idex_mem_control <= 0;
+		idex_wb_control <= 0;
+	end else if(~idex_stall && (ifid_is_no_op || ifid_stall)) begin
+		idex_op1 <= 0;
+		idex_op2 <= 0;
+		idex_immediate <= 0;
+		idex_is_no_op <= 1;
 
-		ctrl_mem_ex_write_memory <= 0;
-	end else if(~id_ex_stall && if_id_is_no_op) begin
-		id_ex_reg_1 <= 0;
-		id_ex_reg_2 <= 0;
-		id_ex_immediate <= 0;
-		id_ex_is_no_op <= 1;
+		ex_control <= 0;
+		idex_mem_control <= 0;
+		idex_wb_control <= 0;
+	end else if(~idex_stall) begin
+		idex_op1 <= op1;
+		idex_op2 <= op2;
+		idex_immediate <= immediate;
+		idex_is_no_op <= 0;
 
-		ctrl_ex_select_random <= 0;
-		ctrl_ex_select_time <= 0;
-		ctrl_ex_select_input <= 0;
-		ctrl_ex_alu_op_code <= 0;
-		ctrl_ex_alu_use_immediate <= 0;
-		ctrl_ex_update_cc <= 0;
-		ctrl_ex_enable_collision <= 0;
-
-		ctrl_mem_ex_write_memory <= 0;
-	end else if(~id_ex_stall) begin
-		id_ex_reg_1 <= rf_reg_1;
-		id_ex_reg_2 <= rf_reg_2;
-		id_ex_immediate <= extended_immediate;
-		id_ex_is_no_op <= 0;
-
-		ctrl_ex_select_random <= ex_select_random;
-		ctrl_ex_select_time <= ex_select_time;
-		ctrl_ex_select_input <= ex_select_input;
-		ctrl_ex_alu_op_code <= ex_alu_op_code;
-		ctrl_ex_alu_use_immediate <= ex_alu_use_immediate;
-		ctrl_ex_update_cc <= ex_update_cc;
-		ctrl_ex_enable_collision <= ex_enable_collision;
-
-		ctrl_mem_ex_write_memory <= mem_write_memory;
+		ex_control <= init_ex_control;
+		idex_mem_control <= init_mem_control;
+		idex_wb_control <= init_wb_control;
 	end
 end
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Execute
 /////////////////////////////////////////////////////////////////////////////
 
+
 // ALU
 
-logic [31:0] alu_operand_1, alu_operand_2;
+logic [31:0] alu_op1, alu_op2;
 logic [31:0] alu_result;
 logic alu_zero, alu_sign, alu_overflow;
 
 alu alu(
 	.alu_op(ctrl_ex_alu_op_code),
-	.operand_a(alu_operand_1),
-	.operand_b(alu_operand_2),
+	.operand_a(alu_op1),
+	.operand_b(alu_op2),
 	.result(alu_result),
 	.zero(alu_zero),
 	.sign(alu_sign),
 	.overflow(alu_overflow)
 );
+
+assign alu_op1 =
+	exmem_fw_ex_enable_op1 ? exmem_fw_ex :
+	memwb_fw_ex_enable_op1 ? memwb_fw_ex :
+	idex_op1;
+
+assign alu_op2 =
+	ex_control.alu_use_immediate ? idex_immediate :
+	exmem_fw_ex_enable_op2 ? exmem_fw_ex :
+	memwb_fw_ex_enable_op2 ? memwb_fw_ex :
+	idex_op2;
 
 
 // collision detector
@@ -510,21 +579,22 @@ collision_detectection cd(
 	.collision(cd_collision)
 );
 
-assign cd_a_x = alu_operand_1[31:24];
-assign cd_a_y = alu_operand_1[23:16];
-assign cd_a_width = alu_operand_1[15:8];
-assign cd_a_height = alu_operand_1[7:0];
-assign cd_b_x = alu_operand_2[31:24];
-assign cd_b_y = alu_operand_2[23:16];
-assign cd_b_width = alu_operand_2[15:8];
-assign cd_b_height = alu_operand_2[7:0];
+// we use alu op instead of raw register as forwarding applies here too
+assign cd_a_x = alu_op1[31:24];
+assign cd_a_y = alu_op1[23:16];
+assign cd_a_width = alu_op1[15:8];
+assign cd_a_height = alu_op1[7:0];
+assign cd_b_x = alu_op2[31:24];
+assign cd_b_y = alu_op2[23:16];
+assign cd_b_width = alu_op2[15:8];
+assign cd_b_height = alu_op2[7:0];
 
 reg collision_state;
 
 always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		collision_state <= 0;
-	end else if(ctrl_ex_enable_collision) begin
+	end else if(ex_control.select_collision) begin
 		collision_state <= ~collision_state;
 	end
 end
@@ -587,104 +657,126 @@ system_time timer(
 
 // control
 
-logic [31:0] ex_result;
+logic [31:0] execute_result;
 
 assign ex_result =
-	ctrl_ex_select_random ? random :
-	ctrl_ex_select_input ? time_ms :
+	ex_control.select_random ? random :
+	ex_control.select_time ? time_ms :
 	ctrl_ex_select_input ? {(32-NUM_INPUT_BITS){0}, user_input} :
 	alu_result;
 
-assign alu_operand_1 =
-	ex_mem_fw_ex_enable_op_1 ? ex_mem_fw_ex :
-	mem_wb_fw_ex_enable_op_1 ? mem_wb_fw_ex :
-	id_ex_reg_1;
+assign ex_stall_request = ~collision_state && ex_control.select_collision;
 
-assign alu_operand_2 =
-	ctrl_ex_alu_use_immediate ? id_ex_immediate :
-	ex_mem_fw_ex_enable_op_2 ? ex_mem_fw_ex :
-	mem_wb_fw_ex_enable_op_2 ? mem_wb_fw_ex :
-	id_ex_reg_2;
-
-assign ex_stall_request = collision_state;
-
-assign cc_update =
-	ctrl_ex_update_cc && (ctrl_ex_enable_collision ^~ collision_state) && ~id_ex_stall && ~id_ex_is_no_op;
+assign cc_update = ex_control.update_conditionals && (ex_control.select_collision ^~ collision_state) && ~idex_stall && ~idex_is_no_op;
 
 assign cc_next_zero = ctrl_ex_enable_collision ? cd_collision : alu_zero;
 assign cc_next_sign = ctrl_ex_enable_collision ? 0 : alu_sign;
 assign cc_next_overflow = ctrl_ex_enable_collision ? 0 : alu_overflow;
 
+
 ///////////////////////////////////////////////////////////////////////////////
+
 
 // EX/MEM register
 
-logic ex_mem_stall;
-reg [31:0] ex_mem_result;
-reg [31:0] ex_mem_store_source;
-reg ex_mem_is_no_op;
+logic exmem_stall;
 
-reg ctrl_mem_write_memory;
+reg [31:0] exmem_result;
+reg [31:0] exmem_store_data;
+reg exmem_is_no_op;
+
+reg [$bits(mem_control_t)-1:0] mem_control;
+reg [$bits(wb_control_t)-1:0] exmem_wb_control;
 
 always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
-		ex_mem_result <= 0;
-		ex_mem_store_source <= 0;
-		ex_mem_is_no_op <= 1;
+		exmem_result <= 0;
+		exmem_store_data <= 0;
+		exmem_is_no_op <= 1;
 
-		ctrl_mem_write_memory <= 0;
-	end else if(~ex_mem_stall && id_ex_is_no_op) begin
-		ex_mem_result <= 0;
-		ex_mem_store_source <= 0;
-		ex_mem_is_no_op <= 1;
+		mem_control <= 0;
+		exmem_wb_control <= 0;
+	end else if(~exmem_stall && (idex_is_no_op || idex_stall)) begin
+		exmem_result <= 0;
+		exmem_store_data <= 0;
+		exmem_is_no_op <= 1;
 
-		ctrl_mem_write_memory <= 0;
-	end else if(~ex_mem_stall) begin
-		ex_mem_result <= ex_result;
-		ex_mem_store_source <= id_ex_reg_2;
-		ex_mem_is_no_op <= 0;
+		mem_control <= 0;
+		exmem_wb_control <= 0;
+	end else if(~exmem_stall) begin
+		exmem_result <= execute_result;
+		exmem_store_data <= idex_op2;
 
-		ctrl_mem_write_memory <= ctrl_mem_ex_write_memory;
+		mem_control <= idex_mem_control;
+		exmem_wb_control <= idex_wb_control;
 	end
 end
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Memory
 /////////////////////////////////////////////////////////////////////////////
 
+
 // data memory
 
 logic [USER_ADDRESS_WIDTH-1:0] user_memory_address;
-logic [31:0] user_memory_data;
+logic [31:0] user_memory_data_in;
+logic [31:0] user_memory_data_out;
 
-assign user_memory_address = ex_mem_result[USER_ADDRESS_WIDTH-1:0];
+assign user_memory_address = exmem_result[$min(USER_ADDRESS_WIDTH, 32)-1:0];
+
+assign user_memory_data_in =
+	memwb_fw_mem_enable ? memwb_fw_mem :
+	exmem_store_data;
 
 memory data_memory(
 	.clk(clk),
 	.rst_n(rst_n),
 	.address(ex_mem_result),
-	.data_in(ex_mem_store_source),
+	.data_in(user_memory_data_in),
 	.write(ctrl_mem_write_memory),
-	.data_out(user_memory_data),
+	.data_out(user_memory_data_out),
 	.stall(mem_stall_request)
 );
 
 
+// control
+
+logic memory_result;
+
+assign memory_result = user_memory_data_out;
+
+
 ///////////////////////////////////////////////////////////////////////////////
+
 
 // MEM/WB register
 
-reg mem_wb_is_no_op;
+reg [31:0] memwb_memory_result;
+reg memwb_is_no_op;
 
-always @(posedge clk or negedge rst_n) begin
+reg [$bits(wb_control_t)-1:0] wb_control;
+
+always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
-		mem_wb_is_no_op <= 1;
-	end else if(ex_mem_is_no_op) begin
-		mem_wb_is_no_op <= 1;
+		memwb_memory_result <= 0;
+		memwb_is_no_op <= 1;
+
+		wb_control <= 0;
+	end else if(exmem_is_no_op || exmem_stall) begin
+		memwb_memory_result <= 0;
+		memwb_is_no_op <= 1;
+
+		wb_control <= 0;
 	end else begin
-		mem_wb_is_no_op <= 0;
+		memwb_memory_result <= memory_result;
+		memwb_is_no_op <= 0;
+
+		wb_control <= exmem_wb_control;
 	end
 end
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Write Back
@@ -694,18 +786,19 @@ end
 
 ///////////////////////////////////////////////////////////////////////////////
 
+
 // forwarding logic
 
-assign ex_mem_fw_ex = ex_mem_result;
-assign mem_wb_fw_ex = 
-assign mem_wb_fw_mem = 
+assign exmem_fw_ex = exmem_result;
+assign memwb_fw_ex = memwb_result;
+assign memwb_fw_mem = memwb_result;
 
 
 // stalling logic
 
-assign ex_mem_stall = mem_stall_request;
-assign id_ex_stall = ex_stall_request || (mem_stall_request && ~id_ex_is_no_op);
-assign if_id_stall = id_stall_request || (ex_stall_request && ~if_id_is_no_op);
+assign exmem_stall = mem_stall_request;
+assign idex_stall = ex_stall_request || (mem_stall_request && ~idex_is_no_op);
+assign ifid_stall = id_stall_request || (ex_stall_request && ~ifid_is_no_op);
 
 
 endmodule

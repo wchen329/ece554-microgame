@@ -47,7 +47,7 @@ namespace asmrunner
 		fprintf(this->f, "DEPTH=%d;\n\n", ind);
 		fprintf(this->f, "ADDRESS_RADIX=UNS;\n");
 		fprintf(this->f, "DATA_RADIX=HEX;\n\n");
-		fprintf(this->f, "CONTEXT BEGIN\n");
+		fprintf(this->f, "CONTENT BEGIN\n");
 
 		int where = 0;
 

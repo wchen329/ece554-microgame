@@ -65,7 +65,7 @@ namespace asmrunner
 			else
 			{
 				inst_file = fopen(shEnv.get_asmFilenames()[0].c_str(), "r");
-				this->out_stream = std::unique_ptr<asmrunner::asm_ostream>(new asm_ostream("a.bin"));
+				this->out_stream = std::unique_ptr<asmrunner::asm_ostream>(new asm_ostream("a.mif"));
 			}
 
 			if(inst_file == NULL)

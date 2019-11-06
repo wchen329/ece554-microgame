@@ -25,17 +25,39 @@ namespace asmrunner
 
 	void asm_ostream::append(asmrunner::BW_32 data)
 	{
-		uint32_t out = data.AsUInt32();
-		fwrite(&out, sizeof(out), 1, this->f);
+		// Just buffer it for now
+		ind++;
+		std::string hrep = data.toHexString();
+		this->instl.push_back(hrep);
+
+//		fwrite(&out, sizeof(out), 1, this->f);
 	}
 
 	asm_ostream::asm_ostream(char * filename)
 	{
+		ind = 0;
 		this->f = fopen(filename, "w");
+		fprintf(this->f, "-- Microgame Assembler generated .mif file\n");
+		fprintf(this->f, "WIDTH=32;\n");
 	}
 
 	asm_ostream::~asm_ostream()
 	{
+		
+		fprintf(this->f, "DEPTH=%d;\n\n", ind);
+		fprintf(this->f, "ADDRESS_RADIX=UNS;\n");
+		fprintf(this->f, "DATA_RADIX=HEX;\n\n");
+		fprintf(this->f, "CONTEXT BEGIN\n");
+
+		int where = 0;
+
+		for(std::list<std::string>::iterator itt = instl.begin(); itt != instl.end(); itt++)
+		{
+			fprintf(this->f, "\t%d : %s;\n", where, (*itt).c_str());
+			where++;
+		}
+
+		fprintf(this->f, "END;\n");
 		fclose(this->f);
 	}
 }

@@ -35,7 +35,7 @@ namespace asmrunner
 
 	template<class ConvType, int bitlength> std::string genericHexBuilder(ConvType c)
 	{
-		std::string ret = "0x";
+		std::string ret = "";
 		int tbl = bitlength;
 		
 		std::string interm = "";
@@ -77,22 +77,22 @@ namespace asmrunner
 					interm = "9" + interm;
 					break;
 				case 10:
-					interm = "a" + interm;
+					interm = "A" + interm;
 					break;
 				case 11:
-					interm = "b" + interm;
+					interm = "B" + interm;
 					break;
 				case 12:
-					interm = "c" + interm;
+					interm = "C" + interm;
 					break;
 				case 13:
-					interm = "d" + interm;
+					interm = "D" + interm;
 					break;
 				case 14:
-					interm = "e" + interm;
+					interm = "E" + interm;
 					break;
 				case 15:
-					interm = "f" + interm;
+					interm = "F" + interm;
 					break;
 			};
 

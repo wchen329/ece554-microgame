@@ -195,7 +195,8 @@ typedef struct packed {
 	logic select_immediate,
 	logic [3:0] alu_op,
 	logic alu_use_immediate,
-	logic update_conditionals
+	logic update_conditionals,
+	logic seed_random
 } ex_control_t;
 
 ex_control_t init_ex_control;
@@ -400,6 +401,9 @@ always_comb begin
 		end
 		5'b11011:begin
 			// sat
+			id_control.use_dest_as_op2 = 1;
+
+			init_ex_control.set_tone = 1;
 		end
 		5'b11100:begin
 			// dc
@@ -420,6 +424,9 @@ always_comb begin
 		end
 		5'b11111:begin
 			// sr
+			id_control.use_dest_as_op2 = 1;
+
+			init_ex_control.seed_random = 1;
 		end
 	endcase
 end
@@ -649,8 +656,8 @@ logic [31:0] tone;
 audio_controller audio(
 	.clk(clk),
 	.rst_n(rst_n),
-	.set_tone(set_tone),
-	.tone(tone)
+	.set_tone(ex_control.set_tone),
+	.tone(alu_op2)
 );
 
 
@@ -663,8 +670,9 @@ logic [31:0] random;
 random randy(
 	.clk(clk),
 	.rst_n(rst_n),
-	.set_seed(set_seed),
-	.seed(seed),
+	.set_seed(ex_control.set_seed),
+	// alu op for forwarding
+	.seed(alu_op2),
 	.random(random)
 );
 

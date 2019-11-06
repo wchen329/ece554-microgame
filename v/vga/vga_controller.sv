@@ -55,8 +55,12 @@ module	VGA_Controller(	//	Host Side
 						vga_blank_n, 	//o_blanking
 
 						//	Control Signal
-						iCLK,
-						iRST_N,
+						//dram_clk,
+						vga_clk,
+						clk,
+					
+						rst_n,
+						//iRST_N,
 						iZOOM_MODE_SW
 							);
 
@@ -81,7 +85,7 @@ parameter	Y_START		=	V_SYNC_CYC+V_SYNC_BACK;
 
 
 input data, command, consume;
-
+output vga_clk;
 
 //output	reg			oRequest;
 //	VGA Side
@@ -92,7 +96,7 @@ output	reg			vga_hs;
 output	reg			vga_vs;
 output	reg			vga_sync_n;
 output	reg			vga_blank_n;
-
+//output 	logic			dram_clk;
 
 wire		[9:0]	mVGA_R;
 wire		[9:0]	mVGA_G;
@@ -103,8 +107,8 @@ wire				mVGA_SYNC;
 wire				mVGA_BLANK;
 
 //	Control Signal
-input				iCLK;
-input				iRST_N;
+input				clk;
+input				rst_n;
 input 			iZOOM_MODE_SW;
 
 //	Internal Registers and Wires
@@ -123,10 +127,39 @@ logic 	[255:0][255:0][11:0]		fb_b 	= '0;
 
 //============================================================
 
+logic iRST_N;
+logic iCLK;
 
-assign v_mask = 13'd0 ;//iZOOM_MODE_SW ? 13'd0 : 13'd26;
-assign	mVGA_BLANK	=	mVGA_H_SYNC & mVGA_V_SYNC;
-assign	mVGA_SYNC	=	1'b0;
+assign iCLK = vga_clk;
+
+reg	[31:0]	rst_cont;
+
+always@(posedge clk or negedge rst_n)
+begin
+	if(!rst_n)
+	begin
+		rst_cont	<=	0;
+		iRST_N	<=	0;
+	end
+	else
+	begin
+		if(rst_cont!=32'h01FFFFFF)
+			rst_cont	<=	rst_cont+1;
+		if(rst_cont>=32'h011FFFFF)
+			iRST_N	<=	1;
+	end
+end
+
+
+//============================================================
+
+
+sdram_pll 			u6	(
+							.refclk(clk),
+							.rst(1'b0),
+							.outclk_3(vga_clk)        //25M
+						);
+
 
 
 
@@ -168,6 +201,9 @@ assign	mVGA_R	= 	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd36
 assign	mVGA_G	=	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? fb_g[x_index][y_index] 	:	0;
 assign	mVGA_B	=	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? fb_b[x_index][y_index] 	:	0;
 
+assign 	v_mask = 13'd0 ;//iZOOM_MODE_SW ? 13'd0 : 13'd26;
+assign	mVGA_BLANK	=	mVGA_H_SYNC & mVGA_V_SYNC;
+assign	mVGA_SYNC	=	1'b0;
 
 //============================================================
 			

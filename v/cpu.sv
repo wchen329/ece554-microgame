@@ -591,13 +591,13 @@ logic [31:0] alu_result;
 logic alu_zero, alu_sign, alu_overflow;
 
 alu alu(
-	.alu_op(ctrl_ex_alu_op_code),
+	.opcode(ctrl_ex_alu_op_code),
 	.operand_a(alu_op1),
 	.operand_b(alu_op2),
 	.result(alu_result),
-	.zero(alu_zero),
-	.sign(alu_sign),
-	.overflow(alu_overflow)
+	.z(alu_zero),
+	.n(alu_sign),
+	.v(alu_overflow)
 );
 
 assign alu_op1 =

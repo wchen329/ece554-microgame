@@ -149,13 +149,14 @@ logic [31:0] rf_write_data;
 logic rf_write_lower;
 logic rf_write_upper;
 logic rf_write;
+logic [31:0] rf_rgb;
 
 reg [32][31:0] rf;
 
 integer itter_rf_i;
 always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
-		for(itter_rf_i=0; itter_rf_i<$size(rf); itter_rf_i=itter_rf_i+1) begin
+		for(itter_rf_i=0; itter_rf_i<32; itter_rf_i=itter_rf_i+1) begin
 			rf[itter_rf_i] <= 0;
 		end
 	end else if(rf_write) begin
@@ -174,6 +175,8 @@ end
 
 assign rf_reg1_data = rf[rf_reg1_address];
 assign rf_reg2_data = rf[rf_reg2_address];
+// register 32 is RGB register, otherwise general-purpose
+assign rf_rgb = rf[31];
 
 
 // control signals for all stages here and beyond
@@ -193,6 +196,7 @@ typedef struct packed {
 	logic select_input,
 	logic select_collision,
 	logic select_immediate,
+	logic zero_as_op2,
 	logic [3:0] alu_op,
 	logic alu_use_immediate,
 	logic update_conditionals,
@@ -212,15 +216,13 @@ typedef struct packed {
 	logic [4:0] dest_reg,
 	logic write_reg,
 	logic write_lower,
-	logic write_upper
+	logic write_upper,
+	logic [2:0] sprite_op,
+	logic sprite_produce,
+	logic [23:0] rgb
 } wb_control_t;
 
 wb_control_t init_wb_control;
-
-
-// decode destination register from instruction
-
-logic [4:0] destination_reg = ifid_instruction[26:22];
 
 
 always_comb begin
@@ -236,7 +238,6 @@ always_comb begin
 			init_ex_control.alu_op = 4'b0000;
 			init_ex_control.update_conditionals = 1;
 
-			init_wb_control.dest_reg = destination_reg;
 			init_wb_control.write_reg = 1;
 		end
 		5'b00001:begin
@@ -245,7 +246,6 @@ always_comb begin
 			init_ex_control.update_conditionals = 1;
 			init_ex_control.alu_use_immediate = 1;
 			
-			init_wb_control.dest_reg = destination_reg;
 			init_wb_control.write_reg = 1;
 		end
 		5'b00010:begin
@@ -253,7 +253,6 @@ always_comb begin
 			init_ex_control.alu_op = 4'b0010;
 			init_ex_control.update_conditionals = 1;
 			
-			init_wb_control.dest_reg = destination_reg;
 			init_wb_control.write_reg = 1;
 		end
 		5'b00011:begin
@@ -261,7 +260,6 @@ always_comb begin
 			init_ex_control.alu_op = 4'b0011;
 			init_ex_control.update_conditionals = 1;
 			
-			init_wb_control.dest_reg = destination_reg;
 			init_wb_control.write_reg = 1;
 		end
 		5'b00100:begin
@@ -270,7 +268,6 @@ always_comb begin
 			init_ex_control.update_conditionals = 1;
 			init_ex_control.alu_use_immediate = 1;
 			
-			init_wb_control.dest_reg = destination_reg;
 			init_wb_control.write_reg = 1;
 		end
 		5'b00101:begin
@@ -278,7 +275,6 @@ always_comb begin
 			init_ex_control.alu_op = 4'b0101;
 			init_ex_control.update_conditionals = 1;
 			
-			init_wb_control.dest_reg = destination_reg;
 			init_wb_control.write_reg = 1;
 		end
 		5'b00110:begin
@@ -287,7 +283,6 @@ always_comb begin
 			init_ex_control.update_conditionals = 1;
 			init_ex_control.alu_use_immediate = 1;
 			
-			init_wb_control.dest_reg = destination_reg;
 			init_wb_control.write_reg = 1;
 		end
 		5'b00111:begin
@@ -295,7 +290,6 @@ always_comb begin
 			init_ex_control.alu_op = 4'b0111;
 			init_ex_control.update_conditionals = 1;
 			
-			init_wb_control.dest_reg = destination_reg;
 			init_wb_control.write_reg = 1;
 		end
 		5'b01000:begin
@@ -303,7 +297,6 @@ always_comb begin
 			init_ex_control.alu_op = 4'b1000;
 			init_ex_control.update_conditionals = 1;
 			
-			init_wb_control.dest_reg = destination_reg;
 			init_wb_control.write_reg = 1;
 		end
 		5'b01001:begin
@@ -311,7 +304,6 @@ always_comb begin
 			init_ex_control.alu_op = 4'b1001;
 			init_ex_control.update_conditionals = 1;
 			
-			init_wb_control.dest_reg = destination_reg;
 			init_wb_control.write_reg = 1;
 		end
 		5'b01010:begin
@@ -319,7 +311,6 @@ always_comb begin
 			init_ex_control.alu_op = 4'b1010;
 			init_ex_control.update_conditionals = 1;
 			
-			init_wb_control.dest_reg = destination_reg;
 			init_wb_control.write_reg = 1;
 		end
 		5'b01011:begin
@@ -383,21 +374,41 @@ always_comb begin
 		end
 		5'b10101:begin
 			// wfb
+			init_ex_control.zero_as_op2 = 1;
+
+			init_wb_control.sprite_op = 3'b000;
+			init_wb_control.sprite_produce = 1;
 		end
 		5'b10110:begin
 			// dfb
+			init_wb_control.sprite_op = 3'b001;
+			init_wb_control.sprite_produce = 1;
 		end
 		5'b10111:begin
 			// ls
+			init_ex_control.select_immediate = 1;
+
+			init_wb_control.sprite_op = 3'b010;
+			init_wb_control.sprite_produce = 1;
 		end
 		5'b11000:begin
 			// ds
+			init_ex_control.zero_as_op2 = 1;
+
+			init_wb_control.sprite_op = 3'b011;
+			init_wb_control.sprite_produce = 1;
 		end
 		5'b11001:begin
 			// cs
+			init_ex_control.zero_as_op2 = 1;
+
+			init_wb_control.sprite_op = 3'b100;
+			init_wb_control.sprite_produce = 1;
 		end
 		5'b11010:begin
 			// rs
+			init_wb_control.sprite_op = 3'b101;
+			init_wb_control.sprite_produce = 1;
 		end
 		5'b11011:begin
 			// sat
@@ -495,6 +506,17 @@ logic [31:0] immediate;
 assign immediate = {16{ifid_instruction[15]}, ifid_instruction[15:0]};
 
 
+// decode destination register from instruction
+// furthermore, recall that dest = { sprite_reg, sprite_orientation }
+
+assign init_wb_control.dest_reg = ifid_instruction[26:22];
+
+
+// special rgb propagation
+
+assign init_wb_control.rgb = rf_rgb[23:0];
+
+
 // branching control
 
 assign link           = id_control.link && should_branch && ~ifid_stall;
@@ -586,6 +608,7 @@ assign alu_op1 =
 
 assign alu_op2 =
 	ex_control.alu_use_immediate ? idex_immediate :
+	ex_control.zero_as_op2 ? 32'b0 :
 	exmem_fw_ex_enable_op2 ? exmem_fw_ex :
 	memwb_fw_ex_enable_op2 ? memwb_fw_ex :
 	idex_op2;
@@ -782,11 +805,14 @@ memory data_memory(
 
 // control
 
-logic memory_result;
+logic [31:0] memory_result;
+logic [31:0] memory_secondary_result;
 
 assign memory_result =
 	mem_control.use_memory_result ? user_memory_data_out :
 	exmem_result;
+
+assign memory_secondary_result = exmem_store_data;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -794,24 +820,28 @@ assign memory_result =
 
 // MEM/WB register
 
-reg [31:0] memwb_result;
+reg [31:0] memwb_result1;
+reg [31:0] memwb_result2;
 reg memwb_is_no_op;
 
 reg [$bits(wb_control_t)-1:0] memwb_wb_control;
 
 always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
-		memwb_result <= 0;
+		memwb_result1 <= 0;
+		memwb_result2 <= 0;
 		memwb_is_no_op <= 1;
 
 		memwb_wb_control <= 0;
 	end else if(exmem_is_no_op || exmem_stall) begin
-		memwb_result <= 0;
+		memwb_result1 <= 0;
+		memwb_result2 <= 0;
 		memwb_is_no_op <= 1;
 
 		memwb_wb_control <= 0;
 	end else begin
-		memwb_result <= memory_result;
+		memwb_result1 <= memory_result;
+		memwb_result2 <= memory_secondary_result;
 		memwb_is_no_op <= 0;
 
 		memwb_wb_control <= exmem_wb_control;
@@ -832,9 +862,33 @@ assign wb_control = memwb_wb_control;
 // register writing
 
 assign rf_write_address = wb_control.dest_reg;
+assign rf_write_data = memwb_result1;
 assign rf_write = wb_control.write_reg && ~memwb_is_no_op;
 assign rf_write_lower = wb_control.write_lower;
 assign rf_write_upper = wb_control.write_upper;
+
+
+// sprite command issue
+
+// { command, reg, orientation, rgb, x, y, address }
+logic [79:0] sprite_command;
+
+assign sprite_command = {
+	wb_control.sprite_command,
+	wb_control.sprite_reg,
+	wb_control.sprite_orientation,
+	wb_control.rgb,
+	memwb_result1[7:0],
+	memwb_result2[7:0],
+	memwb_result1
+};
+
+sprite_command_fifo_front_end sprite_fifo(
+	.clk(clk),
+	.rst_n(rst_n),
+	.cmd(sprite_command),
+	.write(wb_control.sprite_produce && ~memwb_is_no_op)
+);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -843,8 +897,8 @@ assign rf_write_upper = wb_control.write_upper;
 // forwarding logic
 
 assign exmem_fw_ex = exmem_result;
-assign memwb_fw_ex = memwb_result;
-assign memwb_fw_mem = memwb_result;
+assign memwb_fw_ex = memwb_result1;
+assign memwb_fw_mem = memwb_result1;
 
 
 // stalling logic

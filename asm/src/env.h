@@ -48,6 +48,16 @@ namespace asmrunner
 			 */
 			bool get_Option_AsmInputSpecified() { return this->has_AsmInput_Value; }
 
+			/* void get_Option_AsmOnly
+			 * Return whether or not ASM Input option -i has been specified
+			 */
+			bool get_Option_AsmOutput() { return this->has_Option_AsmOutput; }
+
+			/* void get_Option_AsmOnly
+			 * Return whether or not ASM Input option -i has been specified
+			 */
+			bool get_Option_AsmOutputSpecified() { return this->has_AsmOutput_Value; }
+
 			/* void characterize_Env
 			 * Sets the environment given a set of arguments.
 			 */
@@ -66,6 +76,8 @@ namespace asmrunner
 				cpu_count(1)
 			{}
 
+			const std::string get_MIFName() { return this-> mifName; }
+
 		private:
 
 			Filename_Vec asmInputs;		// vector of asm input to assemble (-i)
@@ -73,9 +85,13 @@ namespace asmrunner
 
 			bool has_Option_AsmInput;	// -i option specified
 			bool has_AsmInput_Value;	// -i option has a value
+			bool has_Option_AsmOutput;	// -o option specified
+			bool has_AsmOutput_Value;	// -o option has a value
 			unsigned mem_bitwidth;		// memory bitwidth (default 16)
 			unsigned channel_count;		// amount of memory channels (currently 1), future use
 			unsigned cpu_count;			// amount of cpu sockets (currently 1), future use
+
+			std::string mifName; // output name
 	};
 }
 

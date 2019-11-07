@@ -200,14 +200,17 @@ typedef struct packed {
 	logic [3:0] alu_op,
 	logic alu_use_immediate,
 	logic update_conditionals,
-	logic seed_random
+	logic seed_random,
+	logic [4:0] source1,
+	logic [4:0] source2
 } ex_control_t;
 
 ex_control_t init_ex_control;
 
 typedef struct packed {
 	logic write_memory,
-	logic use_memory_result
+	logic use_memory_result,
+	logic [4:0] source
 } mem_control_t;
 
 mem_control_t init_mem_control;
@@ -493,10 +496,12 @@ end
 
 // operand locations
 
-logic [31:0] op1, op2;
+assign rf_reg1_address = ifid_instruction[21:17];
+assign rf_reg2_address = id_control.use_dest_as_op2 ? ifid_instruction[26:22] : ifid_instruction[16:12];
 
-assign op1 = ifid_instruction[21:17];
-assign op2 = id_control.use_dest_as_op2 ? ifid_instruction[26:22] : ifid_instruction[16:12];
+assign init_ex_control.source1 = rf_reg1_address;
+assign init_ex_control.source2 = rf_reg2_address;
+assign init_mem_control.source = rf_reg2_address;
 
 
 // immediate
@@ -563,8 +568,8 @@ always_ff @(posedge clk or negedge rst_n) begin
 		idex_mem_control <= 0;
 		idex_wb_control <= 0;
 	end else if(~idex_stall) begin
-		idex_op1 <= op1;
-		idex_op2 <= op2;
+		idex_op1 <= rf_reg1_data;
+		idex_op2 <= rf_reg2_data;
 		idex_immediate <= immediate;
 		idex_is_no_op <= 0;
 
@@ -892,6 +897,15 @@ sprite_command_fifo_front_end sprite_fifo(
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Stalling, Forwarding, and Hazards
+/////////////////////////////////////////////////////////////////////////////
+
+
+wb_control_t check_wb_in_exmem;
+wb_control_t check_wb_in_memwb;
+
+assign check_wb_in_exmem = exmem_wb_control;
+assign check_wb_in_memwb = memwb_wb_control;
 
 
 // forwarding logic
@@ -900,12 +914,35 @@ assign exmem_fw_ex = exmem_result;
 assign memwb_fw_ex = memwb_result1;
 assign memwb_fw_mem = memwb_result1;
 
+assign exmem_fw_ex_enable_op1 = (check_wb_in_exmem.dest_reg == ex_control.source1) && check_wb_in_exmem.write_reg && ~exmem_is_no_op;
+assign exmem_fw_ex_enable_op2 = (check_wb_in_exmem.dest_reg == ex_control.source2) && check_wb_in_exmem.write_reg && ~exmem_is_no_op;
+
+assign memwb_fw_ex_enable_op1 = (check_wb_in_memwb.dest_reg == ex_control.source1) && check_wb_in_memwb.write_reg && ~memwb_is_no_op;
+assign memwb_fw_ex_enable_op2 = (check_wb_in_memwb.dest_reg == ex_control.source2) && check_wb_in_memwb.write_reg && ~memwb_is_no_op;
+
+assign memwb_fw_mem_enable = (check_wb_in_memwb.dest_reg == mem_control.source) && check_wb_in_memwb.write_reg && ~memwb_is_no_op;
+
+
+// hazard detection
+
+logic ex_hazard_use_after_load;
+logic id_hazard_branch_after_cc_update;
+
+assign ex_hazard_use_after_load = ((ex_control.source1 == check_wb_in_exmem.dest_reg) || (ex_control.source2 == check_wb_in_exmem.dest_reg)) && check_wb_in_exmem.write_reg && ~exmem_is_no_op && mem_control.use_memory_result;
+assign id_hazard_branch_after_cc_update = id_control.branch && ex_control.update_conditionals && ~idex_is_no_op;
+
+logic ex_hazard;
+logic id_hazard;
+
+assign ex_hazard = ex_hazard_use_after_load;
+assign id_hazard = id_hazard_branch_after_cc_update;
+
 
 // stalling logic
 
+assign ifid_stall = id_stall_request || (ex_stall_request && ~ifid_is_no_op) || id_hazard;
+assign idex_stall = ex_stall_request || (mem_stall_request && ~idex_is_no_op) || ex_hazard;
 assign exmem_stall = mem_stall_request;
-assign idex_stall = ex_stall_request || (mem_stall_request && ~idex_is_no_op);
-assign ifid_stall = id_stall_request || (ex_stall_request && ~ifid_is_no_op);
 
 
 endmodule

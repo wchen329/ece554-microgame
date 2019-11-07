@@ -75,7 +75,7 @@ end
 
 // instruction memory
 
-logic [31:0] instruction
+logic [31:0] instruction;
 
 memory instruction_memory(
 	.clk(clk),
@@ -151,7 +151,7 @@ logic rf_write_upper;
 logic rf_write;
 logic [31:0] rf_rgb;
 
-reg [32][31:0] rf;
+reg [31:0][31:0] rf;
 
 integer itter_rf_i;
 always_ff @(posedge clk or negedge rst_n) begin
@@ -182,47 +182,49 @@ assign rf_rgb = rf[31];
 // control signals for all stages here and beyond
 
 typedef struct packed {
-	logic branch,
-	logic link,
-	logic link_return,
-	logic use_dest_as_op2
+	logic branch;
+	logic link;
+	logic link_return;
+	logic use_dest_as_op2;
 } id_control_t;
 
 id_control_t id_control;
 
 typedef struct packed {
-	logic select_random,
-	logic select_time,
-	logic select_input,
-	logic select_collision,
-	logic select_immediate,
-	logic zero_as_op2,
-	logic [3:0] alu_op,
-	logic alu_use_immediate,
-	logic update_conditionals,
-	logic seed_random,
-	logic [4:0] source1,
-	logic [4:0] source2
+	logic select_random;
+	logic select_time;
+	logic select_input;
+	logic select_collision;
+	logic select_immediate;
+	logic set_tone;
+	logic set_seed;
+	logic zero_as_op2;
+	logic [3:0] alu_op;
+	logic alu_use_immediate;
+	logic update_conditionals;
+	logic seed_random;
+	logic [4:0] source1;
+	logic [4:0] source2;
 } ex_control_t;
 
 ex_control_t init_ex_control;
 
 typedef struct packed {
-	logic write_memory,
-	logic use_memory_result,
-	logic [4:0] source
+	logic write_memory;
+	logic use_memory_result;
+	logic [4:0] source;
 } mem_control_t;
 
 mem_control_t init_mem_control;
 
 typedef struct packed {
-	logic [4:0] dest_reg,
-	logic write_reg,
-	logic write_lower,
-	logic write_upper,
-	logic [2:0] sprite_op,
-	logic sprite_produce,
-	logic [23:0] rgb
+	logic [4:0] dest_reg;
+	logic write_reg;
+	logic write_lower;
+	logic write_upper;
+	logic [2:0] sprite_op;
+	logic sprite_produce;
+	logic [23:0] rgb;
 } wb_control_t;
 
 wb_control_t init_wb_control;
@@ -234,8 +236,18 @@ always_comb begin
 	init_mem_control <= 0;
 	init_wb_control <= 0;
 
+	init_ex_control.source1 = rf_reg1_address;
+	init_ex_control.source2 = rf_reg2_address;
+	init_mem_control.source = rf_reg2_address;
+
+	// decode destination register from instruction
+	// furthermore, recall that dest = { sprite_reg, sprite_orientation }
+	init_wb_control.dest_reg = ifid_instruction[26:22];
+
+	init_wb_control.rgb = rf_rgb[23:0];
+
 	// switch on opcode
-	case(if_id_encoded_instruction[31:27])
+	case(ifid_instruction[31:27])
 		5'b00000:begin
 			// add
 			init_ex_control.alu_op = 4'b0000;
@@ -440,7 +452,7 @@ always_comb begin
 			// sr
 			id_control.use_dest_as_op2 = 1;
 
-			init_ex_control.seed_random = 1;
+			init_ex_control.set_seed = 1;
 		end
 	endcase
 end
@@ -450,7 +462,7 @@ end
 
 logic [2:0] branch_case;
 
-assign branch_case = if_id_encoded_instruction[26:24];
+assign branch_case = ifid_instruction[26:24];
 
 logic should_branch;
 
@@ -494,32 +506,14 @@ always_comb begin
 end
 
 
-// operand locations
-
-assign rf_reg1_address = ifid_instruction[21:17];
-assign rf_reg2_address = id_control.use_dest_as_op2 ? ifid_instruction[26:22] : ifid_instruction[16:12];
-
-assign init_ex_control.source1 = rf_reg1_address;
-assign init_ex_control.source2 = rf_reg2_address;
-assign init_mem_control.source = rf_reg2_address;
-
-
-// immediate
+// immediate and register operands
 
 logic [31:0] immediate;
 
-assign immediate = {16{ifid_instruction[15]}, ifid_instruction[15:0]};
+assign immediate = {{16{ifid_instruction[15]}}, ifid_instruction[15:0]};
 
-
-// decode destination register from instruction
-// furthermore, recall that dest = { sprite_reg, sprite_orientation }
-
-assign init_wb_control.dest_reg = ifid_instruction[26:22];
-
-
-// special rgb propagation
-
-assign init_wb_control.rgb = rf_rgb[23:0];
+assign rf_reg1_address = ifid_instruction[21:17];
+assign rf_reg2_address = id_control.use_dest_as_op2 ? ifid_instruction[26:22] : ifid_instruction[16:12];
 
 
 // branching control
@@ -546,7 +540,7 @@ reg idex_is_no_op;
 
 reg [$bits(ex_control_t)-1:0] idex_ex_control;
 reg [$bits(mem_control_t)-1:0] idex_mem_control;
-reg [$bits(wb_control_t)-1:0] ides_wb_control;
+reg [$bits(wb_control_t)-1:0] idex_wb_control;
 
 always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
@@ -672,7 +666,7 @@ input_buffer user_input_buffer(
 	.right(user_input[3]),
 	.down(user_input[2]),
 	.left(user_input[1]),
-	.space(user_inpu[0])
+	.space(user_input[0])
 );
 
 
@@ -723,7 +717,7 @@ logic [31:0] execute_result;
 assign execute_result =
 	ex_control.select_random ? random :
 	ex_control.select_time ? time_ms :
-	ex_control.select_input ? {(32-NUM_INPUT_BITS){0}, user_input} :
+	ex_control.select_input ? {{(32-NUM_INPUT_BITS){1'b0}}, user_input} :
 	ex_control.select_immediate ? idex_immediate :
 	alu_result;
 
@@ -731,9 +725,9 @@ assign ex_stall_request = ~collision_state && ex_control.select_collision;
 
 assign cc_update = ex_control.update_conditionals && (ex_control.select_collision ^~ collision_state) && ~idex_stall && ~idex_is_no_op;
 
-assign cc_next_zero = ctrl_ex_enable_collision ? cd_collision : alu_zero;
-assign cc_next_sign = ctrl_ex_enable_collision ? 0 : alu_sign;
-assign cc_next_overflow = ctrl_ex_enable_collision ? 0 : alu_overflow;
+assign cc_next_zero = ex_control.select_collision ? cd_collision : alu_zero;
+assign cc_next_sign = ex_control.select_collision ? 0 : alu_sign;
+assign cc_next_overflow = ex_control.select_collision ? 0 : alu_overflow;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -791,7 +785,7 @@ logic [USER_ADDRESS_WIDTH-1:0] user_memory_address;
 logic [31:0] user_memory_data_in;
 logic [31:0] user_memory_data_out;
 
-assign user_memory_address = exmem_result[$min(USER_ADDRESS_WIDTH, 32)-1:0];
+assign user_memory_address = exmem_result[USER_ADDRESS_WIDTH-1:0];
 
 assign user_memory_data_in =
 	memwb_fw_mem_enable ? memwb_fw_mem :
@@ -879,9 +873,9 @@ assign rf_write_upper = wb_control.write_upper;
 logic [79:0] sprite_command;
 
 assign sprite_command = {
-	wb_control.sprite_command,
-	wb_control.sprite_reg,
-	wb_control.sprite_orientation,
+	wb_control.sprite_op,
+	wb_control.dest_reg[4:2],
+	wb_control.dest_reg[1:0],
 	wb_control.rgb,
 	memwb_result1[7:0],
 	memwb_result2[7:0],

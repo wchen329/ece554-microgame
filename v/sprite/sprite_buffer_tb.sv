@@ -75,8 +75,8 @@ task write_sprite(input integer start_addr);
 		@(negedge clk);
 	end
 
-	repeat(10) @(posedge clk);
-	@(negedge clk);
+	// repeat(10) @(posedge clk);
+	// @(negedge clk);
 endtask
 
 task read_sprite(input integer start_addr);
@@ -102,8 +102,8 @@ task read_sprite(input integer start_addr);
 		@(negedge clk);
 	end
 
-	repeat(10) @(posedge clk);
-	@(negedge clk);
+	// repeat(10) @(posedge clk);
+	// @(negedge clk);
 endtask
 
 task set_ori(input [1:0] ori);
@@ -113,8 +113,8 @@ task set_ori(input [1:0] ori);
 	@(negedge clk);
 	set_orientation = 0;
 
-	repeat(10) @(posedge clk);
-	@(negedge clk);
+	// repeat(10) @(posedge clk);
+	// @(negedge clk);
 endtask
 
 endmodule

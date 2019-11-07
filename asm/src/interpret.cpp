@@ -102,14 +102,15 @@ namespace asmrunner
 		{
 			if	(
 					(r_inst(current_op) && args.size() != 4 && current_op != DC) ||
+					(r_inst(current_op) && args.size() != 3 && current_op == DC) ||
 					(i_inst(current_op) && args.size() != 4 && !mem_inst(current_op)) ||
 					(i_inst(current_op) && args.size() != 3 && mem_inst(current_op)) ||
 					(j_inst(current_op) && args.size() != 2) ||
 					(m_inst(current_op) && args.size() != 3 && !(current_op == R || current_op == LK || current_op == SR || current_op == SAT)) ||
 					(m_inst(current_op) && args.size() != 2 && (current_op == R || current_op == LK || current_op == SR || current_op == SAT)) ||
 					(n_inst(current_op) && args.size() != 1) ||
-					((current_op == WFB || current_op == CS || current_op == LS || current_op == RS) && args.size() != 2) ||
-					((current_op == DS) && args.size() != 3) 
+					((current_op == WFB || current_op == CS || current_op == LS || current_op == RS) && args.size() != 3) ||
+					((current_op == DS) && args.size() != 4) 
 					
 				)
 			{
@@ -135,7 +136,7 @@ namespace asmrunner
 				if(jump_syms.has(args[1]))
 				{
 					priscas::BW_32 label_PC = static_cast<int32_t>(jump_syms.lookup_from_sym(std::string(args[1].c_str())));
-					imm = (label_PC.AsInt32() >> 2);
+					imm = offset_to_address_br(baseAddress.AsInt32(), label_PC).AsInt32();
 				}
 
 				else
@@ -146,14 +147,14 @@ namespace asmrunner
 	
 			else if(s_inst(current_op))
 			{
-				if(current_op == WFB || current_op == CS || current_op == DS)
+				if(current_op == WFB || current_op == CS)
 				{
 					rt = get_reg_num(args[1].c_str());
 				}
 
-				if(current_op == RS || current_op == LS)
+				if(current_op == RS || current_op == LS || current_op == DS)
 				{
-					rsprite = get_reg_num_sprite(args[2].c_str());
+					rsprite = get_reg_num_sprite(args[1].c_str());
 				}
 			}
 
@@ -228,12 +229,12 @@ namespace asmrunner
 
 				else if(current_op == LS)
 				{
-					imm = priscas::get_imm(args[1].c_str());
+					imm = priscas::get_imm(args[2].c_str());
 				}
 
 				else if(current_op == RS)
 				{
-					cc = priscas::get_imm(args[1].c_str());
+					cc = priscas::get_imm(args[2].c_str());
 				}
 			}
 		}
@@ -249,23 +250,12 @@ namespace asmrunner
 						
 			else if(i_inst(current_op))
 			{
-
-				if(jump_syms.has(args[3]))
-				{
-					priscas::BW_32 addr = baseAddress.AsInt32();
-					priscas::BW_32 label_PC = static_cast<uint32_t>(jump_syms.lookup_from_sym(std::string(args[3].c_str())));
-					imm = priscas::offset_to_address_br(addr, label_PC).AsInt32();
-				}
-
-				else
-				{
-					imm = priscas::get_imm(args[3].c_str());
-				}
+				imm = priscas::get_imm(args[3].c_str());
 			}
 
 			else if(current_op == DS)
 			{
-				rsprite = get_reg_num_sprite(args[3].c_str());
+				rt = get_reg_num(args[3].c_str());
 			}
 
 			else if(j_inst(current_op)){}

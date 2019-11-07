@@ -33,10 +33,10 @@ namespace asmrunner
 //		fwrite(&out, sizeof(out), 1, this->f);
 	}
 
-	asm_ostream::asm_ostream(char * filename)
+	asm_ostream::asm_ostream(const std::string& filename)
 	{
 		ind = 0;
-		this->f = fopen(filename, "w");
+		this->f = fopen(filename.c_str(), "w");
 		fprintf(this->f, "-- Microgame Assembler generated .mif file\n");
 		fprintf(this->f, "WIDTH=32;\n");
 	}

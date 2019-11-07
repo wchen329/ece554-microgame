@@ -31,7 +31,7 @@ namespace asmrunner
 	{
 		public:	
 			void append(asmrunner::BW_32);
-			asm_ostream(char * filename);
+			asm_ostream(const std::string& filename);
 			~asm_ostream();
 		private:
 			FILE * f;

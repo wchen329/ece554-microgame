@@ -40,6 +40,20 @@ namespace asmrunner
 					this->has_AsmInput_Value = true;
 				}
 			}
+
+			if(args[argind] == "-o")
+			{
+				// Declare -o was received
+				this->has_Option_AsmOutput = true;
+				
+				// Set file name
+				if((argind + 1) < argc)
+				{
+					this->asmInputs.push_back(args[argind+1]);
+					this->has_AsmOutput_Value = true;
+					this->mifName = args[argind + 1];
+				}
+			}
 		}
 	}
 }

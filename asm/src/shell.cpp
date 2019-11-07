@@ -47,7 +47,8 @@ namespace asmrunner
 
 		WriteToOutput("Microgame Binary Assembler 1.0\n");
 		WriteToOutput("Author: wchen329@wisc.edu\n");
-		WriteToOutput("\n");
+
+		std::string AsmOutputName = "a.mif";
 
 		// Characterize my arguments
 		shEnv.characterize_Env(this->args);
@@ -55,7 +56,7 @@ namespace asmrunner
 		// Then start assembling if possible
 		if(shEnv.get_Option_AsmInput())
 		{
-
+			// Open the source file
 			if(!shEnv.get_Option_AsmInputSpecified())
 			{
 				WriteToError("Error: An input file is required (specified through -i [input file] ) in order to run in batch mode.\n");
@@ -65,7 +66,13 @@ namespace asmrunner
 			else
 			{
 				inst_file = fopen(shEnv.get_asmFilenames()[0].c_str(), "r");
-				this->out_stream = std::unique_ptr<asmrunner::asm_ostream>(new asm_ostream("a.bin"));
+
+				// Check output name as necessary
+				if(shEnv.get_Option_AsmOutputSpecified())
+				{
+					AsmOutputName = shEnv.get_MIFName();
+				}
+				this->out_stream = std::unique_ptr<asmrunner::asm_ostream>(new asm_ostream(AsmOutputName));
 			}
 
 			if(inst_file == NULL)
@@ -73,6 +80,7 @@ namespace asmrunner
 				WriteToError("Error: The file specified cannot be opened or doesn't exist.\n");
 				return;
 			}
+
 		}
 
 		else
@@ -111,6 +119,20 @@ namespace asmrunner
 					{
 						this->jump_syms.insert(parts[0].substr(0, parts[0].size() - 1), equiv_pc);
 						continue;
+					}
+
+					const std::string SPRITE = std::string(".SPRITE");
+					if(parts[0] == SPRITE)
+					{
+						if(parts.size() < 2)
+						{
+							throw mt_exception();
+						}
+
+						else
+						{
+							// Add sprite to symbols table
+						}
 					}
 
 					equiv_pc = equiv_pc + 4;

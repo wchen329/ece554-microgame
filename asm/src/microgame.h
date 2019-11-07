@@ -72,7 +72,8 @@ namespace asmrunner
 		$s2 = 18,
 		$s3 = 19,
 		$s4 = 20,
-		$s5 = 21, $s6 = 22,
+		$s5 = 21, 
+		$s6 = 22,
 		$s7 = 23,
 		$t8 = 24,
 		$t9 = 25,
@@ -85,7 +86,7 @@ namespace asmrunner
 		INVALID = -1
 	};
 
-	// MIPS Processor Opcodes
+	// Microgame Processor Opcodes
 	enum opcode
 	{
 		ADD = 0,
@@ -94,33 +95,33 @@ namespace asmrunner
 		AND = 3,
 		ANDI = 4,
 		OR = 5,
-		ORI = 99,
-		XOR = 6,
-		SLL = 7,
-		SRL = 8,
-		SRA = 9,
-		LUI = 10,
+		ORI = 6,
+		XOR = 7,
+		SLL = 8,
+		SRL = 9,
+		SRA = 10,
 		LLI = 11,
-		LW = 12,
-		SW = 13,
-		LWO = 14,
-		SWO = 15,
-		B = 16,
-		JL = 101,
-		RET = 100,
-		LK = 17,
-		WFB = 18,
-		DFB = 19,
-		LS = 20,
-		DS = 21,
-		CS = 22,
-		RS = 23,
-		SAT = 24,
-		DC = 25,
-		TIM = 26,
-		R = 27,
-		SR = 28,
-		NOP =  -1
+		LUI = 12,
+		LW = 13,
+		SW = 14,
+		LWO = 15,
+		SWO = 16,
+		B = 17,
+		JL = 18,
+		RET = 19,
+		LK = 20,
+		WFB = 21,
+		DFB = 22,
+		LS = 23,
+		DS = 24,
+		CS = 25,
+		RS = 26,
+		SAT = 27,
+		DC = 28,
+		TIM = 29,
+		R = 30,
+		SR = 31,
+		NOP = 0 // Duplicate of add? 
 	};
 
 	int friendly_to_numerical(const char *);

@@ -8,10 +8,10 @@ OBJS=entry.o env.o format_chk.o interpret.o microgame.o mtsstream.o primitives.o
 .SUFFIXES: .cpp .o
 
 .cpp.o:
-	$(CC) -c $<
+	$(CC) -g -c $<
 
-all: $(OBJS)
-	$(CC) $(OBJS) -o mgs
+mgassemble: $(OBJS)
+	$(CC) $(OBJS) -o mgassemble
 
 clean:
 	@echo "Cleaning..."
@@ -19,7 +19,7 @@ clean:
 		then echo "Successfully cleaned build intermediates.";\
 	else echo "No intermediates found. Skipping...";\
 	fi
-	@if rm mgs ;\
+	@if rm mgassemble ;\
 		then echo "Successfully cleaned assembler executable.";\
 	else echo "No executable found. Skipping...";\
 	fi

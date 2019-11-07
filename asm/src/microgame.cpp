@@ -144,6 +144,9 @@ namespace asmrunner
 			operation == OR ? true :
 			operation == XOR ? true :
 			operation == DC ? true :
+			operation == SLL ? true :
+			operation == SRA ? true :
+			operation == SRL ? true :
 			false ;
 	}
 
@@ -152,9 +155,7 @@ namespace asmrunner
 		return
 			operation == ADDI ? true :
 			operation == ANDI ? true :
-			operation == SLL ? true :
-			operation == SRA ? true :
-			operation == SRL ? true :
+			operation == ORI ? true :
 			operation == LWO ? true :
 			operation == SWO ? true :
 			false ;
@@ -203,7 +204,6 @@ namespace asmrunner
 		return
 			operation == RET ? true :
 			operation == DFB ? true :
-			operation == NOP ? true :
 			false;
 	}
 

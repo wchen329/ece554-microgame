@@ -52,6 +52,7 @@ namespace asmrunner
 			Shell();
 		private:
 			std::vector<std::string> args;
+			std::list<std::string> sfilelist; // sprite file list
 			void WriteToError(std::string& e);
 			void WriteToError(const char* e);
 			void WriteToOutput(std::string& o);

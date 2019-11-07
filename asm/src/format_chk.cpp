@@ -70,7 +70,7 @@ namespace asmrunner
 		std::vector<char> numbers;
 		int len = strlen(reg_str);
 		if(len <= 1) throw priscas::mt_bad_imm();
-		if(reg_str[0] != '#') throw priscas::mt_parse_unexpected("#", reg_str);
+		if(reg_str[0] != '%') throw priscas::mt_parse_unexpected("%", reg_str);
 		for(int i = 1; i < len; i++)
 		{
 			if(reg_str[i] >= '0' && reg_str[i] <= '9')

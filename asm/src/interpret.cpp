@@ -135,7 +135,7 @@ namespace asmrunner
 				if(jump_syms.has(args[1]))
 				{
 					priscas::BW_32 label_PC = static_cast<int32_t>(jump_syms.lookup_from_sym(std::string(args[1].c_str())));
-					imm = (label_PC.AsInt32() >> 2);
+					imm = offset_to_address_br(baseAddress.AsInt32(), label_PC).AsInt32();
 				}
 
 				else

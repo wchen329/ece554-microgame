@@ -26,7 +26,7 @@ logic [31:0] sprite_mem[0:255];
 assign mem_in = sprite_mem[mem_address];
 
 // frame buffer
-logic [23:0] frame_buffer[0:2047]; // just use enough for 8 rows
+logic [23:0] frame_buffer[0:65535];
 logic [15:0] fb_counter;
 
 typedef enum logic { IDLE, DFB } fb_state_t;
@@ -111,6 +111,11 @@ initial begin
 	@(negedge clk);
 	rst_n = 1;
 
+	// draw frame buffer
+	$display("Drawing frame buffer...");
+	dfb();
+	wait_done();
+
 	// write px
 	$display("Writing one pixel...");
 	wfb(0, 0, 'hFF, 'hFF, 'hFF);
@@ -127,13 +132,35 @@ initial begin
 	end
 
 	// draw a sprite
-	$display("Loading sprite...");
+	$display("Drawing sprite...");
 	ls(0, 0, 0);
 	ds(0, 0, 0);
 
 	repeat(2) wait_done();
-
 	check_sprite_frame(0, 0, 0);
+
+	// rotate sprite
+	$display("Drawing rotated sprite...");
+	rs(0, 1);
+	ds(0, 0, 0);
+
+	wait_done();
+	check_sprite_frame(64, 0, 0);
+
+	// draw a sprite
+	$display("Drawing sprite 2...");
+	rs(0, 2);
+	ds(0, 250, 1);
+
+	wait_done();
+	check_sprite_frame(128, 250, 1);
+
+	// draw a sprite
+	$display("Clearing sprite...");
+	cs(250, 1);
+
+	wait_done();
+	check_frame_zero(250, 1);
 
 	$display("All tests passed.");
 	$stop();
@@ -190,8 +217,19 @@ task ds(input [2:0] ireg, [7:0] ix, iy);
 	write_cmd = 0;
 endtask
 
+task cs(input [7:0] ix, iy);
+	display_op = `SPRITE_CS;
+	write_cmd = 1;
+	x = ix;
+	y = iy;
+
+	@(posedge clk);
+	@(negedge clk);
+	write_cmd = 0;
+endtask
+
 task rs(input [2:0] ireg, [1:0] iori);
-	display_op = `SPRITE_DS;
+	display_op = `SPRITE_RS;
 	write_cmd = 1;
 	sprite_reg = ireg;
 	orientation = iori;
@@ -201,22 +239,37 @@ task rs(input [2:0] ireg, [1:0] iori);
 	write_cmd = 0;
 endtask
 
-task check_sprite_frame(input integer isprite_addr, ix, iy);
+task check_sprite_frame(input integer isprite_addr, [7:0] ix, iy);
 	integer i;
 
 	for(i = 0; i < 64; i++) begin
-		assert (sprite_mem[isprite_addr+i][23:0] == frame_buffer[{iy, ix}+i])
+		assert (frame_buffer[{iy, ix}+i] == sprite_mem[isprite_addr+i][23:0])
 		else begin
 			$display(
-				"Expected frame_buffer[%d] to be %d,%d,%d not %d,%d,%d",
-				i,
+				"Expected frame_buffer[%d (%d)] to be %d,%d,%d not %d,%d,%d",
+				i, {iy, ix}+i,
 				sprite_mem[isprite_addr+i][23:16], sprite_mem[isprite_addr+i][15:8], sprite_mem[isprite_addr+i][7:0],
 				frame_buffer[{iy, ix}+i][23:16], frame_buffer[{iy, ix}+i][15:8], frame_buffer[{iy, ix}+i][7:0]
 			);
 			$stop();
 		end
 	end
+endtask
 
+task check_frame_zero(input [7:0] ix, iy);
+	integer i;
+
+	for(i = 0; i < 64; i++) begin
+		assert (frame_buffer[{iy, ix}+i] == 0)
+		else begin
+			$display(
+				"Expected frame_buffer[%d (%d)] to be 0 not %d,%d,%d",
+				i, {iy, ix}+i,
+				frame_buffer[{iy, ix}+i][23:16], frame_buffer[{iy, ix}+i][15:8], frame_buffer[{iy, ix}+i][7:0]
+			);
+			$stop();
+		end
+	end
 endtask
 
 endmodule

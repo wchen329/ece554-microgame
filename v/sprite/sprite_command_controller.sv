@@ -68,7 +68,7 @@ assign { fb_r, fb_g, fb_b } = (cmd_op == `SPRITE_DS) ? { sb_o_r[cmd_sprite_reg],
 															0;
 // WFB: cmd x/y
 // CS/DS: cmd x/y + sprite px
-assign fb_px = { cmd_x, cmd_y } + sb_px_count;
+assign fb_px = { cmd_y, cmd_x } + sb_px_count;
 
 sprite_command_fifo sprite_command_fifo(
 	.clk(clk),
@@ -135,7 +135,7 @@ end
 
 // sp_px_count for sprite r/w
 always_ff @(posedge clk)
-	if(state == LS || state == DS)
+	if(state == LS || state == DS || state == CS)
 		sb_px_count <= sb_px_count + 1;
 	else
 		sb_px_count <= 0;

@@ -60,4 +60,68 @@ namespace asmrunner
 		fprintf(this->f, "END;\n");
 		fclose(this->f);
 	}
+
+	sprite_stream::sprite_stream(const std::string fname)
+	{
+		this->spstr = fopen(fname.c_str(), "r");
+
+		if(spstr == NULL)
+		{
+			// Change to file exception
+			throw mt_exception();
+		}
+	}
+
+	std::shared_ptr<Sprite> sprite_stream::next()
+	{
+		// Read sprite name and filename. If can't, the return nullptr
+		const size_t BUF_SIZE = 2048;
+		char buf[BUF_SIZE];
+		memset(buf, 0,  BUF_SIZE);
+
+		// Read into the buffer
+		if((fgets(buf, BUF_SIZE - 1, spstr) == NULL))
+		{
+			return std::shared_ptr<Sprite>();
+		}
+		else
+		{
+			std::string input(buf);
+			std::string sname;
+			std::string fname;
+		
+			
+			// Parse. Use : as delineator
+			bool hasSeen_col = false;
+			for(size_t s = 0; s < input.size(); s++)
+			{
+				if(input[s] == ':')
+				{
+					hasSeen_col = true; continue;
+				}
+
+				else if(input[s] != 'n')
+				{
+					if(!hasSeen_col)
+					{
+						sname += input[s];
+					}
+					else
+					{
+						fname += input[s];
+					}
+				}
+			}
+
+			// Construct a new sprite off of the filename. 
+			// Return that sprite
+			return std::shared_ptr<Sprite>(new Sprite(sname, fname));
+		}
+	}
+
+	sprite_stream::~sprite_stream()
+	{
+		if(spstr != NULL)
+			fclose(spstr);
+	}
 }

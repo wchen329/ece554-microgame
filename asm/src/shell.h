@@ -52,7 +52,7 @@ namespace asmrunner
 			Shell();
 		private:
 			std::vector<std::string> args;
-			std::list<std::string> sfilelist; // sprite file list
+			std::vector<std::shared_ptr<Sprite>> splist; // sprite list
 			void WriteToError(std::string& e);
 			void WriteToError(const char* e);
 			void WriteToOutput(std::string& o);
@@ -61,6 +61,7 @@ namespace asmrunner
 			std::unique_ptr<asm_ostream> out_stream;
 			Env shEnv;
 			priscas::syms_table jump_syms;
+			syms_table sprite_table;
 	};
 }
 

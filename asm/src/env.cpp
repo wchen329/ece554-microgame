@@ -54,6 +54,18 @@ namespace asmrunner
 					this->mifName = args[argind + 1];
 				}
 			}
+
+			if(args[argind] == "-g")
+			{
+				// Declare -g was received
+				this->has_Option_SpriteTable = true;
+
+				// Set file name
+				if((argind + 1) < argc)
+				{
+					this->stName = args[argind + 1];
+				}
+			}
 		}
 	}
 }

@@ -796,6 +796,7 @@ memory data_memory(
 	.rst_n(rst_n),
 	.address(ex_mem_result),
 	.data_in(user_memory_data_in),
+	.read(mem_control.use_memory_result),
 	.write(ctrl_mem_write_memory),
 	.data_out(user_memory_data_out),
 	.stall(mem_stall_request)

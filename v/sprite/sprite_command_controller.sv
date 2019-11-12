@@ -4,9 +4,8 @@
  * Handles sprite commands
  * Instantiates sprite buffers, sprite command fifo, and frame buffer
  *
- * TODO:
  * from CPU: 80 bits:
- * { 3'opcode, 3'sprite_reg, 2'orientation, 8'r, 8'g, 8'b, 8'x, 8'y, 16'address }
+ * { 3'opcode, 3'sprite_reg, 2'orientation, 8'r, 8'g, 8'b, 8'x, 8'y, 32'address }
  *
  * Sprite fifo command format 43 bits:
  * WFB: { 3'opcode, 8'x, 8'y, 8'r, 8'g, 8'b }
@@ -20,12 +19,7 @@ module sprite_command_controller(
 	input clk, rst_n,
 	// CPU
 	input write_cmd,
-	input [2:0] display_op,
-	input [2:0] sprite_reg,
-	input [1:0] orientation,
-	input [7:0] x, y,
-	input [15:0] address,
-	input [7:0] r, g, b,
+	input [79:0] cmd,
 	// memory
 	input [31:0] mem_in,
 	output logic [15:0] mem_address,
@@ -38,8 +32,8 @@ module sprite_command_controller(
 );
 
 // cmd signals
-logic [42:0] cmd, curr_cmd;
-logic [2:0] cmd_op;
+logic [42:0] new_cmd, curr_cmd;
+logic [2:0] cmd_op, sprite_op;
 logic [2:0] cmd_sprite_reg;
 logic [1:0] cmd_orientation;
 logic [7:0] cmd_x, cmd_y;
@@ -47,6 +41,7 @@ logic [15:0] cmd_address;
 logic [7:0] cmd_r, cmd_g, cmd_b;
 
 assign cmd_op = curr_cmd[42:40];
+assign sprite_op = cmd[79:77];
 
 // cmd fifo signals
 logic fifo_read;
@@ -73,7 +68,7 @@ assign fb_px = { cmd_y, cmd_x } + sb_px_count;
 sprite_command_fifo sprite_command_fifo(
 	.clk(clk),
 	.rst_n(rst_n),
-	.cmd(cmd),
+	.cmd(new_cmd),
 	.read(fifo_read),
 	.write(write_cmd),
 	.curr_cmd(curr_cmd)
@@ -99,16 +94,22 @@ generate
 	end
 endgenerate
 
-// input to sprite cmd
+// input to sprite new_cmd
 always_comb begin
-	case(display_op)
-		`SPRITE_WFB: cmd = { `SPRITE_WFB, x, y, r, g, b };
-		`SPRITE_DFB: cmd = { `SPRITE_DFB, 40'h? };
-		`SPRITE_LS:  cmd = { `SPRITE_LS, sprite_reg, orientation, address, 19'h? };
-		`SPRITE_DS:  cmd = { `SPRITE_DS, sprite_reg, x, y, 21'h? };
-		`SPRITE_CS:  cmd = { `SPRITE_CS, x, y, 24'h? };
-		`SPRITE_RS:  cmd = { `SPRITE_RS, sprite_reg, orientation, 35'h? };
-		default: cmd = { 3'h0, 40'h? };
+	case(sprite_op)
+		`SPRITE_WFB: new_cmd = { `SPRITE_WFB, cmd[47:40], cmd[39:32], cmd[71:64], cmd[63:56], cmd[55:48] };
+		`SPRITE_DFB: new_cmd = { `SPRITE_DFB, 40'h? };
+		`SPRITE_LS:  new_cmd = { `SPRITE_LS, cmd[76:74], cmd[73:72], cmd[15:0], 19'h? };
+		`SPRITE_DS:  new_cmd = { `SPRITE_DS, cmd[76:74], cmd[47:40], cmd[39:32], 21'h? };
+		`SPRITE_CS:  new_cmd = { `SPRITE_CS, cmd[47:40], cmd[39:32], 24'h? };
+		`SPRITE_RS:  new_cmd = { `SPRITE_RS, cmd[76:74], cmd[73:72], 35'h? };
+		// `SPRITE_WFB: new_cmd = { `SPRITE_WFB, x, y, r, g, b };
+		// `SPRITE_DFB: new_cmd = { `SPRITE_DFB, 40'h? };
+		// `SPRITE_LS:  new_cmd = { `SPRITE_LS, sprite_reg, orientation, address, 19'h? };
+		// `SPRITE_DS:  new_cmd = { `SPRITE_DS, sprite_reg, x, y, 21'h? };
+		// `SPRITE_CS:  new_cmd = { `SPRITE_CS, x, y, 24'h? };
+		// `SPRITE_RS:  new_cmd = { `SPRITE_RS, sprite_reg, orientation, 35'h? };
+		default: new_cmd = { 3'h0, 40'h? };
 	endcase
 end
 

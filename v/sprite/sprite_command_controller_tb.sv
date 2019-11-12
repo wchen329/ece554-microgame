@@ -5,7 +5,7 @@ module sprite_command_controller_tb();
 logic clk, rst_n;
 // CPU
 logic write_cmd;
-logic [2:0] display_op;
+logic [2:0] sprite_op;
 logic [2:0] sprite_reg;
 logic [1:0] orientation;
 logic [7:0] x, y;
@@ -73,15 +73,7 @@ sprite_command_controller sprite_command_controller(
 	.clk(clk),
 	.rst_n(rst_n),
 	.write_cmd(write_cmd),
-	.display_op(display_op),
-	.sprite_reg(sprite_reg),
-	.orientation(orientation),
-	.x(x),
-	.y(y),
-	.address(address),
-	.r(r),
-	.g(g),
-	.b(b),
+	.cmd({sprite_op, sprite_reg, orientation, r, g, b, x, y, 16'h0, address}),
 	.mem_in(mem_in),
 	.mem_address(mem_address),
 	.mem_read(mem_read),
@@ -100,7 +92,7 @@ initial begin
 	$readmemh("sprite/sprite_buffer_mem.hex", sprite_mem);
 	clk = 0;
 	rst_n = 0;
-	display_op = 0;
+	sprite_op = 0;
 	sprite_reg = 0;
 	orientation = 0;
 	{ x, y } = 0;
@@ -167,7 +159,7 @@ initial begin
 end
 
 task wfb(input [7:0] ix, iy, ir, ig, ib);
-	display_op = `SPRITE_WFB;
+	sprite_op = `SPRITE_WFB;
 	write_cmd = 1;
 	x = ix;
 	y = iy;
@@ -185,7 +177,7 @@ task wait_done();
 endtask
 
 task dfb();
-	display_op = `SPRITE_DFB;
+	sprite_op = `SPRITE_DFB;
 	write_cmd = 1;
 
 	@(posedge clk);
@@ -194,7 +186,7 @@ task dfb();
 endtask
 
 task ls(input [2:0] ireg, [1:0] iori, [15:0] iaddr);
-	display_op = `SPRITE_LS;
+	sprite_op = `SPRITE_LS;
 	write_cmd = 1;
 	sprite_reg = ireg;
 	orientation = iori;
@@ -206,7 +198,7 @@ task ls(input [2:0] ireg, [1:0] iori, [15:0] iaddr);
 endtask
 
 task ds(input [2:0] ireg, [7:0] ix, iy);
-	display_op = `SPRITE_DS;
+	sprite_op = `SPRITE_DS;
 	write_cmd = 1;
 	sprite_reg = ireg;
 	x = ix;
@@ -218,7 +210,7 @@ task ds(input [2:0] ireg, [7:0] ix, iy);
 endtask
 
 task cs(input [7:0] ix, iy);
-	display_op = `SPRITE_CS;
+	sprite_op = `SPRITE_CS;
 	write_cmd = 1;
 	x = ix;
 	y = iy;
@@ -229,7 +221,7 @@ task cs(input [7:0] ix, iy);
 endtask
 
 task rs(input [2:0] ireg, [1:0] iori);
-	display_op = `SPRITE_RS;
+	sprite_op = `SPRITE_RS;
 	write_cmd = 1;
 	sprite_reg = ireg;
 	orientation = iori;

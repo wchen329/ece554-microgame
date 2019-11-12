@@ -85,7 +85,7 @@ namespace asmrunner
 
 		else
 		{
-			WriteToOutput("Usage: mgassemble -i [source filename] -o [binary output filename]\n");
+			WriteToOutput("Usage: mgassemble -i [source filename] -o [binary output filename] -g [sprite table file]\n");
 			return;
 		}
 
@@ -121,23 +121,14 @@ namespace asmrunner
 						continue;
 					}
 
-					const std::string SPRITE = std::string(".SPRITE");
-					if(parts[0] == SPRITE)
-					{
-						if(parts.size() < 2)
-						{
-							throw mt_exception();
-						}
-
-						else
-						{
-							// Add sprite to symbols table
-						}
-					}
-
 					equiv_pc = equiv_pc + 4;
 					lines.push_back(current_line);		
 				}
+
+				
+					// Start lining up sprites at PCs +256 each after the initial
+					jump_syms.insert("SYMBOL_NAME", equiv_pc);
+					equiv_pc += 256;
 			}
 			catch(priscas::mt_exception& e)
 			{

@@ -61,6 +61,7 @@ namespace asmrunner
 			std::unique_ptr<asm_ostream> out_stream;
 			Env shEnv;
 			priscas::syms_table jump_syms;
+			syms_table sprite_table;
 	};
 }
 

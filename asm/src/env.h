@@ -87,11 +87,13 @@ namespace asmrunner
 			bool has_AsmInput_Value;	// -i option has a value
 			bool has_Option_AsmOutput;	// -o option specified
 			bool has_AsmOutput_Value;	// -o option has a value
+			bool has_Option_SpriteTable;	// -g option specified
 			unsigned mem_bitwidth;		// memory bitwidth (default 16)
 			unsigned channel_count;		// amount of memory channels (currently 1), future use
 			unsigned cpu_count;			// amount of cpu sockets (currently 1), future use
 
 			std::string mifName; // output name
+			std::string stName; // sprite table name
 	};
 }
 

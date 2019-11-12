@@ -30,4 +30,33 @@ namespace asmrunner
 		*(w_ptr + 2) = b_2;
 		*(w_ptr + 3) = b_3;
 	}
+
+	Sprite::Sprite(const std::string& filename)
+	{
+		FILE * f = fopen(filename.c_str(), "r");	
+
+		if(f == NULL)
+		{
+			throw mt_io_file_open_failure(filename);
+			return;
+		}
+
+		// Read 256 bytes into the buffer
+		fread(spBuf, 256, 1, f);
+		fclose(f);
+	}
+
+	std::list<BW_32> Sprite::toBW32()
+	{
+		std::list<BW_32> l;
+		int count = 256 / 4;
+
+		for(int i = 0; i < count; i = (i + 4))
+		{
+			BW_32 n(spBuf[i], spBuf[i + 1], spBuf[i + 2], spBuf[i+3]);
+			l.push_back(n);
+		}
+
+		return l;
+	}
 }

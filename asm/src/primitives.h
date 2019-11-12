@@ -21,7 +21,10 @@
 #ifndef __PRIMITIVES_H__
 #define __PRIMITIVES_H__
 #include <cstdint>
+#include <cstdio>
+#include <list>
 #include <string>
+#include "mt_exception.h"
 /* Various byte long
  * primitives such as a 32-bitlong word
  * or a 64-bitlong one.
@@ -157,6 +160,19 @@ namespace asmrunner
 			};
 
 			BW_32_internal w;
+	};
+
+	/* Sprite
+	 *
+	 */
+	class Sprite
+	{
+		public:
+			Sprite(const std::string& filename); // load sprite from file
+			std::list<BW_32> toBW32(); // represent the sprite buffer as a vector of BW32s.
+		private:
+			char spBuf[256]; // buffer for the sprite data, it's NOT a string...
+
 	};
 }
 

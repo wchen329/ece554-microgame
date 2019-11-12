@@ -48,15 +48,25 @@ namespace asmrunner
 			 */
 			bool get_Option_AsmInputSpecified() { return this->has_AsmInput_Value; }
 
-			/* void get_Option_AsmOnly
-			 * Return whether or not ASM Input option -i has been specified
+			/* void get_Option_AsmOutput
+			 * Return whether or not ASM Input option -o has been specified
 			 */
 			bool get_Option_AsmOutput() { return this->has_Option_AsmOutput; }
 
-			/* void get_Option_AsmOnly
-			 * Return whether or not ASM Input option -i has been specified
+			/* void get_Option_AsmOutputSpecified
+			 * Return whether or not ASM Input option -o has been specified
 			 */
 			bool get_Option_AsmOutputSpecified() { return this->has_AsmOutput_Value; }
+
+			/* void get_Option_SpriteTable
+			 * Return whether -g option specified
+			 */
+			bool get_Option_SpriteTable() { return this->has_Option_SpriteTable; }
+
+			/* void get_Option_SpriteTable_Value
+			 * Return value of -g option
+			 */
+			const std::string& get_Option_SpriteTable_Value() { return this->stName; }
 
 			/* void characterize_Env
 			 * Sets the environment given a set of arguments.

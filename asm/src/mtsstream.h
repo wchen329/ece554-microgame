@@ -21,7 +21,11 @@
 #ifndef __MTSSTREAM_H__
 #define __MTSSTREAM_H__
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <list>
+#include <memory>
+#include <string>
 #include "primitives.h"
 
 namespace asmrunner
@@ -39,6 +43,18 @@ namespace asmrunner
 			asm_ostream(asm_ostream &);
 			asm_ostream& operator=(asm_ostream &);
 			int ind;
+	};
+
+	class sprite_stream
+	{
+		public:
+			std::shared_ptr<Sprite> next();
+			sprite_stream(const std::string fname);
+			~sprite_stream();
+		private:
+			sprite_stream(const sprite_stream&);
+			sprite_stream operator=(sprite_stream);
+			FILE* spstr;
 	};
 }
 

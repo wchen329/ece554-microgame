@@ -126,9 +126,19 @@ namespace asmrunner
 				}
 
 				
-					// Start lining up sprites at PCs +256 each after the initial
-					jump_syms.insert("SYMBOL_NAME", equiv_pc);
-					equiv_pc += 256;
+				// Start lining up sprites at PCs +256 each after the initial, if sprite table was specified.
+				if(shEnv.get_Option_SpriteTable())
+				{
+					// Build sprite table
+					sprite_stream spin(shEnv.get_Option_SpriteTable_Value());
+					std::shared_ptr<Sprite> sp;
+					while((sp = spin.next()).get() != nullptr)
+					{
+						this->splist.push_back(sp);
+						jump_syms.insert(sp->getName(), equiv_pc);
+						equiv_pc += 256;
+					}
+				}
 			}
 			catch(priscas::mt_exception& e)
 			{
@@ -166,7 +176,17 @@ namespace asmrunner
 				asm_pc.AsUInt32() += 4;
 				this->out_stream->append(thirty_two);
 			}
-			
+
+			// Finally, just dump all sprites out to the memory.
+			for(size_t spno = 0; spno < this->splist.size(); spno++)
+			{
+				std::list<BW_32> sd = (*(splist[spno])).toBW32();
+				for(std::list<BW_32>::iterator li = sd.begin(); li != sd.end(); li++)
+				{
+					this->out_stream->append(*li);
+				}
+				asm_pc.AsUInt32() += 256;
+			}
 		}
 
 		WriteToOutput(("Operation completed successfully.\n"));

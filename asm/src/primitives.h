@@ -168,10 +168,12 @@ namespace asmrunner
 	class Sprite
 	{
 		public:
-			Sprite(const std::string& filename); // load sprite from file
+			Sprite(const std::string& spritename, const std::string& filename); // load sprite from file
 			std::list<BW_32> toBW32(); // represent the sprite buffer as a vector of BW32s.
+			const std::string& getName() { return this->name; }
 		private:
 			char spBuf[256]; // buffer for the sprite data, it's NOT a string...
+			std::string name;
 
 	};
 }

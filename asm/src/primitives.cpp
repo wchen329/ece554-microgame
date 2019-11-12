@@ -31,7 +31,7 @@ namespace asmrunner
 		*(w_ptr + 3) = b_3;
 	}
 
-	Sprite::Sprite(const std::string& filename)
+	Sprite::Sprite(const std::string& spritename, const std::string& filename)
 	{
 		FILE * f = fopen(filename.c_str(), "r");	
 
@@ -40,6 +40,8 @@ namespace asmrunner
 			throw mt_io_file_open_failure(filename);
 			return;
 		}
+
+		this->name = spritename;
 
 		// Read 256 bytes into the buffer
 		fread(spBuf, 256, 1, f);

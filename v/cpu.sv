@@ -36,6 +36,9 @@ logic mem_stall_request;
 /////////////////////////////////////////////////////////////////////////////
 
 
+logic pc_stall;
+
+
 // linking register
 
 logic link;
@@ -65,7 +68,7 @@ always_ff @(posedge clk or negedge rst_n) begin
 		pc <= branch_address;
 	end else if(link_return) begin
 		pc <= link_reg;
-	end else begin
+	end else if(~pc_stall) begin
 		// instruction memory is word-addressable
 		pc <= pc + 1;
 	end
@@ -103,7 +106,8 @@ always_ff @(posedge clk or negedge rst_n) begin
 		ifid_is_no_op <= 1;
 	end else if(ifid_flush) begin
 		ifid_instruction <= 0;
-		ifid_pc <= 0;
+		// empty edge case, but neat
+		ifid_pc <= pc;
 		ifid_is_no_op <= 1;
 	end else if(~ifid_stall) begin
 		ifid_instruction <= instruction;
@@ -949,9 +953,10 @@ assign id_hazard =
 
 // stalling logic
 
-assign ifid_stall = (ex_stall_request && ~ifid_is_no_op) || id_hazard;
-assign idex_stall = ex_stall_request || (mem_stall_request && ~idex_is_no_op) || ex_hazard;
-assign exmem_stall = mem_stall_request;
+assign exmem_stall = mem_stall_request && ~exmem_is_no_op;
+assign idex_stall = (ex_stall_request || ex_hazard || exmem_stall) && ~idex_is_no_op;
+assign ifid_stall = (id_hazard || idex_stall) && ~ifid_is_no_op;
+assign pc_stall = ifid_stall;
 
 
 endmodule

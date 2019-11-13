@@ -23,7 +23,7 @@ initial begin
 	end
 
 	i = 0;
-	while(i<MAX_INSTRUCTIONS && ~$feof(fd) && $fscanf(fd, "%b\n")) begin
+	while(i<MAX_INSTRUCTIONS && ~$feof(fd) && $fscanf(fd, "%b\n", instructions[i])) begin
 		i = i + 1;
 	end
 end

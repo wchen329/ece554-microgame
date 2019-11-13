@@ -5,7 +5,7 @@ module data_memory(
 	input read,
 	input write,
 	output [31:0] data_out,
-	output stall,
+	output stall
 );
 
 assign data_out = 31'b0;

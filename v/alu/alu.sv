@@ -2,7 +2,7 @@ module alu  ( result, z, v, n, operand_a, operand_b, opcode);
   output logic 	[31:0]  result;
   output logic	z,v,n;
   input logic	[31:0]  operand_a, operand_b;
-  input logic	[4:0]   opcode;
+  input logic	[3:0]   opcode;
  
   logic       	[31:0] addsub_result;
   logic 	ovfl;

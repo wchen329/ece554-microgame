@@ -27,7 +27,6 @@ logic [31:0] memwb_fw_mem;
 
 // stall request declarations
 
-logic id_stall_request;
 logic ex_stall_request;
 logic mem_stall_request;
 
@@ -77,7 +76,7 @@ end
 
 logic [31:0] instruction;
 
-memory instruction_memory(
+instruction_memory instruction_memory(
 	.clk(clk),
 	.rst_n(rst_n),
 	.address(pc),
@@ -101,7 +100,7 @@ always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		ifid_instruction <= 0;
 		ifid_pc <= 0;
-		ifid_pc <= 1;
+		ifid_is_no_op <= 1;
 	end else if(ifid_flush) begin
 		ifid_instruction <= 0;
 		ifid_pc <= 0;
@@ -109,7 +108,8 @@ always_ff @(posedge clk or negedge rst_n) begin
 	end else if(~ifid_stall) begin
 		ifid_instruction <= instruction;
 		ifid_pc <= pc;
-		ifid_is_no_op <= 0;
+		// a bit of a bandaid
+		ifid_is_no_op <= instruction == 32'b0;
 	end
 end
 
@@ -230,11 +230,13 @@ typedef struct packed {
 wb_control_t init_wb_control;
 
 
+logic [4:0] op;
+
 always_comb begin
-	id_control <= 0;
-	init_ex_control <= 0;
-	init_mem_control <= 0;
-	init_wb_control <= 0;
+	id_control = 0;
+	init_ex_control = 0;
+	init_mem_control = 0;
+	init_wb_control = 0;
 
 	init_ex_control.source1 = rf_reg1_address;
 	init_ex_control.source2 = rf_reg2_address;
@@ -246,8 +248,10 @@ always_comb begin
 
 	init_wb_control.rgb = rf_rgb[23:0];
 
+	op = ifid_instruction[31:27];
+
 	// switch on opcode
-	case(ifid_instruction[31:27])
+	case(op)
 		5'b00000:begin
 			// add
 			init_ex_control.alu_op = 4'b0000;
@@ -591,7 +595,7 @@ logic [31:0] alu_result;
 logic alu_zero, alu_sign, alu_overflow;
 
 alu alu(
-	.opcode(ctrl_ex_alu_op_code),
+	.opcode(ex_control.alu_op),
 	.operand_a(alu_op1),
 	.operand_b(alu_op2),
 	.result(alu_result),
@@ -619,7 +623,7 @@ logic [7:0] cd_a_x, cd_a_y, cd_a_width, cd_a_height;
 logic [7:0] cd_b_x, cd_b_y, cd_b_width, cd_b_height;
 logic cd_collision;
 
-collision_detectection cd(
+collision_detection cd(
 	.clk(clk),
 	.rst_n(rst_n),
 	.a_x(cd_a_x),
@@ -661,7 +665,7 @@ logic [NUM_INPUT_BITS-1:0] user_input;
 input_buffer user_input_buffer(
 	.clk(clk),
 	.rst_n(rst_n),
-	.clear(ctrl_ex_select_input),
+	.clear(ex_control.select_input),
 	.up(user_input[4]),
 	.right(user_input[3]),
 	.down(user_input[2]),
@@ -689,13 +693,12 @@ logic set_seed;
 logic [31:0] seed;
 logic [31:0] random;
 
-random randy(
+lfsr_32 randy(
 	.clk(clk),
-	.rst_n(rst_n),
 	.set_seed(ex_control.set_seed),
 	// alu op for forwarding
-	.seed(alu_op2),
-	.random(random)
+	.seed_in(alu_op2),
+	.out(random)
 );
 
 
@@ -791,13 +794,13 @@ assign user_memory_data_in =
 	memwb_fw_mem_enable ? memwb_fw_mem :
 	exmem_store_data;
 
-memory data_memory(
+data_memory data_memory(
 	.clk(clk),
 	.rst_n(rst_n),
-	.address(ex_mem_result),
+	.address(exmem_result[USER_ADDRESS_WIDTH-1:0]),
 	.data_in(user_memory_data_in),
 	.read(mem_control.use_memory_result),
-	.write(ctrl_mem_write_memory),
+	.write(mem_control.write_memory),
 	.data_out(user_memory_data_out),
 	.stall(mem_stall_request)
 );
@@ -935,7 +938,7 @@ assign id_hazard = id_hazard_branch_after_cc_update;
 
 // stalling logic
 
-assign ifid_stall = id_stall_request || (ex_stall_request && ~ifid_is_no_op) || id_hazard;
+assign ifid_stall = (ex_stall_request && ~ifid_is_no_op) || id_hazard;
 assign idex_stall = ex_stall_request || (mem_stall_request && ~idex_is_no_op) || ex_hazard;
 assign exmem_stall = mem_stall_request;
 

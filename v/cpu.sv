@@ -159,7 +159,7 @@ always_ff @(posedge clk or negedge rst_n) begin
 		for(itter_rf_i=0; itter_rf_i<32; itter_rf_i=itter_rf_i+1) begin
 			rf[itter_rf_i] <= 0;
 		end
-	end else if(rf_write) begin
+	end else if(rf_write || rf_write_lower || rf_write_upper) begin
 		// zero register is tied to zero
 		if(rf_write_address != 5'b00000) begin
 			if(rf_write_lower) begin
@@ -765,6 +765,7 @@ always_ff @(posedge clk or negedge rst_n) begin
 	end else if(~exmem_stall) begin
 		exmem_result <= execute_result;
 		exmem_store_data <= idex_op2;
+		exmem_is_no_op <= 0;
 
 		exmem_mem_control <= idex_mem_control;
 		exmem_wb_control <= idex_wb_control;
@@ -899,11 +900,11 @@ sprite_command_fifo_front_end sprite_fifo(
 /////////////////////////////////////////////////////////////////////////////
 
 
+wb_control_t check_wb_in_idex;
 wb_control_t check_wb_in_exmem;
-wb_control_t check_wb_in_memwb;
 
+assign check_wb_in_idex = idex_wb_control;
 assign check_wb_in_exmem = exmem_wb_control;
-assign check_wb_in_memwb = memwb_wb_control;
 
 
 // forwarding logic
@@ -915,25 +916,35 @@ assign memwb_fw_mem = memwb_result1;
 assign exmem_fw_ex_enable_op1 = (check_wb_in_exmem.dest_reg == ex_control.source1) && check_wb_in_exmem.write_reg && ~exmem_is_no_op;
 assign exmem_fw_ex_enable_op2 = (check_wb_in_exmem.dest_reg == ex_control.source2) && check_wb_in_exmem.write_reg && ~exmem_is_no_op;
 
-assign memwb_fw_ex_enable_op1 = (check_wb_in_memwb.dest_reg == ex_control.source1) && check_wb_in_memwb.write_reg && ~memwb_is_no_op;
-assign memwb_fw_ex_enable_op2 = (check_wb_in_memwb.dest_reg == ex_control.source2) && check_wb_in_memwb.write_reg && ~memwb_is_no_op;
+assign memwb_fw_ex_enable_op1 = (wb_control.dest_reg == ex_control.source1) && wb_control.write_reg && ~memwb_is_no_op;
+assign memwb_fw_ex_enable_op2 = (wb_control.dest_reg == ex_control.source2) && wb_control.write_reg && ~memwb_is_no_op;
 
-assign memwb_fw_mem_enable = (check_wb_in_memwb.dest_reg == mem_control.source) && check_wb_in_memwb.write_reg && ~memwb_is_no_op;
+assign memwb_fw_mem_enable = (wb_control.dest_reg == mem_control.source) && wb_control.write_reg && ~memwb_is_no_op;
 
 
 // hazard detection
 
 logic ex_hazard_use_after_load;
 logic id_hazard_branch_after_cc_update;
+logic id_hazard_rf_read_after_load;
 
-assign ex_hazard_use_after_load = ((ex_control.source1 == check_wb_in_exmem.dest_reg) || (ex_control.source2 == check_wb_in_exmem.dest_reg)) && check_wb_in_exmem.write_reg && ~exmem_is_no_op && mem_control.use_memory_result;
-assign id_hazard_branch_after_cc_update = id_control.branch && ex_control.update_conditionals && ~idex_is_no_op;
+assign ex_hazard_use_after_load =
+	((ex_control.source1 == check_wb_in_exmem.dest_reg) || (ex_control.source2 == check_wb_in_exmem.dest_reg)) && check_wb_in_exmem.write_reg && ~exmem_is_no_op && mem_control.use_memory_result;
+assign id_hazard_branch_after_cc_update =
+	id_control.branch && ex_control.update_conditionals && ~idex_is_no_op;
+assign id_hazard_rf_read_after_load = 
+	((check_wb_in_idex.dest_reg == rf_reg1_address || check_wb_in_idex.dest_reg == rf_reg2_address) && (check_wb_in_idex.write_lower || check_wb_in_idex.write_upper)) ||
+	((check_wb_in_exmem.dest_reg == rf_reg1_address || check_wb_in_exmem.dest_reg == rf_reg2_address) && (check_wb_in_exmem.write_lower || check_wb_in_exmem.write_upper)) ||
+	((wb_control.dest_reg == rf_reg1_address || wb_control.dest_reg == rf_reg2_address) && (wb_control.write_lower || wb_control.write_upper));
 
 logic ex_hazard;
 logic id_hazard;
 
-assign ex_hazard = ex_hazard_use_after_load;
-assign id_hazard = id_hazard_branch_after_cc_update;
+assign ex_hazard =
+	ex_hazard_use_after_load;
+assign id_hazard =
+	id_hazard_branch_after_cc_update ||
+	id_hazard_rf_read_after_load;
 
 
 // stalling logic

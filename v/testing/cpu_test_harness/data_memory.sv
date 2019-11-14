@@ -4,13 +4,20 @@ module data_memory(
 	input [31:0] data_in,
 	input read,
 	input write,
-	output [31:0] data_out,
-	output stall
+	output logic [31:0] data_out,
+	output reg stall
 );
 
-assign data_out = 31'b0;
-assign stall = 1'b0;
+assign data_out = 32'h5555;
 
-// TODO make some dummy lag on read/write
+always_ff @(posedge clk, negedge rst_n) begin
+	if(~rst_n) begin
+		stall <= 0;
+	end else if((read || write) && ~stall) begin
+		stall <= 1;
+	end else if(stall) begin
+		stall <= 0;
+	end
+end
 
 endmodule

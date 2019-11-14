@@ -203,7 +203,7 @@ typedef struct packed {
 	logic set_tone;
 	logic set_seed;
 	logic zero_as_op2;
-	logic [3:0] alu_op;
+	logic [2:0] alu_op;
 	logic alu_use_immediate;
 	logic update_conditionals;
 	logic seed_random;
@@ -258,14 +258,14 @@ always_comb begin
 	case(op)
 		5'b00000:begin
 			// add
-			init_ex_control.alu_op = 4'b0000;
+			init_ex_control.alu_op = 3'b000;
 			init_ex_control.update_conditionals = 1;
 
 			init_wb_control.write_reg = 1;
 		end
 		5'b00001:begin
 			// addi
-			init_ex_control.alu_op = 4'b0001;
+			init_ex_control.alu_op = 3'b000;
 			init_ex_control.update_conditionals = 1;
 			init_ex_control.alu_use_immediate = 1;
 			
@@ -273,21 +273,21 @@ always_comb begin
 		end
 		5'b00010:begin
 			// sub
-			init_ex_control.alu_op = 4'b0010;
+			init_ex_control.alu_op = 3'b001;
 			init_ex_control.update_conditionals = 1;
 			
 			init_wb_control.write_reg = 1;
 		end
 		5'b00011:begin
 			// and
-			init_ex_control.alu_op = 4'b0011;
+			init_ex_control.alu_op = 3'b010;
 			init_ex_control.update_conditionals = 1;
 			
 			init_wb_control.write_reg = 1;
 		end
 		5'b00100:begin
 			// andi
-			init_ex_control.alu_op = 4'b0100;
+			init_ex_control.alu_op = 3'b010;
 			init_ex_control.update_conditionals = 1;
 			init_ex_control.alu_use_immediate = 1;
 			
@@ -295,14 +295,14 @@ always_comb begin
 		end
 		5'b00101:begin
 			// or
-			init_ex_control.alu_op = 4'b0101;
+			init_ex_control.alu_op = 3'b011;
 			init_ex_control.update_conditionals = 1;
 			
 			init_wb_control.write_reg = 1;
 		end
 		5'b00110:begin
 			// ori
-			init_ex_control.alu_op = 4'b0110;
+			init_ex_control.alu_op = 3'b011;
 			init_ex_control.update_conditionals = 1;
 			init_ex_control.alu_use_immediate = 1;
 			
@@ -310,28 +310,28 @@ always_comb begin
 		end
 		5'b00111:begin
 			// xor
-			init_ex_control.alu_op = 4'b0111;
+			init_ex_control.alu_op = 3'b100;
 			init_ex_control.update_conditionals = 1;
 			
 			init_wb_control.write_reg = 1;
 		end
 		5'b01000:begin
 			// sll
-			init_ex_control.alu_op = 4'b1000;
+			init_ex_control.alu_op = 3'b101;
 			init_ex_control.update_conditionals = 1;
 			
 			init_wb_control.write_reg = 1;
 		end
 		5'b01001:begin
 			// srl
-			init_ex_control.alu_op = 4'b1001;
+			init_ex_control.alu_op = 3'b110;
 			init_ex_control.update_conditionals = 1;
 			
 			init_wb_control.write_reg = 1;
 		end
 		5'b01010:begin
 			// sra
-			init_ex_control.alu_op = 4'b1010;
+			init_ex_control.alu_op = 3'b111;
 			init_ex_control.update_conditionals = 1;
 			
 			init_wb_control.write_reg = 1;

@@ -8,7 +8,7 @@ module data_memory(
 	output reg stall
 );
 
-assign data_out = 32'h5555;
+assign data_out = 32'h555555555;
 
 always_ff @(posedge clk, negedge rst_n) begin
 	if(~rst_n) begin

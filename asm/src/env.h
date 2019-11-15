@@ -88,6 +88,10 @@ namespace asmrunner
 
 			const std::string get_MIFName() { return this-> mifName; }
 
+			const std::string& get_OModeStr() { return this->oms; }
+
+			bool get_Option_FormatSpec() { return this->has_Option_FormatSpec; } 
+
 		private:
 
 			Filename_Vec asmInputs;		// vector of asm input to assemble (-i)
@@ -104,6 +108,9 @@ namespace asmrunner
 
 			std::string mifName; // output name
 			std::string stName; // sprite table name
+			std::string oms; // output mode string
+
+			bool has_Option_FormatSpec = false;
 	};
 }
 

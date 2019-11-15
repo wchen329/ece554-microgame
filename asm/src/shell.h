@@ -51,6 +51,7 @@ namespace asmrunner
 			void SetArgs(std::vector<std::string> & args) { this->args = args; }
 			Shell();
 		private:
+
 			std::vector<std::string> args;
 			std::vector<std::shared_ptr<Sprite>> splist; // sprite list
 			void WriteToError(std::string& e);
@@ -62,6 +63,7 @@ namespace asmrunner
 			Env shEnv;
 			priscas::syms_table jump_syms;
 			syms_table sprite_table;
+			StreamMode::OutputMode outputMode = StreamMode::MIF;
 	};
 }
 

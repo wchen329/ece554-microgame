@@ -70,6 +70,24 @@ namespace asmrunner
 	/* Compatibility Namespace Alias from Import
 	 */
 	namespace priscas = asmrunner;
+
+	/* Sprite size
+	 */
+	const int32_t SPRITE_SIZE = 192;
+
+
+	namespace StreamMode
+	{
+		/* Output Mode
+		 * (for Shell and asm streams)
+		 */
+		enum OutputMode
+		{
+			MIF,
+			HEXLIST,
+			BIN
+		};
+	}
 }
 
 #endif

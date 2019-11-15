@@ -24,6 +24,7 @@
 #include <cstdio>
 #include <list>
 #include <string>
+#include "aliases.h"
 #include "mt_exception.h"
 /* Various byte long
  * primitives such as a 32-bitlong word

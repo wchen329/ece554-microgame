@@ -66,6 +66,18 @@ namespace asmrunner
 					this->stName = args[argind + 1];
 				}
 			}
+
+			if(args[argind] == "-f")
+			{
+				// Declare -f was received
+				this->has_Option_FormatSpec = true;
+
+				// Set formatting type
+				if((argind + 1) < argc)
+				{
+					this->oms = args[argind + 1];
+				}
+			}
 		}
 	}
 }

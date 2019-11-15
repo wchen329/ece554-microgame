@@ -48,7 +48,7 @@ namespace asmrunner
 		WriteToOutput("Microgame Binary Assembler 1.0\n");
 		WriteToOutput("Author: wchen329@wisc.edu\n");
 
-		std::string AsmOutputName = "a.mif";
+		std::string AsmOutputName = "a.";
 
 		// Characterize my arguments
 		shEnv.characterize_Env(this->args);
@@ -67,12 +67,50 @@ namespace asmrunner
 			{
 				inst_file = fopen(shEnv.get_asmFilenames()[0].c_str(), "r");
 
+				// Check output format specification
+				if(shEnv.get_Option_FormatSpec())
+				{
+					std::string o = shEnv.get_OModeStr();
+
+					// Set output mode depending on string
+					if(o == "hexlist" || o == "hl")
+					{
+						this->outputMode = StreamMode::HEXLIST;
+						AsmOutputName += "hl";
+					}
+
+					else if(o == "bin")
+					{
+						this->outputMode = StreamMode::BIN;
+						AsmOutputName += "bin";
+					}
+
+					else if(o == "mif")
+						AsmOutputName += "mif";
+
+					else
+					{
+						WriteToError("Invalid value for output format (-f).\n");
+						WriteToError("Supported formats:\n");
+						WriteToError("\t- mif (default)\n");
+						WriteToError("\t- hexlist / hl\n");
+						WriteToError("\t- bin\n");
+						return;
+					}
+				}
+				else
+				{
+					AsmOutputName += "mif";
+				}
+
 				// Check output name as necessary
 				if(shEnv.get_Option_AsmOutputSpecified())
 				{
 					AsmOutputName = shEnv.get_MIFName();
 				}
-				this->out_stream = std::unique_ptr<asmrunner::asm_ostream>(new asm_ostream(AsmOutputName));
+
+
+				this->out_stream = std::unique_ptr<asmrunner::asm_ostream>(new asm_ostream(AsmOutputName, this->outputMode));
 			}
 
 			if(inst_file == NULL)
@@ -136,7 +174,7 @@ namespace asmrunner
 					{
 						this->splist.push_back(sp);
 						jump_syms.insert(sp->getName(), equiv_pc);
-						equiv_pc += 256;
+						equiv_pc += SPRITE_SIZE;
 					}
 				}
 			}
@@ -185,7 +223,7 @@ namespace asmrunner
 				{
 					this->out_stream->append(*li);
 				}
-				asm_pc.AsUInt32() += 256;
+				asm_pc.AsUInt32() += SPRITE_SIZE;
 			}
 		}
 

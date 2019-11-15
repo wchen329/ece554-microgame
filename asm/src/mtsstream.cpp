@@ -30,34 +30,56 @@ namespace asmrunner
 		std::string hrep = data.toHexString();
 		this->instl.push_back(hrep);
 
-//		fwrite(&out, sizeof(out), 1, this->f);
+		if(this->om == StreamMode::BIN)
+		{
+			int32_t out = data.AsUInt32();
+			fwrite(&out, sizeof(out), 1, this->f);
+		}
 	}
 
-	asm_ostream::asm_ostream(const std::string& filename)
+	asm_ostream::asm_ostream(const std::string& filename, StreamMode::OutputMode om)
 	{
 		ind = 0;
 		this->f = fopen(filename.c_str(), "w");
-		fprintf(this->f, "-- Microgame Assembler generated .mif file\n");
-		fprintf(this->f, "WIDTH=32;\n");
+		this->om = om;
+		
+		if(this->om == StreamMode::MIF)
+		{
+			fprintf(this->f, "-- Microgame Assembler generated .mif file\n");
+			fprintf(this->f, "WIDTH=32;\n");
+		}
+		
 	}
 
 	asm_ostream::~asm_ostream()
 	{
 		
-		fprintf(this->f, "DEPTH=%d;\n\n", ind);
-		fprintf(this->f, "ADDRESS_RADIX=UNS;\n");
-		fprintf(this->f, "DATA_RADIX=HEX;\n\n");
-		fprintf(this->f, "CONTENT BEGIN\n");
-
-		int where = 0;
-
-		for(std::list<std::string>::iterator itt = instl.begin(); itt != instl.end(); itt++)
+		if(this->om == StreamMode::MIF)
 		{
-			fprintf(this->f, "\t%d : %s;\n", where, (*itt).c_str());
-			where++;
+			fprintf(this->f, "DEPTH=%d;\n\n", ind);
+			fprintf(this->f, "ADDRESS_RADIX=UNS;\n");
+			fprintf(this->f, "DATA_RADIX=HEX;\n\n");
+			fprintf(this->f, "CONTENT BEGIN\n");
+
+			int where = 0;
+
+			for(std::list<std::string>::iterator itt = instl.begin(); itt != instl.end(); itt++)
+			{
+				fprintf(this->f, "\t%d : %s;\n", where, (*itt).c_str());
+				where++;
+			}
+
+			fprintf(this->f, "END;\n");
 		}
 
-		fprintf(this->f, "END;\n");
+		else if(this->om == StreamMode::HEXLIST)
+		{
+			for(std::list<std::string>::iterator itt = instl.begin(); itt != instl.end(); itt++)
+			{
+				fprintf(this->f, "%s\n", (*itt).c_str());
+			}
+		}
+
 		fclose(this->f);
 	}
 
@@ -100,7 +122,7 @@ namespace asmrunner
 					hasSeen_col = true; continue;
 				}
 
-				else if(input[s] != 'n')
+				else if(input[s] != '\n')
 				{
 					if(!hasSeen_col)
 					{

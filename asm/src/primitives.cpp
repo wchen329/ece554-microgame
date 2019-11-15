@@ -43,19 +43,19 @@ namespace asmrunner
 
 		this->name = spritename;
 
-		// Read 256 bytes into the buffer
-		fread(spBuf, 256, 1, f);
+		// Read 192 bytes (one sprite) into the buffer
+		fread(spBuf, 192, 1, f);
 		fclose(f);
 	}
 
 	std::list<BW_32> Sprite::toBW32()
 	{
 		std::list<BW_32> l;
-		int count = 256 / 4;
+		int count = SPRITE_SIZE;
 
-		for(int i = 0; i < count; i = (i + 4))
+		for(int i = 0; i < count; i = (i + 3))
 		{
-			BW_32 n(spBuf[i], spBuf[i + 1], spBuf[i + 2], spBuf[i+3]);
+			BW_32 n(spBuf[i], spBuf[i + 1], spBuf[i + 2], 0); // Zero extend the 8 top bits
 			l.push_back(n);
 		}
 

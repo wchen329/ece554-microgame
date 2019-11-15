@@ -26,6 +26,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include "aliases.h"
 #include "primitives.h"
 
 namespace asmrunner
@@ -35,7 +36,7 @@ namespace asmrunner
 	{
 		public:	
 			void append(asmrunner::BW_32);
-			asm_ostream(const std::string& filename);
+			asm_ostream(const std::string& filename, StreamMode::OutputMode);
 			~asm_ostream();
 		private:
 			FILE * f;
@@ -43,6 +44,7 @@ namespace asmrunner
 			asm_ostream(asm_ostream &);
 			asm_ostream& operator=(asm_ostream &);
 			int ind;
+			StreamMode::OutputMode om;
 	};
 
 	class sprite_stream

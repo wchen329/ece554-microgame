@@ -91,7 +91,6 @@ namespace asmrunner
 		else if("tim" == args[0]) { current_op = TIM; }
 		else if("r" == args[0]) { current_op = R; }
 		else if("sr" == args[0]) { current_op = SR; }
-		else if("nop" == args[0]) { current_op = NOP; }
 		else
 		{
 			throw mt_bad_mnemonic();

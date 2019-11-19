@@ -61,6 +61,11 @@ state_t state, next_state;
 assign { fb_r, fb_g, fb_b } = (cmd_op == `SPRITE_DS) ? { sb_o_r[cmd_sprite_reg], sb_o_g[cmd_sprite_reg], sb_o_b[cmd_sprite_reg] } :
 															(cmd_op == `SPRITE_WFB) ? { cmd_r, cmd_g, cmd_b } :
 															0;
+// block top 7 rows
+// assign { fb_r, fb_g, fb_b } = (cmd_x < 8 || cmd_y < 8) ? 0 :
+// 															(cmd_op == `SPRITE_DS) ? { sb_o_r[cmd_sprite_reg], sb_o_g[cmd_sprite_reg], sb_o_b[cmd_sprite_reg] } :
+// 															(cmd_op == `SPRITE_WFB) ? { cmd_r, cmd_g, cmd_b } :
+// 															0;
 // WFB: cmd x/y
 // CS/DS: cmd x/y + sprite px
 assign fb_px = { cmd_y, cmd_x } + sb_px_count;

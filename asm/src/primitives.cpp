@@ -45,6 +45,7 @@ namespace asmrunner
 
 		// Read 192 bytes (one sprite) into the buffer
 		fread(spBuf, 192, 1, f);
+		
 		fclose(f);
 	}
 
@@ -55,7 +56,7 @@ namespace asmrunner
 
 		for(int i = 0; i < count; i = (i + 3))
 		{
-			BW_32 n(spBuf[i], spBuf[i + 1], spBuf[i + 2], 0); // Zero extend the 8 top bits
+			BW_32 n(spBuf[i + 2], spBuf[i + 1], spBuf[i], 0); // Zero extend the 8 top bits
 			l.push_back(n);
 		}
 

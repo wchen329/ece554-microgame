@@ -177,9 +177,33 @@ always_ff @(posedge clk or negedge rst_n) begin
 	end
 end
 
-// write-through functionality
-assign rf_reg1_data = rf_write_address == rf_reg1_address ? rf_write_data : rf[rf_reg1_address];
-assign rf_reg2_data = rf_write_address == rf_reg2_address ? rf_write_data : rf[rf_reg2_address];
+// register file outputs
+always_comb begin
+	// normal behavior
+	rf_reg1_data = rf[rf_reg1_address];
+	rf_reg2_data = rf[rf_reg2_address];
+
+	// write-through functionality
+	if(rf_write_lower && rf_write_address == rf_reg1_address) begin
+		rf_reg1_data = {rf[rf_reg1_address][31:16], rf_write_data[15:0]};
+	end else
+	if(rf_write_lower && rf_write_address == rf_reg2_address) begin
+		rf_reg2_data = {rf[rf_reg2_address][31:16], rf_write_data[15:0]};
+	end else
+	if(rf_write_upper && rf_write_address == rf_reg1_address) begin
+		rf_reg1_data = {rf_write_data[31:16], rf[rf_reg1_address][15:0]};
+		end else
+	if(rf_write_upper && rf_write_address == rf_reg2_address) begin
+		rf_reg2_data = {rf_write_data[31:16], rf[rf_reg2_address][15:0]};
+	end else
+	if(rf_write && rf_write_address == rf_reg1_address) begin
+		rf_reg1_data = rf_write_data;
+	end else
+	if(rf_write && rf_write_address == rf_reg2_address) begin
+		rf_reg2_data = rf_write_data;
+	end
+end
+
 // register 32 is RGB register, otherwise general-purpose
 assign rf_rgb = rf[31];
 
@@ -956,8 +980,7 @@ assign hazard_branch_after_cc_update =
 // for when the register file is read after a lui or lli
 assign hazard_rf_read_after_load = 
 	((check_wb_in_idex.dest_reg == rf_reg1_address || check_wb_in_idex.dest_reg == rf_reg2_address) && (check_wb_in_idex.write_lower || check_wb_in_idex.write_upper)) ||
-	((check_wb_in_exmem.dest_reg == rf_reg1_address || check_wb_in_exmem.dest_reg == rf_reg2_address) && (check_wb_in_exmem.write_lower || check_wb_in_exmem.write_upper)) ||
-	((wb_control.dest_reg == rf_reg1_address || wb_control.dest_reg == rf_reg2_address) && (wb_control.write_lower || wb_control.write_upper));
+	((check_wb_in_exmem.dest_reg == rf_reg1_address || check_wb_in_exmem.dest_reg == rf_reg2_address) && (check_wb_in_exmem.write_lower || check_wb_in_exmem.write_upper));
 
 logic hazard;
 

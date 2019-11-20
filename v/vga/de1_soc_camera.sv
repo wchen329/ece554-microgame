@@ -385,11 +385,11 @@ assign rst = ~KEY[0];
 assign LEDR  = currentr1_addr[9:0];
 
 
-assign synced = (vga_x == 12'd0) & (vga_y == 12'd0) & (currentr1_addr == 0);	
+assign synced = (vga_x == 12'd0) & (vga_y == 12'd0) & (read_count == 0);	
 
 
 
-assign nxt_state 	= (state == 2'h0) & ~KEY[1] & (currentr1_addr == '0)? 2'h1 
+assign nxt_state 	= (state == 2'h0) & ~KEY[1] & (read_count == '0)? 2'h1 
 						: (state == 2'h1) & (count == 12'hFFFF) & (KEY[1]) ? 2'h2
 						: (state == 2'h2) & synced? 2'h0
 						: state;
@@ -413,18 +413,39 @@ end
 						
 						
 logic [15:0] write_data, currentw1_addr, currentr1_addr;			
-logic [9:0] currentw1_x, currentw1_y;
+logic [7:0] currentw1_x, currentw1_y;
 
 
-assign currentw1_x = currentw1_addr[7:0];
+assign currentw1_x = write_count[7:0];
 
-assign currentw1_y = currentw1_addr[15:8];
+assign currentw1_y = write_count[15:8];
 
 
 //assign write_data = {1'h0, fb_r[current_x][current_y], fb_g[current_x][current_y], fb_b[current_x][current_y]};
-assign write_data = (currentw1_x < 16 & currentw1_y < 20) ? {1'b0,5'h00,5'h7F,5'h00} : {1'b0,5'h00,5'h00,5'h7F} ;
+assign write_data = (currentw1_x < 2) && (currentw1_y < 20) ? {1'b0,5'h00,5'h7F,5'h00} : {1'b0,5'h00,5'h00,5'h7F} ;
 						
-						
+	
+
+logic dval, dval_nxt;
+logic [15:0] write_count, read_count;
+	
+	
+	//count writes
+always @(posedge D5M_PIXLCLK) begin
+	write_count <= (state != 2'h1) 	?'0
+					: write_count > (256*256) ? '0
+					:write_count + 16'h1;
+end
+	
+	//count reads
+always @(posedge VGA_CTRL_CLK) begin
+	read_count <= (state != 2'h0) 	?'0
+					: read_count > (256*256) ? '0
+					: Read ? read_count + 16'h1
+					: read_count;
+end
+
+	
 						
 //SDRam Read and Write as Frame Buffer
 Sdram_Control	   u7	(	// HOST Side						
@@ -437,7 +458,7 @@ Sdram_Control	   u7	(	// HOST Side
 							.WR1_DATA(write_data),
 							//.WR1_DATA({1'b0,RGB_R[11:7],RGB_G[11:7],RGB_B[11:7]}),
 							//.WR1(RGB_DVAL),
-							.WR1( (state == 2'h1) & RGB_DVAL),
+							.WR1( (state == 2'h1) ),
 							.WR1_ADDR(0),
 							.WR1_MAX_ADDR(256*256),
 							.WR1_LENGTH(8'h10),

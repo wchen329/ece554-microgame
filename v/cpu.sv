@@ -177,10 +177,21 @@ always_ff @(posedge clk or negedge rst_n) begin
 	end
 end
 
-assign rf_reg1_data = rf[rf_reg1_address];
-assign rf_reg2_data = rf[rf_reg2_address];
+// write-through functionality
+assign rf_reg1_data = rf_write_address == rf_reg1_address ? rf_write_data : rf[rf_reg1_address];
+assign rf_reg2_data = rf_write_address == rf_reg2_address ? rf_write_data : rf[rf_reg2_address];
 // register 32 is RGB register, otherwise general-purpose
 assign rf_rgb = rf[31];
+
+
+// TODO TODO TODO DELETE ME
+
+always begin
+	#4500;
+	$display("Result: %u", rf[5'b00100]);
+end
+
+// DELETE ME
 
 
 // control signals for all stages here and beyond
@@ -352,11 +363,15 @@ always_comb begin
 			// lw
 			init_mem_control.use_memory_result = 1;
 
+			init_ex_control.select_immediate = 1;
+
 			init_wb_control.write_reg = 1;
 		end
 		5'b01110:begin
 			// sw
 			id_control.use_dest_as_op2 = 1;
+
+			init_ex_control.select_immediate = 1;
 
 			init_mem_control.write_memory = 1;
 		end
@@ -802,7 +817,7 @@ assign user_memory_data_in =
 data_memory data_memory(
 	.clk(clk),
 	.rst_n(rst_n),
-	.address(exmem_result[USER_ADDRESS_WIDTH-1:0]),
+	.address(user_memory_address),
 	.data_in(user_memory_data_in),
 	.read(mem_control.use_memory_result),
 	.write(mem_control.write_memory),
@@ -928,34 +943,35 @@ assign memwb_fw_mem_enable = (wb_control.dest_reg == mem_control.source) && wb_c
 
 // hazard detection
 
-logic ex_hazard_use_after_load;
-logic id_hazard_branch_after_cc_update;
-logic id_hazard_rf_read_after_load;
+logic hazard_use_after_load;
+logic hazard_branch_after_cc_update;
+logic hazard_rf_read_after_load;
 
-assign ex_hazard_use_after_load =
+// for when ex is using operand just read from data memory
+assign hazard_use_after_load =
 	((ex_control.source1 == check_wb_in_exmem.dest_reg) || (ex_control.source2 == check_wb_in_exmem.dest_reg)) && check_wb_in_exmem.write_reg && ~exmem_is_no_op && mem_control.use_memory_result;
-assign id_hazard_branch_after_cc_update =
+// for when a branch occurs immediately after a conditional update
+assign hazard_branch_after_cc_update =
 	id_control.branch && ex_control.update_conditionals && ~idex_is_no_op;
-assign id_hazard_rf_read_after_load = 
+// for when the register file is read after a lui or lli
+assign hazard_rf_read_after_load = 
 	((check_wb_in_idex.dest_reg == rf_reg1_address || check_wb_in_idex.dest_reg == rf_reg2_address) && (check_wb_in_idex.write_lower || check_wb_in_idex.write_upper)) ||
 	((check_wb_in_exmem.dest_reg == rf_reg1_address || check_wb_in_exmem.dest_reg == rf_reg2_address) && (check_wb_in_exmem.write_lower || check_wb_in_exmem.write_upper)) ||
 	((wb_control.dest_reg == rf_reg1_address || wb_control.dest_reg == rf_reg2_address) && (wb_control.write_lower || wb_control.write_upper));
 
-logic ex_hazard;
-logic id_hazard;
+logic hazard;
 
-assign ex_hazard =
-	ex_hazard_use_after_load;
-assign id_hazard =
-	id_hazard_branch_after_cc_update ||
-	id_hazard_rf_read_after_load;
+assign hazard =
+	hazard_use_after_load ||
+	hazard_branch_after_cc_update ||
+	hazard_rf_read_after_load;
 
 
 // stalling logic
 
 assign exmem_stall = mem_stall_request && ~exmem_is_no_op;
-assign idex_stall = (ex_stall_request || ex_hazard || exmem_stall) && ~idex_is_no_op;
-assign ifid_stall = (id_hazard || idex_stall) && ~ifid_is_no_op;
+assign idex_stall = (ex_stall_request || exmem_stall) && ~idex_is_no_op;
+assign ifid_stall = (hazard || idex_stall) && ~ifid_is_no_op;
 assign pc_stall = ifid_stall;
 
 

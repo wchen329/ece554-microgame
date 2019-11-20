@@ -12,7 +12,7 @@ initial begin
 	rst_n = 0;
 
 	// time for fake memory setup
-	#1000;	
+	#1000;
 
 	rst_n = 1;
 

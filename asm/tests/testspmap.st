@@ -1,1 +1,1 @@
-SPRITE_1:A.sprite
+SPRITE_1:tests/red.data

@@ -123,7 +123,7 @@ namespace asmrunner
 
 		else
 		{
-			WriteToOutput("Usage: mgassemble -i [source filename] -o [binary output filename] -g [sprite table file]\n");
+			WriteToOutput("Usage: mgassemble -i [source filename] -o [binary output filename] -g [sprite table file] -f [format]\n");
 			return;
 		}
 
@@ -174,7 +174,7 @@ namespace asmrunner
 					{
 						this->splist.push_back(sp);
 						jump_syms.insert(sp->getName(), equiv_pc);
-						equiv_pc += SPRITE_SIZE;
+						equiv_pc += PACKED_SPRITE_SIZE;
 					}
 				}
 			}
@@ -223,7 +223,7 @@ namespace asmrunner
 				{
 					this->out_stream->append(*li);
 				}
-				asm_pc.AsUInt32() += SPRITE_SIZE;
+				asm_pc.AsUInt32() += PACKED_SPRITE_SIZE;
 			}
 		}
 

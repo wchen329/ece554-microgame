@@ -105,16 +105,57 @@ namespace asmrunner
 	int get_imm(const char * str)
 	{
 		int len = strlen(str);
-		
+		int base = 10;
+
+		// Change base if possible
+		if(len > 0)
+		{
+			if(str[0] == 'o')
+			{
+				base = 8;
+				str = str + 1;
+				len = len - 1;
+			}
+
+			else if(str[0] == 'h')
+			{
+				base = 16;
+				str = str + 1;
+				len = len - 1;
+			}
+
+			else if(str[0] == 'b')
+			{
+				base = 2;
+				str = str + 1;
+				len = len - 1;
+			}
+
+		}
+
+
 		for(int i = 0; i < len; i++)
 		{
-			if(str[i] < '0' || str[i] > '9')
+
+			if(
+					(base == 10 && (str[i] < '0' || str[i] > '9')) ||
+					(base == 2 && (str[i] < '0' || str[i] > '1')) ||
+					(base == 16 && !((str[i] >= '0' && str[i] <= '9') || (str[i] >= 'a' && str[i] <= 'f') || (str[i] >= 'A' && str[i] <= 'F'))) ||
+					(base == 8 && (str[i] < '0' || str[i] > '7'))
+				)
 			{
-				if(i == 0 && str[i] != '-')
+				if(!(i == 0 && str[i] == '-'))
+				{
 					throw priscas::mt_bad_imm();
+				}
 			}
 		}
 
-		return atoi(str);
+		if(len == 0)
+		{
+			throw mt_bad_imm();
+		}
+
+		return strtol(str, NULL, base);
 	}
 }

@@ -22,6 +22,7 @@
 
 namespace asmrunner
 {
+	std::vector<std::string> chop_string(std::string & input);
 
 	void asm_ostream::append(asmrunner::BW_32 data)
 	{
@@ -135,9 +136,18 @@ namespace asmrunner
 				}
 			}
 
+			// Check for illegal formatting and trim leading whitespaces...
+			std::vector<std::string> sn_var = chop_string(sname);
+			std::vector<std::string> fn_var = chop_string(fname);
+
+			if(sn_var.size() != 1 || fn_var.size() != 1)
+			{
+				throw mt_exception();
+			}
+
 			// Construct a new sprite off of the filename. 
 			// Return that sprite
-			return std::shared_ptr<Sprite>(new Sprite(sname, fname));
+			return std::shared_ptr<Sprite>(new Sprite(sn_var[0], fn_var[0]));
 		}
 	}
 

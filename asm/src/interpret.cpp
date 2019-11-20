@@ -34,6 +34,7 @@ namespace asmrunner
 
 		priscas::opcode current_op = NOP;
 
+		bool noop = false;
 		int rs = 0;
 		int rt = 0;
 		int rd = 0;
@@ -67,16 +68,16 @@ namespace asmrunner
 		else if("beq" == args[0]) { current_op = B; cc = CCEQ; }
 		else if("bgt" == args[0]) { current_op = B; cc = CCGT; }
 		else if("blt" == args[0]) { current_op = B; cc = CCLT; }
-		else if("bgte" == args[0]) { current_op = B; cc = CCGTE; }
-		else if("blte" == args[0]) { current_op = B; cc = CCLTE; }
+		else if("bge" == args[0]) { current_op = B; cc = CCGTE; }
+		else if("ble" == args[0]) { current_op = B; cc = CCLTE; }
 		else if("bov" == args[0]) { current_op = B; cc = CCOFLOW; }
 		else if("b" == args[0]) { current_op = B; cc = CCUNCOND; }
 		else if("blne" == args[0]) { current_op = JL; cc = CCNE; }
 		else if("bleq" == args[0]) { current_op = JL; cc = CCEQ; }
 		else if("blgt" == args[0]) { current_op = JL; cc = CCGT; }
 		else if("bllt" == args[0]) { current_op = JL; cc = CCLT; }
-		else if("bgte" == args[0]) { current_op = JL; cc = CCGTE; }
-		else if("blte" == args[0]) { current_op = JL; cc = CCLTE; }
+		else if("blge" == args[0]) { current_op = JL; cc = CCGTE; }
+		else if("blle" == args[0]) { current_op = JL; cc = CCLTE; }
 		else if("blov" == args[0]) { current_op = JL; cc = CCOFLOW; }
 		else if("bl" == args[0]) { current_op = JL; cc = CCUNCOND; }
 		else if("ret" == args[0]) { current_op = RET; }
@@ -91,25 +92,26 @@ namespace asmrunner
 		else if("tim" == args[0]) { current_op = TIM; }
 		else if("r" == args[0]) { current_op = R; }
 		else if("sr" == args[0]) { current_op = SR; }
+		else if("noop" == args[0]) { current_op = NOP; noop = true; }
 		else
 		{
 			throw mt_bad_mnemonic();
 		}
 
-		// Check for insufficient arguments TODO: simplify
-		if(args.size() >= 1)
+		// Check for insufficient arguments
+		if(args.size() > 1)
 		{
 			if	(
-					(r_inst(current_op) && args.size() != 4 && current_op != DC) ||
-					(r_inst(current_op) && args.size() != 3 && current_op == DC) ||
+					(r_inst(current_op) && args.size() != 4 && current_op != DC && !noop) ||
+					(r_inst(current_op) && args.size() != 3 && current_op == DC && !noop) ||
 					(i_inst(current_op) && args.size() != 4 && !mem_inst(current_op)) ||
 					(i_inst(current_op) && args.size() != 3 && mem_inst(current_op)) ||
 					(j_inst(current_op) && args.size() != 2) ||
 					(m_inst(current_op) && args.size() != 3 && !(current_op == R || current_op == LK || current_op == SR || current_op == SAT)) ||
 					(m_inst(current_op) && args.size() != 2 && (current_op == R || current_op == LK || current_op == SR || current_op == SAT)) ||
-					(n_inst(current_op) && args.size() != 1) ||
-					((current_op == WFB || current_op == CS || current_op == LS || current_op == RS) && args.size() != 3) ||
-					((current_op == DS) && args.size() != 4) 
+					((n_inst(current_op) || noop ) && args.size() != 1) ||
+					((current_op == WFB || current_op == CS || current_op == RS) && args.size() != 3) ||
+					((current_op == DS || current_op == LS) && args.size() != 4)
 					
 				)
 			{
@@ -255,6 +257,20 @@ namespace asmrunner
 			else if(current_op == DS)
 			{
 				rt = get_reg_num(args[3].c_str());
+			}
+
+			else if(current_op == LS)
+			{
+				if(jump_syms.has(args[3]))
+				{
+					priscas::BW_32 label_PC = static_cast<int32_t>(jump_syms.lookup_from_sym(std::string(args[3].c_str())));
+					imm = label_PC.AsInt32();
+				}
+
+				else
+				{
+					imm = priscas::get_imm(args[3].c_str());
+				}
 			}
 
 			else if(j_inst(current_op)){}

@@ -74,6 +74,7 @@ namespace asmrunner
 	/* Sprite size
 	 */
 	const int32_t SPRITE_SIZE = 192;
+	const int32_t PACKED_SPRITE_SIZE = 256;
 
 
 	namespace StreamMode

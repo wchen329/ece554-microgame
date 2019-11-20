@@ -1,3 +1,7 @@
+# allinst.s
+# Shows all the instructions
+# required.
+
 BEGIN:
 addi $2, $0, 50
 add $1, $2, $3
@@ -18,6 +22,8 @@ lwo $17, 20($15)
 swo $18, 25($16)
 swo $19, 300($16)
 beq BEGIN
+ble BEGIN
+bge BEGIN
 bne BEGIN
 bgt AFTER
 bleq BEGIN
@@ -28,7 +34,7 @@ ret
 lk $20
 wfb $21, $22
 dfb
-ls %3, 2, 200
+ls %3, 2, 300
 ds %1, $21, $22
 cs $23, $24
 rs %2, 2

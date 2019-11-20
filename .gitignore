@@ -7,4 +7,5 @@ mg_assembler/mg_assembler/Release/*
 *.opendb
 *.swp
 *.o
-mgs
+asm -al
+asm/mgassemble

@@ -228,12 +228,7 @@ namespace asmrunner
 					rs = get_reg_num(args[2].c_str());
 				}
 
-				else if(current_op == LS)
-				{
-					imm = priscas::get_imm(args[2].c_str());
-				}
-
-				else if(current_op == RS)
+				else if(current_op == RS || current_op == LS)
 				{
 					cc = priscas::get_imm(args[2].c_str());
 				}

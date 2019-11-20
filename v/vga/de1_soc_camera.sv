@@ -1,3 +1,4 @@
+
 // ============================================================================
 // Copyright (c) 2013 by Terasic Technologies Inc.
 // ============================================================================
@@ -376,7 +377,7 @@ logic [12:0] vga_x, vga_y;
 
 logic [1:0]  state, nxt_state;
 logic write, synced;
-logic [9:0] count;		
+logic [11:0] count;		
 
 assign rst = ~KEY[0];
 
@@ -386,18 +387,26 @@ assign LEDR  = currentr1_addr[9:0];
 
 assign synced = (vga_x == 12'd0) & (vga_y == 12'd0) & (currentr1_addr == 0);	
 
-assign nxt_state 	= (state == 2'h0) & ~KEY[1] ? 2'h1 
+
+
+assign nxt_state 	= (state == 2'h0) & ~KEY[1] & (currentr1_addr == '0)? 2'h1 
+						: (state == 2'h1) & (count == 12'hFFFF) & (KEY[1]) ? 2'h2
+						: (state == 2'h2) & synced? 2'h0
+						: state;
+
+
+/*assign nxt_state 	= (state == 2'h0) & ~KEY[1] ? 2'h1 
 						: (state == 2'h1) & (count == 10'hFFF) & (KEY[1]) ? 2'h2
 						: (state == 2'h2) & synced ? 2'h0
 						: state;
 	
-	
+*/	
 
 	
 always @ (posedge CLOCK_50) begin
 		
 	state <= rst ? 1'b0 : nxt_state;
-	count <= (state == 2'h1) ? count + 1'h1 : 1'h0;
+	count <= (state == 2'h1) ? count + 12'h1 : 12'h0;
 		
 end		
 						
@@ -451,7 +460,7 @@ Sdram_Control	   u7	(	// HOST Side
 				        	.RD1_ADDR(0),
 							.RD1_MAX_ADDR(256*256),
 							.RD1_LENGTH(8'h40),
-							.RD1_LOAD(!DLY_RST_0 & ~redraw),
+							.RD1_LOAD(!DLY_RST_0 ),
 							.RD1_CLK(~VGA_CTRL_CLK),
 							
 	/*						

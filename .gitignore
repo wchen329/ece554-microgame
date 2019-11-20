@@ -9,3 +9,14 @@ mg_assembler/mg_assembler/Release/*
 *.o
 asm -al
 asm/mgassemble
+mgs
+
+# ignore vsim files
+**/work
+**/*.mti
+**/*.mpf
+**/transcript
+**/*.wlf
+
+# ignore nfs files
+**/.nfs*

@@ -191,10 +191,10 @@ always_comb begin
 		rf_reg2_data = {rf[rf_reg2_address][31:16], rf_write_data[15:0]};
 	end else
 	if(rf_write_upper && rf_write_address == rf_reg1_address) begin
-		rf_reg1_data = {rf_write_data[31:16], rf[rf_reg1_address][15:0]};
+		rf_reg1_data = {rf_write_data[15:0], rf[rf_reg1_address][15:0]};
 		end else
 	if(rf_write_upper && rf_write_address == rf_reg2_address) begin
-		rf_reg2_data = {rf_write_data[31:16], rf[rf_reg2_address][15:0]};
+		rf_reg2_data = {rf_write_data[15:0], rf[rf_reg2_address][15:0]};
 	end else
 	if(rf_write && rf_write_address == rf_reg1_address) begin
 		rf_reg1_data = rf_write_data;

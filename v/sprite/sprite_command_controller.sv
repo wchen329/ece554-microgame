@@ -61,10 +61,13 @@ state_t state, next_state;
 assign { fb_r, fb_g, fb_b } = (cmd_op == `SPRITE_DS) ? { sb_o_r[cmd_sprite_reg], sb_o_g[cmd_sprite_reg], sb_o_b[cmd_sprite_reg] } :
 															(cmd_op == `SPRITE_WFB) ? { cmd_r, cmd_g, cmd_b } :
 															0;
-// block top 7 rows
-// assign { fb_r, fb_g, fb_b } = (cmd_x < 8 || cmd_y < 8) ? 0 :
-// 															(cmd_op == `SPRITE_DS) ? { sb_o_r[cmd_sprite_reg], sb_o_g[cmd_sprite_reg], sb_o_b[cmd_sprite_reg] } :
-// 															(cmd_op == `SPRITE_WFB) ? { cmd_r, cmd_g, cmd_b } :
+// block top/left 7 rows/cols for DS
+// assign { fb_r, fb_g, fb_b } = (cmd_op == `SPRITE_WFB) ? { cmd_r, cmd_g, cmd_b } :
+// 															(cmd_op == `SPRITE_DS && cmd_x > 7 && cmd_y > 7) ? { sb_o_r[cmd_sprite_reg], sb_o_g[cmd_sprite_reg], sb_o_b[cmd_sprite_reg] } :
+// 															0;
+// block all 7 outside rows/cols for DS
+// assign { fb_r, fb_g, fb_b } = (cmd_op == `SPRITE_WFB) ? { cmd_r, cmd_g, cmd_b } :
+// 															(cmd_op == `SPRITE_DS && cmd_x > 7 && cmd_y > 7 && cmd_x < 249 && cmd_y < 249) ? { sb_o_r[cmd_sprite_reg], sb_o_g[cmd_sprite_reg], sb_o_b[cmd_sprite_reg] } :
 // 															0;
 // WFB: cmd x/y
 // CS/DS: cmd x/y + sprite px

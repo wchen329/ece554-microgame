@@ -89,11 +89,10 @@ sprite_command_controller sprite_command_controller(
 
 // TODO: inst frame buffer
 
-// sprite mem
-logic [31:0] sprite_mem[0:255];
-assign mem_in = sprite_mem[mem_address];
-
-initial $readmemh("sprite_buffer_mem.hex", sprite_mem);
+// fake sprite mem: sprite 0 = red, sprite 1 = green, sprite 2 = blue
+assign mem_in = mem_address < 64 ? { 8'h0, mem_address[8:0], 8'h0, 8'h0 } :
+								mem_address < 128 ? { 8'h0, 8'h0, mem_address[8:0], 8'h0 } :
+								{ 8'h0, 8'h0, 8'h0, mem_address[8:0] }
 
 assign rst_n = KEY[0];
 always_comb

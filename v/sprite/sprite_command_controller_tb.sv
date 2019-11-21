@@ -235,6 +235,7 @@ task check_sprite_frame(input integer isprite_addr, [7:0] ix, iy);
 	integer i;
 
 	for(i = 0; i < 64; i++) begin
+		// assert (frame_buffer[{iy, ix}+i] == (ix < 8 || iy < 8 || ix > 248 || iy > 248) ? 0 : sprite_mem[isprite_addr+i][23:0])
 		assert (frame_buffer[{iy, ix}+i] == sprite_mem[isprite_addr+i][23:0])
 		else begin
 			$display(

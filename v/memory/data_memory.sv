@@ -1,9 +1,10 @@
 module data_memory
 #(
-	parameter USER_ADDRESS_WIDTH=16
+	parameter WIDTH=16
 )(
 	input clk,
 	input rst_n,
+	input [USER_ADDRESS_WIDTH-1:0] address,
 	input [31:0] data_in,
 	input write,
 	input read,
@@ -18,7 +19,11 @@ module data_memory
 assign stall = 1'b0;
 
 data_memory_8k user_space(
-	
+	.address(address),
+	.clock(clk),
+	.data(data_in),
+	.wren(write),
+	.q(data_out)
 );
 
 

@@ -1,7 +1,7 @@
 module cpu
 #(
-	parameter INSTRUCTION_ADDRESS_WIDTH=16,
-	parameter USER_ADDRESS_WIDTH=16,
+	parameter INSTRUCTION_ADDRESS_WIDTH=11,
+	parameter USER_ADDRESS_WIDTH=11,
 	parameter NUM_INPUT_BITS=5
 )(
 	input clk, rst_n
@@ -79,11 +79,18 @@ end
 
 logic [31:0] instruction;
 
-instruction_memory instruction_memory(
+logic [31:0] mem_sprite_out;
+logic [INSTRUCTION_ADDRESS_WIDTH-1:0] mem_sprite_address;
+
+// TODO actually wire to sprite stuff
+assign mem_sprite_address = 0;
+
+instruction_memory #(INSTRUCTION_ADDRESS_WIDTH) instruction_memory(
 	.clk(clk),
-	.rst_n(rst_n),
-	.address(pc),
-	.data(instruction)
+	.address_a(pc),
+	.data_a(instruction),
+	.address_b(mem_sprite_address),
+	.data_b(mem_sprite_out)
 );
 
 
@@ -838,7 +845,7 @@ assign user_memory_data_in =
 	memwb_fw_mem_enable ? memwb_fw_mem :
 	exmem_store_data;
 
-data_memory data_memory(
+data_memory #(USER_ADDRESS_WIDTH) data_memory(
 	.clk(clk),
 	.rst_n(rst_n),
 	.address(user_memory_address),

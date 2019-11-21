@@ -44,7 +44,7 @@ dfb
 
 # draw sprites inside border
 # draw rotated 0
-ls %0, 0, 0
+ls %0, 0, SPRITE
 lli $1, 20
 lli $2, 10
 ds %0, $1, $2
@@ -94,15 +94,15 @@ dfb
 lli $1, 20
 lli $2, 10
 cs $1, $2
-# draw rotated 1
+# clear rotated 1
 lli $1, 30
 lli $2, 20
 cs $1, $2
-# draw rotated 2
+# clear rotated 2
 lli $1, 20
 lli $2, 30
 cs $1, $2
-# draw rotated 3
+# clear rotated 3
 lli $1, 10
 lli $2, 20
 cs $1, $2
@@ -113,15 +113,15 @@ dfb
 lli $1, 124
 lli $2, 0
 cs $1, $2
-# draw rotated 1
+# clear rotated 1
 lli $1, 255
 lli $2, 124
 cs $1, $2
-# draw rotated 2
+# clear rotated 2
 lli $1, 124
 lli $2, 255
 cs $1, $2
-# draw rotated 3
+# clear rotated 3
 lli $1, 0
 lli $2, 124
 cs $1, $2

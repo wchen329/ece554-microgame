@@ -88,6 +88,25 @@ namespace asmrunner
 	{
 		this->spstr = fopen(fname.c_str(), "r");
 
+		// Find the "base path", i.e. context path
+		std::string bp;
+		std::string buf;
+
+		for(size_t z = 0; z < fname.size(); z++)
+		{
+			buf += fname[z];
+
+			// If we've reached a slash, add everything we've seen to the relative path
+			if(fname[z] == '/')
+			{
+				bp += buf;
+				buf.clear();
+			}
+			
+		}
+
+		this->stream_offset = bp;
+
 		if(spstr == NULL)
 		{
 			// Change to file exception
@@ -147,7 +166,7 @@ namespace asmrunner
 
 			// Construct a new sprite off of the filename. 
 			// Return that sprite
-			return std::shared_ptr<Sprite>(new Sprite(sn_var[0], fn_var[0]));
+			return std::shared_ptr<Sprite>(new Sprite(sn_var[0], this->stream_offset+ fn_var[0]));
 		}
 	}
 

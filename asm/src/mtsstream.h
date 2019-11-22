@@ -57,6 +57,7 @@ namespace asmrunner
 			sprite_stream(const sprite_stream&);
 			sprite_stream operator=(sprite_stream);
 			FILE* spstr;
+			std::string stream_offset;
 	};
 }
 

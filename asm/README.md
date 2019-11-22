@@ -13,5 +13,20 @@ Some other useful options include...
 
 An example of the layout of all instructions are int the tests folder (more details to arrive).
 
-### Warning About Sprite Table
-The Sprite Table currently does not parse whitespace in a flexible manner, nor does escaping. This will be added soon.
+### Sprite Table Format
+The Sprite Table is simply a list of associative pairs of Sprite Name and the Filename of that Sprite, with one pair per line:
+
+`SPRITE_NAME: "filename.sprite"`
+
+The filename is either an absolute path or a path relative to the sprite table with backslashes used to delineate between directories.
+
+The Sprite name given (here `SPRITE_NAME`) is not important except for the fact that it can be used for load sprite
+operations in programs. So for a sprite of sprite name `SPRITE_NAME`:
+
+`
+...
+ls %1, 0, SPRITE_NAME
+...
+`
+
+Would load the sprite of sprite name `SPRITE_NAME` into sprite register 1.

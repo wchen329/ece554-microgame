@@ -4,7 +4,11 @@ module cpu
 	parameter USER_ADDRESS_WIDTH=11,
 	parameter NUM_INPUT_BITS=5
 )(
-	input clk, rst_n
+	input clk, rst_n,
+	
+	// TODO REMOVE ME
+	output [10:0] pc_report,
+	output [4:0] opcode_report
 );
 
 
@@ -75,6 +79,10 @@ always_ff @(posedge clk or negedge rst_n) begin
 end
 
 
+// TODO REMOVE ME
+assign pc_report = pc;
+
+
 // instruction memory
 
 logic [31:0] instruction;
@@ -92,6 +100,10 @@ instruction_memory #(INSTRUCTION_ADDRESS_WIDTH) instruction_memory(
 	.address_b(mem_sprite_address),
 	.data_b(mem_sprite_out)
 );
+
+
+// TODO REMOVE ME
+assign opcode_report = instruction[31:27];
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -575,7 +587,7 @@ assign rf_reg2_address = id_control.use_dest_as_op2 ? ifid_instruction[26:22] : 
 assign link           = id_control.link && should_branch && ~ifid_stall;
 assign link_address   = ifid_pc + 1;
 assign branch         = id_control.branch && should_branch && ~ifid_stall;
-assign branch_address = ifid_pc + 1 + immediate;
+assign branch_address = ifid_pc + 1 + immediate[INSTRUCTION_ADDRESS_WIDTH-1:0];
 assign link_return    = id_control.link_return && ~ifid_stall;
 assign ifid_flush     = branch || link_return;
 
@@ -756,7 +768,7 @@ lfsr_32 randy(
 
 logic [31:0] time_ms;
 
-system_time timer(
+system_timer timer(
 	.clk(clk),
 	.rst_n(rst_n),
 	.ms(time_ms)

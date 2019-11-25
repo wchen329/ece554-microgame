@@ -4,7 +4,7 @@ module data_memory
 )(
 	input clk,
 	input rst_n,
-	input [USER_ADDRESS_WIDTH-1:0] address,
+	input [WIDTH-1:0] address,
 	input [31:0] data_in,
 	input write,
 	input read,

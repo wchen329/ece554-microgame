@@ -3,8 +3,8 @@ module instruction_memory
 	WIDTH=16
 )(
 	input clk,
-	input [INSTRUCTION_ADDRESS_WIDTH-1:0] address_a,
-	input [INSTRUCTION_ADDRESS_WIDTH-1:0] address_b,
+	input [WIDTH-1:0] address_a,
+	input [WIDTH-1:0] address_b,
 
 	output [31:0] data_a,
 	output [31:0] data_b

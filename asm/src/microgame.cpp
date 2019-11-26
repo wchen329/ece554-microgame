@@ -172,6 +172,7 @@ namespace asmrunner
 			operation == R ? true :
 			operation == SAT ? true :
 			operation == SR ? true :
+			operation == TIM ? true :
 			false;
 	}
 
@@ -261,18 +262,19 @@ namespace asmrunner
 
 			if(op == WFB || op == DS || op == CS)
 			{
-				w = (w.AsInt32() | ((rs & ((1 << 5) - 1) ) << 19 ));
-				w = (w.AsInt32() | ((rt & ((1 << 5) - 1) ) << 14 ));
+				w = (w.AsInt32() | ((rt & ((1 << 5) - 1) ) << 17 ));
+				w = (w.AsInt32() | ((rs & ((1 << 5) - 1) ) << 12 ));
 			}
 
 			else if(op == LS)
 			{
 				w = (w.AsInt32() | (imm & ((1 << 16) - 1)));
+				w = (w.AsInt32() | ((cc & ((1 << 3) - 1)) << 22));
 			}
 
 			else if(op == RS)
 			{
-				w = (w.AsInt32() | ((rsprite & ((1 << 3) - 1) ) << 25 ));
+				w = (w.AsInt32() | ((cc & ((1 << 3) - 1)) << 22));
 			}
 			
 		}

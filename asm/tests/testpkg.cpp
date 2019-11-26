@@ -56,14 +56,19 @@ int main(int argc, char** argv)
 	num_to_output[30] = "93000002";
 	num_to_output[31] = "9600FFE0";
 	num_to_output[32] = "9700FFDF";
-	num_to_output[33] = "";
-	num_to_output[34] = "";
-	num_to_output[35] = "";
-	num_to_output[36] = "";
-	num_to_output[37] = "";
-	num_to_output[38] = "";
-	num_to_output[39] = "";
-	num_to_output[40] = "";
+	num_to_output[33] = "98000000";
+	num_to_output[34] = "A5000000";
+	num_to_output[35] = "A82B6000";
+	num_to_output[36] = "B0000000";
+	num_to_output[37] = "BB80FFFF";
+	num_to_output[38] = "C12B6000";
+	num_to_output[39] = "C82F8000";
+	num_to_output[40] = "D2C00000";
+	num_to_output[41] = "DE800000";
+	num_to_output[42] = "E6F80000";
+	num_to_output[43] = "EF400000";
+	num_to_output[44] = "F7800000";
+	num_to_output[45] = "FFC00000";
 
 	// Open reference test file
 	FILE* f = fopen("test.hl", "r");

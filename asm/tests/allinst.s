@@ -42,16 +42,16 @@ blov BEGIN # 9600FFE0
 bl BEGIN # 9700FFDF
 
 AFTER:
-ret
-lk $20
-wfb $21, $22
-dfb
-ls %3, 2, 300
-ds %1, $21, $22
-cs $23, $24
-rs %2, 3
-sat $26
-dc $27, $28
-tim $29
-r $30
-sr $31
+ret # 98000000
+lk $20 # A5000000
+wfb $21, $22 # A82B6000
+dfb # B0000000
+ls %3, 2, hFFFF # BB80FFFF
+ds %1, $21, $22 # C12B6000
+cs $23, $24 # C82F8000
+rs %2, 3 # D2C00000
+sat $26 # DE800000
+dc $27, $28 # E6F80000
+tim $29 # EF400000
+r $30 # F7800000
+sr $31 # FFC00000

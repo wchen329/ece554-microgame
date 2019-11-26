@@ -8,7 +8,8 @@ module cpu
 	
 	// TODO REMOVE ME
 	output [10:0] pc_report,
-	output [4:0] opcode_report
+	output [4:0] opcode_report,
+	output [9:0] result_report
 );
 
 
@@ -251,6 +252,10 @@ end
 
 // register 32 is RGB register, otherwise general-purpose
 assign rf_rgb = rf[31];
+
+// TODO delete me TODO
+assign result_report = rf[5'b00100][9:0];
+// TODO TODO TODO
 
 
 // control signals for all stages here and beyond

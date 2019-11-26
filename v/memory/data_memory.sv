@@ -14,9 +14,23 @@ module data_memory
 );
 
 
-// BRAM current implementation is single-cycle
+// BRAM has one-cycle delay on both reads and writes
+// so simple state machine to reflect this
 
-assign stall = 1'b0;
+reg state;
+
+always_ff @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		state <= 0;
+	end else if(~state && (read || write)) begin
+		state <= 1;
+	end else begin
+		state <= 0;
+	end
+end
+
+assign stall = ~state && (read || write);
+
 
 data_memory_8k user_space(
 	.address(address),

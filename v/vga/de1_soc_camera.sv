@@ -33,7 +33,7 @@
 // ============================================================================
 
 //`define ENABLE_HPS
-//`define ENABLE_USB
+//`define ENABLE_USB 
 
 module DE1_SoC_CAMERA(
 

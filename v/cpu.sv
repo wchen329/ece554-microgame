@@ -60,27 +60,49 @@ end
 
 // program counter
 
-logic branch;
-logic link_return;
-logic [INSTRUCTION_ADDRESS_WIDTH-1:0] branch_address;
-reg [INSTRUCTION_ADDRESS_WIDTH-1:0] pc;
+// have to flop this to make sure that reset is applied
 
-always_ff @(posedge clk or negedge rst_n) begin
+reg pc_reset;
+
+always_ff @(posedge clk, negedge rst_n) begin
 	if(~rst_n) begin
-		pc <= 0;
-	end else if(branch) begin
-		pc <= branch_address;
-	end else if(link_return) begin
-		pc <= link_reg;
-	end else if(~pc_stall) begin
-		// instruction memory is word-addressable
-		pc <= pc + 1;
+		pc_reset <= 1;
+	end else begin
+		pc_reset <= 0;
 	end
 end
 
+logic branch;
+logic link_return;
+logic [INSTRUCTION_ADDRESS_WIDTH-1:0] branch_address;
+logic [INSTRUCTION_ADDRESS_WIDTH-1:0] pc;
 
-// TODO REMOVE ME
-assign pc_report = pc;
+// mirror of what BRAM has
+
+reg [INSTRUCTION_ADDRESS_WIDTH-1:0] pc_ghost;
+
+always_ff @(posedge clk or negedge rst_n) begin
+	if(~rst_n) begin
+		pc_ghost <= 0;
+	end else begin
+		pc_ghost <= pc;
+	end
+end
+
+always_comb begin
+	if(pc_reset) begin
+		pc = 0;
+	end else if(branch) begin
+		pc = branch_address;
+	end else if(link_return) begin
+		pc = link_reg;
+	end else if(~pc_stall) begin
+		// instruction memory is word-addressable
+		pc = pc_ghost + 1;
+	end else begin
+		pc = pc_ghost;
+	end
+end
 
 
 // instruction memory
@@ -100,10 +122,6 @@ instruction_memory #(INSTRUCTION_ADDRESS_WIDTH) instruction_memory(
 	.address_b(mem_sprite_address),
 	.data_b(mem_sprite_out)
 );
-
-
-// TODO REMOVE ME
-assign opcode_report = instruction[31:27];
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -135,6 +153,14 @@ always_ff @(posedge clk or negedge rst_n) begin
 		ifid_is_no_op <= instruction == 32'b0;
 	end
 end
+
+
+// TODO REMOVE ME
+assign pc_report = ifid_pc;
+
+
+// TODO REMOVE ME
+assign opcode_report = ifid_instruction[31:27];
 
 
 ///////////////////////////////////////////////////////////////////////////////

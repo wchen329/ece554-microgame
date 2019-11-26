@@ -1,0 +1,13 @@
+-- Microgame Assembler generated .mif file
+WIDTH=32;
+DEPTH=4;
+
+ADDRESS_RADIX=UNS;
+DATA_RADIX=HEX;
+
+CONTENT BEGIN
+	0 : 58C0000C;
+	1 : 60C00000;
+	2 : 70C00018;
+	3 : 69000018;
+END;

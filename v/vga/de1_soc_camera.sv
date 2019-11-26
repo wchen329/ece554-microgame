@@ -389,8 +389,10 @@ assign LEDR  = state;
 
 
 assign nxt_state 	= (state == 2'h0) & ~KEY[1] & (read_count == 16'hFFFF)? 2'h1 
+						: (state == 2'h0) & ~KEY[2] & (read_count == 16'hFFFF)? 2'h3
 						: (state == 2'h1) & (write_count == 16'hFFFF)? 2'h2
 						: (state == 2'h2) & (vga_x == '0) & (vga_y == '0) ? 2'h0
+						: (state == 2'h3) & (write_count == 16'hFFFF)? 2'h2
 						: state;
 
 
@@ -421,9 +423,7 @@ assign currentw1_x = write_count[7:0];
 assign currentw1_y = write_count[15:8];
 
 
-//assign write_data = {1'h0, fb_r[currentw1_x][currentw1_y], fb_g[currentw1_x][currentw1_y], fb_b[currentw1_x][currentw1_y]};
-assign write_data = (currentw1_x <= (SW+10)) && (currentw1_y <= (SW+10)) && (currentw1_x > SW) && (currentw1_y > SW)? {1'b0,5'h00,5'h7F,5'h00} : {1'b0,5'h00,5'h00,5'h7F} ;
-						
+
 	
 
 logic dval, dval_nxt;
@@ -448,12 +448,23 @@ always @(posedge VGA_CTRL_CLK) begin
 end
 
 
-logic [15:0] data_to_write, pixel_number;
+logic [15:0] data_to_write, write_data1, pixel_number;
 
 
-assign data_to_write = {1'b0, 5'hFF, 5'h00, 5'h00};
-assign pixel_number = 16'd32768;
-						
+assign data_to_write = {1'b0, 5'hFF, 5'hFF, 5'h00};
+assign pixel_number = 16'd540;
+			
+			
+			
+//assign write_data = {1'h0, fb_r[currentw1_x][currentw1_y], fb_g[currentw1_x][currentw1_y], fb_b[currentw1_x][currentw1_y]};
+assign write_data = SW[9] ? (currentw1_x <= (10)) && (currentw1_y <= (10)) && (currentw1_x > 0) && (currentw1_y > 0) ? {1'b0,5'h00,5'h7F,5'h00} : {1'b0,5'h00,5'h00,5'h7F}
+						: write_data1;
+			
+			
+			
+//must initialize all data first
+			
+			
 //SDRam Read and Write as Frame Buffer
 Sdram_Control	   u7	(	// HOST Side						
 							.RESET_N(KEY[0]),
@@ -478,9 +489,9 @@ Sdram_Control	   u7	(	// HOST Side
 							.WR2_DATA(data_to_write),
 							//.WR1_DATA({1'b0,RGB_R[11:7],RGB_G[11:7],RGB_B[11:7]}),
 							//.WR1(RGB_DVAL),
-							.WR2( 1'b1 ),
-							.WR2_ADDR(31'h100000 + pixel_number),
-							.WR2_MAX_ADDR(31'h100000 + pixel_number),
+							.WR2( (state == 2'h3) ),
+							.WR2_ADDR(32'h100000 + pixel_number),
+							.WR2_MAX_ADDR(32'h100000 + pixel_number),
 							.WR2_LENGTH(8'h01),
 							.WR2_LOAD(!DLY_RST_0),
 							.WR2_CLK(CLOCK_50),
@@ -497,13 +508,13 @@ Sdram_Control	   u7	(	// HOST Side
 						
 							//used for copying
 							// FIFO Read Side 2
-							.RD2_DATA(),
-							.RD2(1'b0),
-							.RD2_ADDR(16'h100000),
-							.RD2_MAX_ADDR(16'h100000 + 256*256),
+							.RD2_DATA(write_data1),
+							.RD2((state == 2'h1)),
+							.RD2_ADDR(32'h100000),
+							.RD2_MAX_ADDR(32'h100000 + 256*256),
 							.RD2_LENGTH(8'h40),
 							.RD2_LOAD(!DLY_RST_0),
-							.RD2_CLK(CLOCK_50),
+							.RD2_CLK(~CLOCK_50),
 							
 							// SDRAM Side
 							.SA(DRAM_ADDR),

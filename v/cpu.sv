@@ -77,7 +77,7 @@ logic link_return;
 logic [INSTRUCTION_ADDRESS_WIDTH-1:0] branch_address;
 logic [INSTRUCTION_ADDRESS_WIDTH-1:0] pc;
 
-// mirror of what BRAM has
+// need to track PC in BRAM
 
 reg [INSTRUCTION_ADDRESS_WIDTH-1:0] pc_ghost;
 
@@ -144,11 +144,11 @@ always_ff @(posedge clk or negedge rst_n) begin
 	end else if(ifid_flush) begin
 		ifid_instruction <= 0;
 		// empty edge case, but neat
-		ifid_pc <= pc;
+		ifid_pc <= pc_ghost;
 		ifid_is_no_op <= 1;
 	end else if(~ifid_stall) begin
 		ifid_instruction <= instruction;
-		ifid_pc <= pc;
+		ifid_pc <= pc_ghost;
 		// a bit of a bandaid
 		ifid_is_no_op <= instruction == 32'b0;
 	end
@@ -251,16 +251,6 @@ end
 
 // register 32 is RGB register, otherwise general-purpose
 assign rf_rgb = rf[31];
-
-
-// TODO TODO TODO DELETE ME
-
-always begin
-	#4500;
-	$display("Result: %u", rf[5'b00100]);
-end
-
-// DELETE ME
 
 
 // control signals for all stages here and beyond

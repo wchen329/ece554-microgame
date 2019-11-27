@@ -107,8 +107,8 @@ namespace asmrunner
 					(i_inst(current_op) && args.size() != 4 && !mem_inst(current_op)) ||
 					(i_inst(current_op) && args.size() != 3 && mem_inst(current_op)) ||
 					(j_inst(current_op) && args.size() != 2) ||
-					(m_inst(current_op) && args.size() != 3 && !(current_op == R || current_op == LK || current_op == SR || current_op == SAT)) ||
-					(m_inst(current_op) && args.size() != 2 && (current_op == R || current_op == LK || current_op == SR || current_op == SAT)) ||
+					(m_inst(current_op) && args.size() != 3 && !(current_op == R || current_op == LK || current_op == SR || current_op == SAT || current_op == TIM)) ||
+					(m_inst(current_op) && args.size() != 2 && (current_op == R || current_op == LK || current_op == SR || current_op == SAT || current_op == TIM)) ||
 					((n_inst(current_op) || noop ) && args.size() != 1) ||
 					((current_op == WFB || current_op == CS || current_op == RS) && args.size() != 3) ||
 					((current_op == DS || current_op == LS) && args.size() != 4)
@@ -223,9 +223,14 @@ namespace asmrunner
 
 			else if(s_inst(current_op))
 			{
-				if(current_op == WFB || current_op == CS || current_op == DS)
+				if(current_op == WFB || current_op == CS)
 				{
 					rs = get_reg_num(args[2].c_str());
+				}
+
+				else if(current_op == DS)
+				{
+					rt = get_reg_num(args[2].c_str());
 				}
 
 				else if(current_op == RS || current_op == LS)
@@ -251,7 +256,7 @@ namespace asmrunner
 
 			else if(current_op == DS)
 			{
-				rt = get_reg_num(args[3].c_str());
+				rs = get_reg_num(args[3].c_str());
 			}
 
 			else if(current_op == LS)

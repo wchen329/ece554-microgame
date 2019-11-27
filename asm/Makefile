@@ -23,3 +23,8 @@ clean:
 		then echo "Successfully cleaned assembler executable.";\
 	else echo "No executable found. Skipping...";\
 	fi
+
+test: mgassemble
+	./mgassemble -i tests/allinst.s -f hl -o test.hl # -g tests/testspmap.st
+	$(CC) tests/testpkg.cpp -o testmgassemble
+	./testmgassemble

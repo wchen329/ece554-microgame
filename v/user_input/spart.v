@@ -45,9 +45,9 @@ module spart(
 	assign tx_data = (iocs & ~iorw) ? databus : 8'b0; // data to drive tx data (potentially)
 	
 	// Receive and Transmit Logic
-	shifter rx_shifter(rxd, clk, rx_rst, baud_en, rx_data, rda);
+	user_io_shifter rx_shifter(rxd, clk, rx_rst, baud_en, rx_data, rda);
 	
-	shift_out tx_shifter(clk, rst, tx_en, baud_en, tx_data, txd, tbr);
+	user_io_shift_out tx_shifter(clk, rst, tx_en, baud_en, tx_data, txd, tbr);
 	
 	// Baud rate generator
 	BRG brg(clk, brg_rst, div_hword, div_in, baud_en);

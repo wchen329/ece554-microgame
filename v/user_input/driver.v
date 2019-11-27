@@ -15,7 +15,7 @@ module driver(
     );
 
 	// Instantiate CPU to harness
-	cpu CPU0(	.clk(clk),
+	user_io_cpu CPU0(	.clk(clk),
 			.rst(rst),
 			.iocs(iocs),
 			.iorw(iorw),

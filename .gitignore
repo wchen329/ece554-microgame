@@ -20,3 +20,6 @@ mgs
 
 # ignore nfs files
 **/.nfs*
+
+# ignore .bak
+**/.bak

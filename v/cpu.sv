@@ -5,6 +5,7 @@ module cpu
 	parameter NUM_INPUT_BITS=5
 )(
 	input clk, rst_n,
+	input [35:0] gpio,
 	
 	// TODO REMOVE ME
 	output [10:0] pc_report,
@@ -745,10 +746,10 @@ end
 
 logic [NUM_INPUT_BITS-1:0] user_input;
 
-input_buffer user_input_buffer(
+user_input_buffer stimulus(
 	.clk(clk),
-	.rst_n(rst_n),
-	.clear(ex_control.select_input),
+	.rst(ex_control.select_input),
+	.GPIO(gpio),
 	.up(user_input[4]),
 	.right(user_input[3]),
 	.down(user_input[2]),

@@ -1,0 +1,41 @@
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_TOOL_NAME "Qsys"
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_TOOL_VERSION "18.1"
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_TOOL_ENV "Qsys"
+set_global_assignment -library "soc_audio_lrclk" -name SOPCINFO_FILE [file join $::quartus(qip_path) "../../soc_audio_lrclk.sopcinfo"]
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name SLD_INFO "QSYS_NAME soc_audio_lrclk HAS_SOPCINFO 1 GENERATION_ID 1575078283"
+set_global_assignment -library "soc_audio_lrclk" -name MISC_FILE [file join $::quartus(qip_path) "../soc_audio_lrclk.cmp"]
+set_global_assignment -library "soc_audio_lrclk" -name SLD_FILE [file join $::quartus(qip_path) "soc_audio_lrclk.debuginfo"]
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_TARGETED_DEVICE_FAMILY "Cyclone V"
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_GENERATED_DEVICE_FAMILY "{Cyclone V}"
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_QSYS_MODE "STANDALONE"
+set_global_assignment -name SYNTHESIS_ONLY_QIP ON
+set_global_assignment -library "soc_audio_lrclk" -name MISC_FILE [file join $::quartus(qip_path) "../../soc_audio_lrclk.qsys"]
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_NAME "c29jX2F1ZGlvX2xyY2xr"
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_DISPLAY_NAME "c29jX2F1ZGlvX2xyY2xr"
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_REPORT_HIERARCHY "On"
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_INTERNAL "Off"
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_VERSION "MS4w"
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "QVVUT19HRU5FUkFUSU9OX0lE::MTU3NTA3ODI4Mw==::QXV0byBHRU5FUkFUSU9OX0lE"
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0VfRkFNSUxZ::Q3ljbG9uZSBW::QXV0byBERVZJQ0VfRkFNSUxZ"
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0U=::NUNTRU1BNUYzMUM2::QXV0byBERVZJQ0U="
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0VfU1BFRURHUkFERQ==::Ng==::QXV0byBERVZJQ0VfU1BFRURHUkFERQ=="
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "QVVUT19BVURfQkNMS19DTE9DS19SQVRF::LTE=::QXV0byBDTE9DS19SQVRF"
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "QVVUT19BVURfQkNMS19DTE9DS19ET01BSU4=::LTE=::QXV0byBDTE9DS19ET01BSU4="
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "QVVUT19BVURfQkNMS19SRVNFVF9ET01BSU4=::LTE=::QXV0byBSRVNFVF9ET01BSU4="
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "QVVUT19DTEtfQ0xPQ0tfUkFURQ==::LTE=::QXV0byBDTE9DS19SQVRF"
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "QVVUT19DTEtfQ0xPQ0tfRE9NQUlO::LTE=::QXV0byBDTE9DS19ET01BSU4="
+set_global_assignment -entity "soc_audio_lrclk" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "QVVUT19DTEtfUkVTRVRfRE9NQUlO::LTE=::QXV0byBSRVNFVF9ET01BSU4="
+set_global_assignment -entity "soc_audio_lrclk_intel_up_avalon_audio_clks_0" -library "soc_audio_lrclk" -name IP_COMPONENT_NAME "c29jX2F1ZGlvX2xyY2xrX2ludGVsX3VwX2F2YWxvbl9hdWRpb19jbGtzXzA="
+set_global_assignment -entity "soc_audio_lrclk_intel_up_avalon_audio_clks_0" -library "soc_audio_lrclk" -name IP_COMPONENT_DISPLAY_NAME "QXVkaW8gTFIgQ2xvY2sgZm9yIERFLXNlcmllcyBCb2FyZHM="
+set_global_assignment -entity "soc_audio_lrclk_intel_up_avalon_audio_clks_0" -library "soc_audio_lrclk" -name IP_COMPONENT_REPORT_HIERARCHY "Off"
+set_global_assignment -entity "soc_audio_lrclk_intel_up_avalon_audio_clks_0" -library "soc_audio_lrclk" -name IP_COMPONENT_INTERNAL "Off"
+set_global_assignment -entity "soc_audio_lrclk_intel_up_avalon_audio_clks_0" -library "soc_audio_lrclk" -name IP_COMPONENT_AUTHOR "SW50ZWwgRlBHQSBVbml2ZXJzaXR5IFByb2dyYW0="
+set_global_assignment -entity "soc_audio_lrclk_intel_up_avalon_audio_clks_0" -library "soc_audio_lrclk" -name IP_COMPONENT_VERSION "MTguMA=="
+set_global_assignment -entity "soc_audio_lrclk_intel_up_avalon_audio_clks_0" -library "soc_audio_lrclk" -name IP_COMPONENT_DESCRIPTION "QXVkaW8gTFIgQ2xvY2sgZm9yIERFLXNlcmllcyBCb2FyZHM="
+set_global_assignment -entity "soc_audio_lrclk_intel_up_avalon_audio_clks_0" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "ZHc=::MjQ=::RGF0YSBXaWR0aA=="
+set_global_assignment -entity "soc_audio_lrclk_intel_up_avalon_audio_clks_0" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "QVVUT19ERVZJQ0VfRkFNSUxZ::Q3ljbG9uZSBW::QXV0byBERVZJQ0VfRkFNSUxZ"
+set_global_assignment -entity "soc_audio_lrclk_intel_up_avalon_audio_clks_0" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "QVVUT19DTEtfQ0xPQ0tfUkFURQ==::MA==::QXV0byBDTE9DS19SQVRF"
+set_global_assignment -entity "soc_audio_lrclk_intel_up_avalon_audio_clks_0" -library "soc_audio_lrclk" -name IP_COMPONENT_PARAMETER "QVVUT19BVURfQkNMS19DTE9DS19SQVRF::MA==::QXV0byBDTE9DS19SQVRF"
+
+set_global_assignment -library "soc_audio_lrclk" -name VERILOG_FILE [file join $::quartus(qip_path) "soc_audio_lrclk.v"]
+set_global_assignment -library "soc_audio_lrclk" -name VERILOG_FILE [file join $::quartus(qip_path) "submodules/soc_audio_lrclk_intel_up_avalon_audio_clks_0.v"]

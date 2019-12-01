@@ -1,0 +1,4 @@
+set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) soc_audio_lrclk/soc_audio_lrclk.qip]
+set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) soc_audio_clk/soc_audio_clk.qip]
+set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) soc_audio_cfg/soc_audio_cfg.qip]
+set_global_assignment -name QIP_FILE [file join $::quartus(qip_path) soc_audio/soc_audio.qip]

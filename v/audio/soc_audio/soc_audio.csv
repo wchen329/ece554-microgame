@@ -1,0 +1,23 @@
+# system info soc_audio on 2019.11.29.19:41:22
+system_info:
+name,value
+DEVICE,5CSEMA5F31C6
+DEVICE_FAMILY,Cyclone V
+GENERATION_ID,1575078081
+#
+#
+# Files generated for soc_audio on 2019.11.29.19:41:22
+files:
+filepath,kind,attributes,module,is_top
+simulation/soc_audio.v,VERILOG,,soc_audio,true
+simulation/submodules/altera_up_audio_bit_counter.v,VERILOG,,soc_audio_audio_0,false
+simulation/submodules/altera_up_audio_in_deserializer.v,VERILOG,,soc_audio_audio_0,false
+simulation/submodules/altera_up_audio_out_serializer.v,VERILOG,,soc_audio_audio_0,false
+simulation/submodules/altera_up_clock_edge.v,VERILOG,,soc_audio_audio_0,false
+simulation/submodules/altera_up_sync_fifo.v,VERILOG,,soc_audio_audio_0,false
+simulation/submodules/soc_audio_audio_0.v,VERILOG,,soc_audio_audio_0,false
+#
+# Map from instance-path to kind of module
+instances:
+instancePath,module
+soc_audio.audio_0,soc_audio_audio_0

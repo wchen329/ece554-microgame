@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simPackage>
+ <file
+   path="simulation/submodules/altera_up_av_config_serial_bus_controller.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/altera_up_slow_clock_generator.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/altera_up_av_config_auto_init.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/altera_up_av_config_auto_init_dc2.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/altera_up_av_config_auto_init_d5m.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/altera_up_av_config_auto_init_lcm.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/altera_up_av_config_auto_init_ltm.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/altera_up_av_config_auto_init_ob_de1_soc.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/altera_up_av_config_auto_init_ob_de2_115.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/altera_up_av_config_auto_init_ob_de2i_150.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/altera_up_av_config_auto_init_ob_de10_standard.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/altera_up_av_config_auto_init_ob_audio.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/altera_up_av_config_auto_init_ob_adv7180.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/altera_up_av_config_auto_init_ob_adv7181.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file
+   path="simulation/submodules/soc_audio_cfg_audio_and_video_config_0.v"
+   type="VERILOG"
+   library="audio_and_video_config_0" />
+ <file path="simulation/soc_audio_cfg.v" type="VERILOG" />
+ <topLevel name="soc_audio_cfg" />
+ <deviceFamily name="cyclonev" />
+</simPackage>

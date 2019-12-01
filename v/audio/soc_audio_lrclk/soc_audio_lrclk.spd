@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simPackage>
+ <file
+   path="simulation/submodules/soc_audio_lrclk_intel_up_avalon_audio_clks_0.v"
+   type="VERILOG"
+   library="intel_up_avalon_audio_clks_0" />
+ <file path="simulation/soc_audio_lrclk.v" type="VERILOG" />
+ <topLevel name="soc_audio_lrclk" />
+ <deviceFamily name="cyclonev" />
+</simPackage>

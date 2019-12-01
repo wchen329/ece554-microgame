@@ -1,0 +1,22 @@
+# system info soc_audio_clk on 2019.11.29.19:53:37
+system_info:
+name,value
+DEVICE,5CSEMA5F31C6
+DEVICE_FAMILY,Cyclone V
+GENERATION_ID,1575078801
+#
+#
+# Files generated for soc_audio_clk on 2019.11.29.19:53:37
+files:
+filepath,kind,attributes,module,is_top
+simulation/soc_audio_clk.v,VERILOG,,soc_audio_clk,true
+simulation/submodules/soc_audio_clk_audio_pll_0.v,VERILOG,,soc_audio_clk_audio_pll_0,false
+simulation/submodules/soc_audio_clk_audio_pll_0_audio_pll.vo,VERILOG,,soc_audio_clk_audio_pll_0_audio_pll,false
+simulation/submodules/altera_up_avalon_reset_from_locked_signal.v,VERILOG,,altera_up_avalon_reset_from_locked_signal,false
+#
+# Map from instance-path to kind of module
+instances:
+instancePath,module
+soc_audio_clk.audio_pll_0,soc_audio_clk_audio_pll_0
+soc_audio_clk.audio_pll_0.audio_pll,soc_audio_clk_audio_pll_0_audio_pll
+soc_audio_clk.audio_pll_0.reset_from_locked,altera_up_avalon_reset_from_locked_signal

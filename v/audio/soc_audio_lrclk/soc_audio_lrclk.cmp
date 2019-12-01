@@ -1,0 +1,9 @@
+	component soc_audio_lrclk is
+		port (
+			AUD_BCLK  : in  std_logic := 'X'; -- clk
+			AUD_LRCLK : out std_logic;        -- clk
+			clk       : in  std_logic := 'X'; -- clk
+			reset     : in  std_logic := 'X'  -- reset
+		);
+	end component soc_audio_lrclk;
+

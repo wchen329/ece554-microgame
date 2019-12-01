@@ -1,0 +1,10 @@
+# # File gsaved with Nlview version 6.3.8  2013-12-19 bk=1.2992 VDI=34 GEI=35
+# 
+preplace inst unsaved.intel_up_avalon_audio_clks_0 -pg 1 -lvl 1 -y 30
+preplace inst unsaved -pg 1 -lvl 1 -y 40 -regy -20
+preplace netloc EXPORT<net_container>unsaved</net_container>(MASTER)intel_up_avalon_audio_clks_0.AUD_LRCLK,(MASTER)unsaved.AUD_LRCLK) 1 1 1 N
+preplace netloc EXPORT<net_container>unsaved</net_container>(SLAVE)unsaved.reset,(SLAVE)intel_up_avalon_audio_clks_0.reset) 1 0 1 NJ
+preplace netloc EXPORT<net_container>unsaved</net_container>(SLAVE)unsaved.clk,(SLAVE)intel_up_avalon_audio_clks_0.clk) 1 0 1 NJ
+preplace netloc EXPORT<net_container>unsaved</net_container>(SLAVE)unsaved.AUD_BCLK,(SLAVE)intel_up_avalon_audio_clks_0.AUD_BCLK) 1 0 1 NJ
+levelinfo -pg 1 0 60 350
+levelinfo -hier unsaved 70 120 260

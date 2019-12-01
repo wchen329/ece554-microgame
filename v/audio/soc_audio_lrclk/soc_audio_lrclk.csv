@@ -1,0 +1,18 @@
+# system info soc_audio_lrclk on 2019.11.29.19:44:41
+system_info:
+name,value
+DEVICE,5CSEMA5F31C6
+DEVICE_FAMILY,Cyclone V
+GENERATION_ID,1575078280
+#
+#
+# Files generated for soc_audio_lrclk on 2019.11.29.19:44:41
+files:
+filepath,kind,attributes,module,is_top
+simulation/soc_audio_lrclk.v,VERILOG,,soc_audio_lrclk,true
+simulation/submodules/soc_audio_lrclk_intel_up_avalon_audio_clks_0.v,VERILOG,,soc_audio_lrclk_intel_up_avalon_audio_clks_0,false
+#
+# Map from instance-path to kind of module
+instances:
+instancePath,module
+soc_audio_lrclk.intel_up_avalon_audio_clks_0,soc_audio_lrclk_intel_up_avalon_audio_clks_0

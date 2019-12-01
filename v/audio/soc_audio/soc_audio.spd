@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<simPackage>
+ <file
+   path="simulation/submodules/altera_up_audio_bit_counter.v"
+   type="VERILOG"
+   library="audio_0" />
+ <file
+   path="simulation/submodules/altera_up_audio_in_deserializer.v"
+   type="VERILOG"
+   library="audio_0" />
+ <file
+   path="simulation/submodules/altera_up_audio_out_serializer.v"
+   type="VERILOG"
+   library="audio_0" />
+ <file
+   path="simulation/submodules/altera_up_clock_edge.v"
+   type="VERILOG"
+   library="audio_0" />
+ <file
+   path="simulation/submodules/altera_up_sync_fifo.v"
+   type="VERILOG"
+   library="audio_0" />
+ <file
+   path="simulation/submodules/soc_audio_audio_0.v"
+   type="VERILOG"
+   library="audio_0" />
+ <file path="simulation/soc_audio.v" type="VERILOG" />
+ <topLevel name="soc_audio" />
+ <deviceFamily name="cyclonev" />
+</simPackage>

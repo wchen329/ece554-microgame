@@ -1,0 +1,7 @@
+
+State Machine - |DE1_SOC_golden_top|setup
+Name setup.11 setup.10 setup.01 setup.00 
+setup.00 0 0 0 0 
+setup.01 0 0 1 1 
+setup.10 0 1 0 1 
+setup.11 1 0 0 1 

@@ -24,11 +24,13 @@ module sprite_command_controller(
 	input [31:0] mem_in,
 	output logic [15:0] mem_address,
 	// frame buffer
-	input fb_busy,
 	output logic fb_wfb, fb_dfb,
 	output logic [15:0] fb_px,
 	output logic [7:0] fb_r, fb_g, fb_b
 );
+
+logic fb_busy;
+assign fb_busy = 1'b0;
 
 // cmd signals
 logic [42:0] new_cmd, curr_cmd;

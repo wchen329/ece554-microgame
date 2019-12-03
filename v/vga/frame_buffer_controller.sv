@@ -35,18 +35,10 @@
 //`define ENABLE_HPS
 //`define ENABLE_USB
 
-module DE1_SoC_CAMERA(
-
-    ///////// AUD /////////
-    input              	AUD_ADCDAT,
-    inout              	AUD_ADCLRCK,
-    inout              	AUD_BCLK,
-    output             	AUD_DACDAT,
-    inout              	AUD_DACLRCK,
-    output             	AUD_XCK,
+module frame_buffer_controller(
 
     ///////// CLOCK /////////
-    input              	CLOCK_50,
+    input              	CLOCK_50, rst,
 
     ///////// DRAM /////////
     output      [12:0] 	DRAM_ADDR,
@@ -61,15 +53,6 @@ module DE1_SoC_CAMERA(
     output             	DRAM_UDQM,
     output             	DRAM_WE_N,
 
-    ///////// KEY /////////
-    input       [3:0]  	KEY,
-
-    ///////// LEDR /////////
-    output      [9:0]  	LEDR,
-
-    ///////// SW /////////
-    input       [9:0]  	SW,
-
     ///////// VGA /////////
     output      [7:0]  	VGA_B,
     output             	VGA_BLANK_N,
@@ -78,8 +61,12 @@ module DE1_SoC_CAMERA(
     output             	VGA_HS,
     output      [7:0]  	VGA_R,
     output             	VGA_SYNC_N,
-    output             	VGA_VS
-		
+    output             	VGA_VS,
+	 
+	 input [15:0] pixnum,
+	 input display_screen,
+	 input write_buffer,
+	 input [7:0] red, green, blue
 );
 
 
@@ -135,11 +122,11 @@ assign  VGA_B = oVGA_B[9:2];
 
 
 //auto start when power on
-assign auto_start = ((KEY[0])&&(DLY_RST_3)&&(!DLY_RST_4))? 1'b1:1'b0;
+assign auto_start = ((~rst)&&(DLY_RST_3)&&(!DLY_RST_4))? 1'b1:1'b0;
 //Reset module
 Reset_Delay			u2	(	
 							.iCLK(CLOCK_50),
-							.iRST(KEY[0]),
+							.iRST(~rst),
 							.oRST_0(DLY_RST_0),
 							.oRST_1(DLY_RST_1),
 							.oRST_2(DLY_RST_2),
@@ -169,9 +156,7 @@ logic [12:0] vga_x, vga_y;
 
 logic [1:0]  state, nxt_state;
 logic write, synced;
-logic [9:0] count;		
-
-assign rst = ~KEY[0];
+logic [9:0] count;
 
 
 assign LEDR  = state;
@@ -181,8 +166,8 @@ assign LEDR  = state;
 
 
 
-assign nxt_state 	= (state == 2'h0) & ~KEY[1] & (read_count == 16'hFFFF)? 2'h1 
-						: (state == 2'h0) & ~KEY[2] & (read_count == 16'hFFFF)? 2'h3
+assign nxt_state 	= (state == 2'h0) & display_screen & (read_count == 16'hFFFF)? 2'h1 
+						: (state == 2'h0) & write_buffer & (read_count == 16'hFFFF)? 2'h3
 						: (state == 2'h1) & (write_count == 16'hFFFF)? 2'h2
 						: (state == 2'h2) & (vga_x == '0) & (vga_y == '0) ? 2'h0
 						: (state == 2'h3) & (write_count == 16'hFFFF)? 2'h2
@@ -240,36 +225,55 @@ assign data_to_write = {1'b0, 5'hFF, 5'hFF, 5'h00};
 assign pixel_number = 16'd540;
 			
 			
-			
-//assign write_data = {1'h0, fb_r[currentw1_x][currentw1_y], fb_g[currentw1_x][currentw1_y], fb_b[currentw1_x][currentw1_y]};
-assign write_data = SW[9] ? (currentw1_x <= (10)) && (currentw1_y <= (10)) && (currentw1_x > 0) && (currentw1_y > 0) ? {1'b0,5'h00,5'h7F,5'h00} : {1'b0,5'h00,5'h00,5'h7F}
-						: {1'b0,fb_r[currentw1_y][currentw1_x],3'h0,fb_g[currentw1_y][currentw1_x],3'h0,fb_b[currentw1_y][currentw1_x],3'h0};
+wire [7:0] red_from_bram, green_from_bram, blue_from_bram;
+wire [7:0] red_from_sram, green_from_sram, blue_from_sram, dont_care;
 			
 			
+frame_buffer_bram bram_red(
+	.clock(CLOCK_50),
+	.data(red),
+	.rdaddress({currentw1_y, currentw1_x}),
+	.wraddress({pixnum[15:8], pixnum[7:0]}),
+	.wren(write_buffer),
+	.q(red_from_bram)
+);
+
+frame_buffer_bram bram_green(
+	.clock(CLOCK_50),
+	.data(green),
+	.rdaddress({currentw1_y, currentw1_x}),
+	.wraddress({pixnum[15:8], pixnum[7:0]}),
+	.wren(write_buffer),
+	.q(green_from_bram)
+);
+
+frame_buffer_bram bram_blue(
+	.clock(CLOCK_50),
+	.data(blue),
+	.rdaddress({currentw1_y, currentw1_x}),
+	.wraddress({pixnum[15:8], pixnum[7:0]}),
+	.wren(write_buffer),
+	.q(blue_from_bram)
+);
 			
+			
+//assign write_data = {1'h0, fb_r[currentw1_x][currentw1_y], fb_g[currentw1_x][currentw1_y], fb_b[currentw1_x][currentw1_y]};		
 	
-logic [255:0][255:0][1:0] fb_r = '0;	
-logic [255:0][255:0][1:0] fb_g = '0;
-logic [255:0][255:0][1:0] fb_b = '0;
-
-
-
-		
-logic [15:0] pixnum;
-
-assign pixnum = {6'h0,SW[8:0],1'h0};
+//logic [255:0][255:0][1:0] fb_r = '0;
+//logic [255:0][255:0][1:0] fb_g = '0;
+//logic [255:0][255:0][1:0] fb_b = '0;
 
 	
-always@(posedge CLOCK_50) begin
-	
-	fb_r[pixnum[15:8]][pixnum[7:0]] <= rst ? '0 
-												:~KEY[2] ? 5'hFF : fb_r;
-	fb_g[pixnum[15:8]][pixnum[7:0]] <= rst ? '0
-												:~KEY[2] ? 5'hFF : fb_g;
-	fb_b[pixnum[15:8]][pixnum[7:0]] <= rst ? '0 
-												:~KEY[2] ? 5'hFF : fb_b;
-
-end
+//always@(posedge CLOCK_50) begin
+//	
+//	fb_r[pixnum[15:8]][pixnum[7:0]] <= rst ? '0 
+//												:write_buffer ? red : fb_r;
+//	fb_g[pixnum[15:8]][pixnum[7:0]] <= rst ? '0
+//												:write_buffer ? green : fb_g;
+//	fb_b[pixnum[15:8]][pixnum[7:0]] <= rst ? '0 
+//												:write_buffer ? blue : fb_b;
+//
+//end
 			
 			
 			
@@ -278,14 +282,14 @@ end
 			
 //SDRam Read and Write as Frame Buffer
 Sdram_Control	   u7	(	// HOST Side						
-							.RESET_N(KEY[0]),
+							.RESET_N(~rst),
 							.CLK(sdram_ctrl_clk),
 							.currentw1_addr(currentw1_addr),
 							.currentr1_addr(currentr1_addr),
 							
 							//used for copy
 							// FIFO Write Side 1
-							.WR1_DATA(write_data),
+							.WR1_DATA({red_from_bram, green_from_bram}),
 							//.WR1_DATA({1'b0,RGB_R[11:7],RGB_G[11:7],RGB_B[11:7]}),
 							//.WR1(RGB_DVAL),
 							.WR1( (state == 2'h1) ),
@@ -297,32 +301,30 @@ Sdram_Control	   u7	(	// HOST Side
 
 							//used for write
 							// FIFO Write Side 2
-							.WR2_DATA(data_to_write),
+							.WR2_DATA({8'b0, blue_from_bram}),
 							//.WR1_DATA({1'b0,RGB_R[11:7],RGB_G[11:7],RGB_B[11:7]}),
 							//.WR1(RGB_DVAL),
-							.WR2( (state == 2'h3) ),
-							.WR2_ADDR(32'h100000 + pixel_number),
-							.WR2_MAX_ADDR(32'h100000 + pixel_number),
-							.WR2_LENGTH(8'h01),
+							.WR2( (state == 2'h1) ),
+							.WR2_ADDR(256*256),
+							.WR2_MAX_ADDR(256*256*2),
+							.WR2_LENGTH(8'h40),
 							.WR2_LOAD(!DLY_RST_0),
 							.WR2_CLK(CLOCK_50),
 
 							// FIFO Read Side 1
-							.RD1_DATA(Read_DATA1),
-				        	.RD1( Read & (state == 2'h0) ),
+							.RD1_DATA({red_from_sram, green_from_sram}),
+				        	.RD1( Read && (state == 2'h0) ),
 				        	.RD1_ADDR(0),
 							.RD1_MAX_ADDR(256*256),
 							.RD1_LENGTH(8'h40),
 							.RD1_LOAD(!DLY_RST_0),
 							.RD1_CLK(~VGA_CTRL_CLK),
 							
-						
-							//used for copying
 							// FIFO Read Side 2
-							.RD2_DATA(write_data1),
-							.RD2((state == 2'h1)),
-							.RD2_ADDR(32'h100000),
-							.RD2_MAX_ADDR(32'h100000 + 256*256),
+							.RD2_DATA({dont_care, blue_from_sram}),
+							.RD2((state == 2'h0) && Read),
+							.RD2_ADDR(256*256),
+							.RD2_MAX_ADDR(256*256*2),
 							.RD2_LENGTH(8'h40),
 							.RD2_LOAD(!DLY_RST_0),
 							.RD2_CLK(~CLOCK_50),
@@ -339,24 +341,6 @@ Sdram_Control	   u7	(	// HOST Side
 							.DQM({DRAM_UDQM,DRAM_LDQM})
 						);
 						
-							
-								
-				
-				
-//D5M I2C control
-I2C_CCD_Config 		u8	(	// Host Side
-							.iCLK(CLOCK2_50),
-							.iRST_N(DLY_RST_2),
-							.iEXPOSURE_ADJ(1'b1),
-							.iEXPOSURE_DEC_p(SW[0]),
-							.iZOOM_MODE_SW(SW[9]),
-							// I2C Side
-							.I2C_SCLK(D5M_SCLK),
-							.I2C_SDAT(D5M_SDATA)
-						);
-						
-						
-						
 						
 			//how to reset without taking forever
 			//wait until vga is at 0,0 
@@ -365,9 +349,9 @@ I2C_CCD_Config 		u8	(	// Host Side
 //VGA DISPLAY
 VGA_Controller	  	u1	(	// Host Side
 							.oRequest(Read),
-							.ired({Read_DATA1[14:10], 5'h0}),
-							.igreen({Read_DATA1[9:5], 5'h0}),
-							.iblue({Read_DATA1[4:0], 5'h0}),
+							.ired({red_from_sram, 2'b0}),
+							.igreen({green_from_sram, 2'b0}),
+							.iblue({blue_from_sram, 2'b0}),
 							.vga_x(vga_x),
 							.vga_y(vga_y),
 						
@@ -382,7 +366,7 @@ VGA_Controller	  	u1	(	// Host Side
 							// Control Signal
 							.iCLK(VGA_CTRL_CLK),
 							.iRST_N(DLY_RST_2),
-							.iZOOM_MODE_SW(SW[9])
+							.iZOOM_MODE_SW(1'b0)
 						);
 
 endmodule

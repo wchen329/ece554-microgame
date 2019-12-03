@@ -7,6 +7,13 @@ module cpu
 	input clk, rst_n,
 	input [35:0] gpio,
 	
+	output vga_write,
+	output vga_display,
+	output [15:0] vga_pixnum,
+	output [7:0] vga_r,
+	output [7:0] vga_g,
+	output [7:0] vga_b,
+	
 	// TODO REMOVE ME
 	output [10:0] pc_report,
 	output [4:0] opcode_report,
@@ -980,14 +987,12 @@ sprite_command_controller sprite_fifo(
 	.write_cmd(wb_control.sprite_produce && ~memwb_is_no_op),
 	.mem_in(mem_sprite_out),
 	.mem_address(mem_sprite_address),
-	// TODO get these signals from VGA
-	.fb_busy(1'b0),
-	.fb_wfb(dont_care[41]),
-	.fb_dfb(dont_care[40]),
-	.fb_px(dont_care[39:24]),
-	.fb_r(dont_care[23:16]),
-	.fb_g(dont_care[15:8]),
-	.fb_b(dont_care[7:0])
+	.fb_wfb(vga_write),
+	.fb_dfb(vga_display),
+	.fb_px(vga_pixnum),
+	.fb_r(vga_r),
+	.fb_g(vga_g),
+	.fb_b(vga_b)
 );
 
 

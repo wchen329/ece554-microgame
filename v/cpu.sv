@@ -114,9 +114,6 @@ logic [31:0] instruction;
 logic [31:0] mem_sprite_out;
 logic [INSTRUCTION_ADDRESS_WIDTH-1:0] mem_sprite_address;
 
-// TODO actually wire to sprite stuff
-assign mem_sprite_address = 0;
-
 instruction_memory #(INSTRUCTION_ADDRESS_WIDTH) instruction_memory(
 	.clk(clk),
 	.address_a(pc),
@@ -255,8 +252,10 @@ end
 assign rf_rgb = rf[31];
 
 // TODO delete me TODO
-assign result_report = rf[5'b00100][9:0];
+//assign result_report = rf[5'b00100][9:0];
 // TODO TODO TODO
+
+assign result_report = {5'b0, user_input};
 
 
 // control signals for all stages here and beyond
@@ -748,13 +747,14 @@ logic [NUM_INPUT_BITS-1:0] user_input;
 
 user_input_buffer stimulus(
 	.clk(clk),
-	.rst(ex_control.select_input),
+	.clr(ex_control.select_input),
 	.GPIO(gpio),
 	.up(user_input[4]),
 	.right(user_input[3]),
 	.down(user_input[2]),
 	.left(user_input[1]),
-	.space(user_input[0])
+	.space(user_input[0]),
+	.rst_n(rst_n)
 );
 
 
@@ -971,11 +971,23 @@ assign sprite_command = {
 	memwb_result1
 };
 
-sprite_command_fifo_front_end sprite_fifo(
+logic [41:0] dont_care;
+
+sprite_command_controller sprite_fifo(
 	.clk(clk),
 	.rst_n(rst_n),
 	.cmd(sprite_command),
-	.write(wb_control.sprite_produce && ~memwb_is_no_op)
+	.write_cmd(wb_control.sprite_produce && ~memwb_is_no_op),
+	.mem_in(mem_sprite_out),
+	.mem_address(mem_sprite_address),
+	// TODO get these signals from VGA
+	.fb_busy(1'b0),
+	.fb_wfb(dont_care[41]),
+	.fb_dfb(dont_care[40]),
+	.fb_px(dont_care[39:24]),
+	.fb_r(dont_care[23:16]),
+	.fb_g(dont_care[15:8]),
+	.fb_b(dont_care[7:0])
 );
 
 

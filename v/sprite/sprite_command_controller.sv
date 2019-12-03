@@ -23,7 +23,6 @@ module sprite_command_controller(
 	// memory
 	input [31:0] mem_in,
 	output logic [15:0] mem_address,
-	output logic mem_read,
 	// frame buffer
 	input fb_busy,
 	output logic fb_wfb, fb_dfb,
@@ -84,7 +83,7 @@ sprite_command_fifo sprite_command_fifo(
 
 genvar i;
 generate
-	for(i = 0; i < `SPRITE_BUFFERS; i = i + 1) begin
+	for(i = 0; i < `SPRITE_BUFFERS; i = i + 1) begin : gen_sprites
 		sprite_buffer sprite_buffer(
 			.clk(clk),
 			.rst_n(rst_n),
@@ -169,7 +168,6 @@ always_comb begin
 	sb_write = 0;
 	sb_read = 0;
 	fifo_read = 0;
-	mem_read = 0;
 
 	case(state)
 		IDLE: begin
@@ -186,7 +184,6 @@ always_comb begin
 					next_state = LS;
 					sb_set_ori[cmd_sprite_reg] = 1;
 					sb_write[cmd_sprite_reg] = 1;
-					mem_read = 1;
 				end
 				`SPRITE_DS: begin
 					next_state = DS;
@@ -214,7 +211,6 @@ always_comb begin
 				fifo_read = 1;
 			else begin
 				next_state = LS;
-				mem_read = 1;
 			end
 		end
 		DS: begin

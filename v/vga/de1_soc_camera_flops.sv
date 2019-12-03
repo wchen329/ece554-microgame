@@ -37,12 +37,6 @@
 
 module DE1_SoC_CAMERA(
 
-    ///////// ADC /////////
-    inout              	ADC_CS_N,
-    output             	ADC_DIN,
-    input              	ADC_DOUT,
-    output             	ADC_SCLK,
-
     ///////// AUD /////////
     input              	AUD_ADCDAT,
     inout              	AUD_ADCLRCK,
@@ -50,15 +44,6 @@ module DE1_SoC_CAMERA(
     output             	AUD_DACDAT,
     inout              	AUD_DACLRCK,
     output             	AUD_XCK,
-
-    ///////// CLOCK2 /////////
-    input              	CLOCK2_50,
-
-    ///////// CLOCK3 /////////
-    input              	CLOCK3_50,
-
-    ///////// CLOCK4 /////////
-    input              	CLOCK4_50,
 
     ///////// CLOCK /////////
     input              	CLOCK_50,
@@ -76,129 +61,14 @@ module DE1_SoC_CAMERA(
     output             	DRAM_UDQM,
     output             	DRAM_WE_N,
 
-    ///////// FAN /////////
-    output             	FAN_CTRL,
-
-    ///////// FPGA /////////
-    output             	FPGA_I2C_SCLK,
-    inout              	FPGA_I2C_SDAT,
-
-    ///////// GPIO /////////
-    inout     [35:0]   	GPIO_0,
-	
-    ///////// HEX0 /////////
-    output      [6:0]  	HEX0,
-
-    ///////// HEX1 /////////
-    output      [6:0]  	HEX1,
-
-    ///////// HEX2 /////////
-    output      [6:0]  	HEX2,
-
-    ///////// HEX3 /////////
-    output      [6:0]  	HEX3,
-
-    ///////// HEX4 /////////
-    output      [6:0]  	HEX4,
-
-    ///////// HEX5 /////////
-    output      [6:0]  	HEX5,
-
-`ifdef ENABLE_HPS
-    ///////// HPS /////////
-    input              	HPS_CONV_USB_N,
-    output      [14:0] 	HPS_DDR3_ADDR,
-    output      [2:0]  	HPS_DDR3_BA,
-    output             	HPS_DDR3_CAS_N,
-    output             	HPS_DDR3_CKE,
-    output             	HPS_DDR3_CK_N,
-    output             	HPS_DDR3_CK_P,
-    output             	HPS_DDR3_CS_N,
-    output      [3:0]  	HPS_DDR3_DM,
-    inout       [31:0] 	HPS_DDR3_DQ,
-    inout       [3:0]  	HPS_DDR3_DQS_N,
-    inout       [3:0]  	HPS_DDR3_DQS_P,
-    output             	HPS_DDR3_ODT,
-    output             	HPS_DDR3_RAS_N,
-    output             	HPS_DDR3_RESET_N,
-    input              	HPS_DDR3_RZQ,
-    output             	HPS_DDR3_WE_N,
-    output             	HPS_ENET_GTX_CLK,
-    inout              	HPS_ENET_INT_N,
-    output             	HPS_ENET_MDC,
-    inout              	HPS_ENET_MDIO,
-    input              	HPS_ENET_RX_CLK,
-    input       [3:0]  	HPS_ENET_RX_DATA,
-    input              	HPS_ENET_RX_DV,
-    output      [3:0]  	HPS_ENET_TX_DATA,
-    output             	HPS_ENET_TX_EN,
-    inout       [3:0]  	HPS_FLASH_DATA,
-    output             	HPS_FLASH_DCLK,
-    output             	HPS_FLASH_NCSO,
-    inout              	HPS_GSENSOR_INT,
-    inout              	HPS_I2C1_SCLK,
-    inout              	HPS_I2C1_SDAT,
-    inout              	HPS_I2C2_SCLK,
-    inout              	HPS_I2C2_SDAT,
-    inout              	HPS_I2C_CONTROL,
-    inout              	HPS_KEY,
-    inout              	HPS_LED,
-    inout              	HPS_LTC_GPIO,
-    output             	HPS_SD_CLK,
-    inout              	HPS_SD_CMD,
-    inout       [3:0]  	HPS_SD_DATA,
-    output             	HPS_SPIM_CLK,
-    input              	HPS_SPIM_MISO,
-    output             	HPS_SPIM_MOSI,
-    inout              	HPS_SPIM_SS,
-    input              	HPS_UART_RX,
-    output             	HPS_UART_TX,
-    input              	HPS_USB_CLKOUT,
-    inout       [7:0]  	HPS_USB_DATA,
-    input              	HPS_USB_DIR,
-    input              	HPS_USB_NXT,
-    output             	HPS_USB_STP,
-`endif /*ENABLE_HPS*/
-
-    ///////// IRDA /////////
-    input              	IRDA_RXD,
-    output             	IRDA_TXD,
-
     ///////// KEY /////////
     input       [3:0]  	KEY,
 
     ///////// LEDR /////////
     output      [9:0]  	LEDR,
 
-    ///////// PS2 /////////
-    inout              	PS2_CLK,
-    inout              	PS2_CLK2,
-    inout              	PS2_DAT,
-    inout              	PS2_DAT2,
-
     ///////// SW /////////
     input       [9:0]  	SW,
-
-    ///////// TD /////////
-    input              	TD_CLK27,
-    input      	[7:0]  	TD_DATA,
-    input              	TD_HS,
-    output             	TD_RESET_N,
-    input              	TD_VS,
-
-`ifdef ENABLE_USB
-    ///////// USB /////////
-    input              	USB_B2_CLK,
-    inout       [7:0]  	USB_B2_DATA,
-    output             	USB_EMPTY,
-    output             	USB_FULL,
-    input              	USB_OE_N,
-    input              	USB_RD_N,
-    input              	USB_RESET_N,
-    inout              	USB_SCL,
-    inout              	USB_SDA,
-    input              	USB_WR_N,
-`endif /*ENABLE_USB*/
 
     ///////// VGA /////////
     output      [7:0]  	VGA_B,
@@ -208,19 +78,8 @@ module DE1_SoC_CAMERA(
     output             	VGA_HS,
     output      [7:0]  	VGA_R,
     output             	VGA_SYNC_N,
-    output             	VGA_VS,
+    output             	VGA_VS
 		
-	//////////// GPIO1, GPIO1 connect to D5M - 5M Pixel Camera //////////
-	input		[11:0]	D5M_D,
-    input				D5M_FVAL,
-    input		        D5M_LVAL,
-    input		        D5M_PIXLCLK,
-    output		       	D5M_RESET_N,
-    output		       	D5M_SCLK,
-    inout		        D5M_SDATA,
-    input		        D5M_STROBE,
-    output		       	D5M_TRIGGER,
-    output		       	D5M_XCLKIN
 );
 
 
@@ -274,14 +133,6 @@ assign  VGA_R = oVGA_R[9:2];
 assign  VGA_G = oVGA_G[9:2];
 assign  VGA_B = oVGA_B[9:2];
 
-//D5M read 
-always@(posedge D5M_PIXLCLK)
-begin
-	rCCD_DATA	<=	D5M_D;
-	rCCD_LVAL	<=	D5M_LVAL;
-	rCCD_FVAL	<=	D5M_FVAL;
-end
-
 
 //auto start when power on
 assign auto_start = ((KEY[0])&&(DLY_RST_3)&&(!DLY_RST_4))? 1'b1:1'b0;
@@ -295,67 +146,9 @@ Reset_Delay			u2	(
 							.oRST_3(DLY_RST_3),
 							.oRST_4(DLY_RST_4)
 						);
-//D5M image capture
-CCD_Capture			u3	(	
-							.oDATA(mCCD_DATA),
-							.oDVAL(mCCD_DVAL),
-							.oX_Cont(X_Cont),
-							.oY_Cont(Y_Cont),
-							.oFrame_Cont(Frame_Cont),
-							.iDATA(rCCD_DATA),
-							.iFVAL(rCCD_FVAL),
-							.iLVAL(rCCD_LVAL),
-							.iSTART(!KEY[3]|auto_start),
-							.iEND(!KEY[2]),
-							.iCLK(~D5M_PIXLCLK),
-							.iRST(DLY_RST_2)
-						);
-//D5M raw date convert to RGB data
-wire [11:0] RGB_R,RGB_G,RGB_B;
-wire RGB_DVAL;
-RAW2RGB				u4	(	
-							.iCLK(D5M_PIXLCLK),
-							.iRST(DLY_RST_1),
-							.iDATA(mCCD_DATA),
-							.iDVAL(mCCD_DVAL),
-							.oRed(RGB_R),
-							.oGreen(RGB_G),
-							.oBlue(RGB_B),
-							.oDVAL(RGB_DVAL),
-							.iX_Cont(X_Cont),
-							.iY_Cont(Y_Cont)
-						);
-						/*
-Greyscale			u4aa	(
-							.r(RGB_R),
-							.g(RGB_G),
-							.b(RGB_B),
-							.grey(RGB_R)
-						);
-assign {sCCD_R, sCCD_G, sCCD_B, sCCD_DVAL} = SW[2] ? {RGB_R
-*/
-	/*					
-convolution_buffer 	u4a	(
-							.clk(D5M_PIXLCLK),
-							.rst_n(DLY_RST_1),
-							.ired(RGB_R),
-							.igreen(RGB_G),
-							.iblue(RGB_B),
-							.idval(RGB_DVAL),
-							.mode(SW[3:2]),
-							.ored(sCCD_R),
-							.ogreen(sCCD_G),
-							.oblue(sCCD_B),
-							.odval(sCCD_DVAL)
-						);
-*/
-//Frame count display
-SEG7_LUT_6 			u5	(	
-							.oSEG0(HEX0),.oSEG1(HEX1),
-							.oSEG2(HEX2),.oSEG3(HEX3),
-							.oSEG4(HEX4),.oSEG5(HEX5),
-							.iDIG(Frame_Cont[23:0])
-						);
+
+
+
 												
 sdram_pll 			u6	(
 							.refclk(CLOCK_50),
@@ -395,14 +188,6 @@ assign nxt_state 	= (state == 2'h0) & ~KEY[1] & (read_count == 16'hFFFF)? 2'h1
 						: (state == 2'h3) & (write_count == 16'hFFFF)? 2'h2
 						: state;
 
-
-/*
-assign nxt_state 	= (state == 2'h0) & ~KEY[1] ? 2'h1 
-						: (state == 2'h1) & (count == 10'hFFF) & (KEY[1]) ? 2'h2
-						: (state == 2'h2) & synced ? 2'h0
-						: state;
-	
-*/	
 
 
 always @ (posedge CLOCK_50) begin
@@ -448,7 +233,7 @@ always @(posedge VGA_CTRL_CLK) begin
 end
 
 
-logic [15:0] data_to_write, write_data1, pixel_number;
+logic [15:0] data_to_write, pixel_number;
 
 
 assign data_to_write = {1'b0, 5'hFF, 5'hFF, 5'h00};
@@ -458,28 +243,31 @@ assign pixel_number = 16'd540;
 			
 //assign write_data = {1'h0, fb_r[currentw1_x][currentw1_y], fb_g[currentw1_x][currentw1_y], fb_b[currentw1_x][currentw1_y]};
 assign write_data = SW[9] ? (currentw1_x <= (10)) && (currentw1_y <= (10)) && (currentw1_x > 0) && (currentw1_y > 0) ? {1'b0,5'h00,5'h7F,5'h00} : {1'b0,5'h00,5'h00,5'h7F}
-						: write_data1;
+						: {1'b0,fb_r[currentw1_y][currentw1_x],3'h0,fb_g[currentw1_y][currentw1_x],3'h0,fb_b[currentw1_y][currentw1_x],3'h0};
 			
 			
 			
 	
-logic [255:0][255:0][4:0] fb_r = '0;	
-logic [255:0][255:0][4:0] fb_g = '0;
-logic [255:0][255:0][4:0] fb_b = '0;
+logic [255:0][255:0][1:0] fb_r = '0;	
+logic [255:0][255:0][1:0] fb_g = '0;
+logic [255:0][255:0][1:0] fb_b = '0;
 
 
 
 		
 logic [15:0] pixnum;
 
-assign pixnum = 16'd546;
+assign pixnum = {6'h0,SW[8:0],1'h0};
 
 	
 always@(posedge CLOCK_50) begin
 	
-	fb_r[pixnum[15:8]][pixnum[7:0]] <= rst ? '0 : 5'hFF;
-	fb_g[pixnum[15:8]][pixnum[7:0]] <= rst ? '0 : 5'hFF;
-	fb_b[pixnum[15:8]][pixnum[7:0]] <= rst ? '0 : 5'hFF;
+	fb_r[pixnum[15:8]][pixnum[7:0]] <= rst ? '0 
+												:~KEY[2] ? 5'hFF : fb_r;
+	fb_g[pixnum[15:8]][pixnum[7:0]] <= rst ? '0
+												:~KEY[2] ? 5'hFF : fb_g;
+	fb_b[pixnum[15:8]][pixnum[7:0]] <= rst ? '0 
+												:~KEY[2] ? 5'hFF : fb_b;
 
 end
 			
@@ -497,7 +285,7 @@ Sdram_Control	   u7	(	// HOST Side
 							
 							//used for copy
 							// FIFO Write Side 1
-							.WR1_DATA({1'b0,fb_r[currentw1_x][currentw1_y],fb_g[currentw1_x][currentw1_y],fb_b[currentw1_x][currentw1_y]}),
+							.WR1_DATA(write_data),
 							//.WR1_DATA({1'b0,RGB_R[11:7],RGB_G[11:7],RGB_B[11:7]}),
 							//.WR1(RGB_DVAL),
 							.WR1( (state == 2'h1) ),

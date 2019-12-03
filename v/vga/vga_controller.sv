@@ -41,37 +41,26 @@
 // --------------------------------------------------------------------
 
 module	VGA_Controller(	//	Host Side
-						command,
-						data,
-						consume,
+						ired,
+						igreen,
+						iblue,
+						oRequest,
+						vga_x,
+						vga_y,
 						
 						//	VGA Side
-						vga_r,
-						vga_g,
-						vga_b,			
-						vga_hs,	//o_hs
-						vga_vs,	//o_vs
-						vga_sync_n,
-						vga_blank_n, 	//o_blanking
+						oVGA_R,
+						oVGA_G,
+						oVGA_B,			
+						oVGA_H_SYNC,	//o_hs
+						oVGA_V_SYNC,	//o_vs
+						oVGA_SYNC,
+						oVGA_BLANK, 	//o_blanking
 
 						//	Control Signal
-						//dram_clk,
-						vga_clk,
-						clk,
-					
-						rst_n,
-						//iRST_N,
-						iZOOM_MODE_SW,
-						
-						x_write,
-						y_write,
-						r,
-						g,
-						b,
-						write,
-						display,
-						busy,
-						
+						iCLK,
+						iRST_N,
+						iZOOM_MODE_SW
 							);
 
 //	Horizontal Parameter	( Pixel )
@@ -94,37 +83,33 @@ parameter	X_START		=	H_SYNC_CYC+H_SYNC_BACK;
 parameter	Y_START		=	V_SYNC_CYC+V_SYNC_BACK;
 
 
-input data, command, consume;
 
-input 	[7:0]		x_write, y_write, r, g, b;
-input					write, display;
-
-output busy;
-
-output vga_clk;
-
-//output	reg			oRequest;
+//	Host Side
+input		[9:0]	ired;
+input		[9:0]	igreen;
+input		[9:0]	iblue;
+output	reg			oRequest;
 //	VGA Side
-output	reg	[9:0]	vga_r;
-output	reg	[9:0]	vga_g;
-output	reg	[9:0]	vga_b;
-output	reg			vga_hs;
-output	reg			vga_vs;
-output	reg			vga_sync_n;
-output	reg			vga_blank_n;
-//output 	logic			dram_clk;
+output	reg	[9:0]	oVGA_R;
+output	reg	[9:0]	oVGA_G;
+output	reg	[9:0]	oVGA_B;
+output	reg			oVGA_H_SYNC;
+output	reg			oVGA_V_SYNC;
+output	reg			oVGA_SYNC;
+output	reg			oVGA_BLANK;
+output	[12:0] 		vga_x, vga_y;
 
 wire		[9:0]	mVGA_R;
 wire		[9:0]	mVGA_G;
 wire		[9:0]	mVGA_B;
-reg				mVGA_H_SYNC;
-reg				mVGA_V_SYNC;
+reg					mVGA_H_SYNC;
+reg					mVGA_V_SYNC;
 wire				mVGA_SYNC;
 wire				mVGA_BLANK;
 
 //	Control Signal
-input				clk;
-input				rst_n;
+input				iCLK;
+input				iRST_N;
 input 			iZOOM_MODE_SW;
 
 //	Internal Registers and Wires
@@ -135,73 +120,16 @@ wire	[12:0]		v_mask;
 
 logic [12:0] x, y, x_index, y_index;
 
-logic [7:0] display_count;
-logic 		disp, disp_rst_n;
-logic displaying;
-
-//create Frame buffer
-logic 	[255:0][255:0][7:0]		fb_r	= '0;
-logic 	[255:0][255:0][7:0]		fb_g	= '0;
-logic 	[255:0][255:0][7:0]		fb_b 	= '0;
-
-//create display buffer
-logic 	[255:0][255:0][7:0]		db_r	= '0;
-logic 	[255:0][255:0][7:0]		db_g	= '0;
-logic 	[255:0][255:0][7:0]		db_b 	= '0;
-
-
-//============================================================
-
-logic iRST_N;
-logic iCLK;
-
-assign iCLK = vga_clk;
-
-reg	[31:0]	rst_cont;
-
-always@(posedge clk or negedge rst_n)
-begin
-	if(!rst_n)
-	begin
-		rst_cont	<=	0;
-		iRST_N	<=	0;
-	end
-	else
-	begin
-		if(rst_cont!=32'h01FFFFFF)
-			rst_cont	<=	rst_cont+1;
-		if(rst_cont>=32'h011FFFFF)
-			iRST_N	<=	1;
-	end
-end
 
 
 //============================================================
 
 
-sdram_pll 			u6	(
-							.refclk(clk),
-							.rst(1'b0),
-							.outclk_3(vga_clk)        //25M
-						);
+assign v_mask = 13'd0 ;//iZOOM_MODE_SW ? 13'd0 : 13'd26;
+assign	mVGA_BLANK	=	mVGA_H_SYNC & mVGA_V_SYNC;
+assign	mVGA_SYNC	=	1'b0;
 
 
-//============================================================
-
-
-
-
-
-
-//test values
-assign fb_r [200][100] = 12'hFFF;
-assign fb_g [200][100] = 12'hFFF;
-assign fb_b [200][100] = 12'hFFF;
-
-assign fb_g [0][200] = 12'hFFF;
-assign fb_r [200][0] = 12'hFFF;
-assign fb_g [200][200] = 12'hFFF;
-assign fb_b [0][0] = 12'hFFF;
 
 
 //=============================================================
@@ -220,110 +148,45 @@ assign fb_b [0][0] = 12'hFFF;
 //y range is 0 to V_SYNC_TOTAL-(V_SYNC_CYC+V_SYNC_BACK)
 
 
+
+assign vga_x = x;			
+assign vga_y = y;		
+
 assign x = (H_Cont > X_START) 				? H_Cont - X_START : 13'h0;
 assign y = (V_Cont > (Y_START + v_mask)) 	? V_Cont - Y_START + v_mask : 13'h0;
 
-assign x_index = x - 13'd192;
-assign y_index = y - 13'd112;
+assign x_index = x > 13'd192 ? x - 13'd192 : '0;
+assign y_index = y > 13'd112 ? y - 13'd112 : '0;
 
 //only write pixels when in 256x256 box
-//indexing x_index and y_index should not be a problem because they will only be read if they are within the 256x256 screen size
-assign	mVGA_R	= 	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? db_r[x_index[7:0]][y_index[7:0]] 	:	0;
-assign	mVGA_G	=	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? db_g[x_index[7:0]][y_index[7:0]] 	:	0;
-assign	mVGA_B	=	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? db_b[x_index[7:0]][y_index[7:0]] 	:	0;
-
-assign 	v_mask = 13'd0 ;//iZOOM_MODE_SW ? 13'd0 : 13'd26;
-assign	mVGA_BLANK	=	mVGA_H_SYNC & mVGA_V_SYNC;
-assign	mVGA_SYNC	=	1'b0;
+assign	mVGA_R	= 	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? ired 		:	10'hF0F;
+assign	mVGA_G	=	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? igreen 	:	10'hF0F;
+assign	mVGA_B	=	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? iblue 	:	10'hF0F;
 
 
 //============================================================
-//		Update VGA Values
-//============================================================
-//x_write, y_write
-//r, g, b
-//write, display
-
-//this is designed with 2 frame buffers, one for updateing 
-//and one to read when displaying. to trade memory space for update speed, this could 
-//be designed with 1 frame buffer that gets read and updated between vga clk cycles. 
-
-/*
-logic start; 
-logic print;
-logic display_cycle_completed;
-
-logic disp_start;
-logic disp_end;
-
-assign disp_start = ((x_index == '0) & (y_index == '0));
-assign disp_end = ((x_index == 13'd256) & (y_index == 13'd256));
-assign start = disp & ~displaying;
-
-always @(posedge clk or negedge rst_n) begin
-
-	//goes high and stays high
-	disp <= display ? 1'b1 : disp; 
-
-	//goes high from the start to end of 256 x 256 screen
-	displaying <= disp_start ? 1'b1 
-					: disp_end ? 1'b0
-					: displaying;
-	
-	prev_displaying <= displaying;
-
-	//count number of times prev_x_index is not equal to x_index
-	
-end
-
-*/
-
-always@(posedge clk or negedge rst_n) begin
-	
-	if(~rst_n) begin
-		
-		fb_r <= '0;
-		fb_g <= '0;
-		fb_b <= '0;
-	
-	end
-	else begin
-		fb_r[x_write][y_write] <= (write) ? r : fb_r[x_write][y_write];
-		fb_g[x_write][y_write] <= (write) ? g : fb_g[x_write][y_write];
-		fb_b[x_write][y_write] <= (write) ? b : fb_b[x_write][y_write];
-	end
-	
-end
-
-
-
-
-
-//============================================================
-// 	Output to VGA
-//============================================================
-		
+			
 always@(posedge iCLK or negedge iRST_N)
 	begin
 		if (!iRST_N)
 			begin
-				vga_r <= 0;
-				vga_g <= 0;
-            vga_b <= 0;
-				vga_blank_n <= 0;
-				vga_sync_n <= 0;
-				vga_hs <= 0;
-				vga_vs <= 0; 
+				oVGA_R <= 0;
+				oVGA_G <= 0;
+                oVGA_B <= 0;
+				oVGA_BLANK <= 0;
+				oVGA_SYNC <= 0;
+				oVGA_H_SYNC <= 0;
+				oVGA_V_SYNC <= 0; 
 			end
 		else
 			begin
-				vga_r <= mVGA_R;
-				vga_g <= mVGA_G;
-            vga_b <= mVGA_B;
-				vga_blank_n <= mVGA_BLANK;
-				vga_sync_n <= mVGA_SYNC;
-				vga_hs <= mVGA_H_SYNC;
-				vga_vs <= mVGA_V_SYNC;				
+				oVGA_R <= mVGA_R;
+				oVGA_G <= mVGA_G;
+                oVGA_B <= mVGA_B;
+				oVGA_BLANK <= mVGA_BLANK;
+				oVGA_SYNC <= mVGA_SYNC;
+				oVGA_H_SYNC <= mVGA_H_SYNC;
+				oVGA_V_SYNC <= mVGA_V_SYNC;				
 			end               
 	end
 
@@ -332,18 +195,22 @@ always@(posedge iCLK or negedge iRST_N)
 //	Pixel LUT Address Generator
 always@(posedge iCLK or negedge iRST_N)
 begin
-	if(!iRST_N)begin
-		//oRequest	<=	0;
-	end
+	if(!iRST_N)
+	oRequest	<=	0;
 	else
 	begin
+		if((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368))
+			oRequest	<=	1;
+		else
+			oRequest	<=	0;
+	
+	/*
 		if(	H_Cont>=X_START-2 && H_Cont<X_START+H_SYNC_ACT-2 &&
-			V_Cont>=Y_START && V_Cont<Y_START+V_SYNC_ACT ) begin
-		//oRequest	<=	1;
-		end
-		else begin
-		//oRequest	<=	0;
-		end
+			V_Cont>=Y_START && V_Cont<Y_START+V_SYNC_ACT )
+		oRequest	<=	1;
+		else
+			oRequest	<=	0;
+	*/
 	end
 end
 

@@ -6,8 +6,8 @@
 // Permission:
 //
 //   Terasic grants permission to use and modify this code for use
-//   in synthesis for all Terasic Development Boards and Altera Development 
-//   Kits made by Terasic.  Other use of this code, including the selling 
+//   in synthesis for all Terasic Development Boards and Altera Development
+//   Kits made by Terasic.  Other use of this code, including the selling
 //   ,duplication, or modification of any portion is strictly prohibited.
 //
 // Disclaimer:
@@ -16,16 +16,16 @@
 //   which illustrates how these types of functions can be implemented.
 //   It is the user's responsibility to verify their design for
 //   consistency and functionality through the use of formal
-//   verification methods.  Terasic provides no warranty regarding the use 
+//   verification methods.  Terasic provides no warranty regarding the use
 //   or functionality of this code.
 //
 // ============================================================================
-//           
+//
 //  Terasic Technologies Inc
 //  9F., No.176, Sec.2, Gongdao 5th Rd, East Dist, Hsinchu City, 30070. Taiwan
-//  
-//  
-//                     web: http://www.terasic.com/  
+//
+//
+//                     web: http://www.terasic.com/
 //                     email: support@terasic.com
 //
 // ============================================================================
@@ -79,141 +79,43 @@ module DE1_SoC_CAMERA(
     output      [7:0]  	VGA_R,
     output             	VGA_SYNC_N,
     output             	VGA_VS
-		
-);
 
+);
 
 //=======================================================
 //  REG/WIRE declarations
 //=======================================================
-wire			[15:0]			Read_DATA1;
-wire	       	[15:0]			Read_DATA2;
+wire					[15:0]		Read_DATA1;
+wire	       	[15:0]		Read_DATA2;
 
-wire			[11:0]			mCCD_DATA;
-wire							mCCD_DVAL;
-wire							mCCD_DVAL_d;
-wire	       	[15:0]			X_Cont;
-wire	       	[15:0]			Y_Cont;
+wire					[11:0]		mCCD_DATA;
+wire										mCCD_DVAL;
+wire										mCCD_DVAL_d;
+wire	       	[15:0]		X_Cont;
+wire	       	[15:0]		Y_Cont;
 wire	       	[9:0]			X_ADDR;
-wire	       	[31:0]			Frame_Cont;
-wire							DLY_RST_0;
-wire							DLY_RST_1;
-wire							DLY_RST_2;
-wire							DLY_RST_3;
-wire							DLY_RST_4;
-wire							Read;
-reg		    	[11:0]			rCCD_DATA;
-reg								rCCD_LVAL;
-reg								rCCD_FVAL;
-wire	       	[11:0]			sCCD_R;
-wire	       	[11:0]			sCCD_G;
-wire	       	[11:0]			sCCD_B;
-wire							sCCD_DVAL;
+wire	       	[31:0]		Frame_Cont;
+wire										DLY_RST_0;
+wire										DLY_RST_1;
+wire										DLY_RST_2;
+wire										DLY_RST_3;
+wire										DLY_RST_4;
+wire										Read;
+reg		    		[11:0]		rCCD_DATA;
+reg											rCCD_LVAL;
+reg											rCCD_FVAL;
+wire	       	[11:0]		sCCD_R;
+wire	       	[11:0]		sCCD_G;
+wire	       	[11:0]		sCCD_B;
+wire										sCCD_DVAL;
 
-wire							sdram_ctrl_clk;
+wire										sdram_ctrl_clk;
 wire	       	[9:0]			oVGA_R;   				// VGA Red[9:0]
-wire	       	[9:0]			oVGA_G;	 				// VGA Green[9:0]
+wire	       	[9:0]			oVGA_G;	 					// VGA Green[9:0]
 wire	       	[9:0]			oVGA_B;   				// VGA Blue[9:0]
 
 //power on start
 wire             				auto_start;
-
-logic rst_n;
-logic key3, key2, key1;
-// sprite cmd ctrl
-logic [79:0] cmd;
-logic [2:0] opcode;
-logic write_cmd;
-// mem
-logic [31:0] mem_in;
-logic [15:0] mem_address;
-logic mem_read;
-// frame buffer
-logic fb_busy;
-logic fb_wfb, fb_dfb;
-logic [15:0] fb_px;
-logic [7:0] fb_red, fb_green, fb_blue;
-
-// use PB_rise to make keys only 1 clock
-PB_rise pb1(
-	.clk(CLOCK),
-	.rst_n(rst_n),
-	.PB(KEY[1]),
-	.rise(key1)
-);
-
-PB_rise pb2(
-	.clk(CLOCK),
-	.rst_n(rst_n),
-	.PB(KEY[2]),
-	.rise(key2)
-);
-
-PB_rise pb3(
-	.clk(CLOCK),
-	.rst_n(rst_n),
-	.PB(KEY[3]),
-	.rise(key3)
-);
-
-sprite_command_controller sprite_command_controller(
-	.clk(CLOCK_50),
-	.rst_n(rst_n),
-	.write_cmd(write_cmd),
-	.cmd(cmd),
-	.mem_in(mem_in),
-	.mem_address(mem_address),
-	.mem_read(mem_read),
-	.fb_busy(fb_busy),
-	.fb_wfb(fb_wfb),
-	.fb_dfb(fb_dfb),
-	.fb_px(fb_px),
-	.fb_r(fb_red),
-	.fb_g(fb_green),
-	.fb_b(fb_blue)
-);
-
-
-// fake sprite mem: sprite 0 = red, sprite 1 = green, sprite 2 = blue
-assign mem_in = mem_address < 64 ? { 8'h0, mem_address[8:0], 8'h0, 8'h0 } :
-								mem_address < 128 ? { 8'h0, 8'h0, mem_address[8:0], 8'h0 } :
-								{ 8'h0, 8'h0, 8'h0, mem_address[8:0] }
-
-assign rst_n = KEY[0];
-always_comb
-	case({key3, key2, key1})
-		3'b100: begin
-			write_cmd = 1;
-			opcode = `SPRITE_LS
-		end
-		3'b010: begin
-			write_cmd = 1;
-			opcode = `SPRITE_DS
-		end
-		3'b001: begin
-			write_cmd = 1;
-			opcode = `SPRITE_RS
-		end
-		default: begin
-			write_cmd = 0;
-			opcode = 0;
-		end
-	endcase
-
-/**
- * addrs are 0, 64, 128, and 192
- * x,y are 0 -> 224, by 32s
- */
-assign cmd = {
-	opcode,
-	SW[9:7], // sprite_reg
-	SW[6:5], // orientation
-	24'h0, // RGB
-	SW[5:3], 5'h0, // x
-	SW[2:0], 5'h0, // y
-	16'h0, 8'h0, SW[1:0], 6'h0 // addr
-};
-
 //=======================================================
 //  Structural coding
 //=======================================================
@@ -232,16 +134,11 @@ assign  VGA_B = oVGA_B[9:2];
 
 
 //auto start when power on
-assign auto_start = ((~rst_n)&&(DLY_RST_3)&&(!DLY_RST_4))? 1'b1:1'b0;
-
-
-
-
-
+assign auto_start = ((KEY[0])&&(DLY_RST_3)&&(!DLY_RST_4))? 1'b1:1'b0;
 //Reset module
-Reset_Delay			u2	(	
+Reset_Delay			u2	(
 							.iCLK(CLOCK_50),
-							.iRST(~rst_n),
+							.iRST(KEY[0]),
 							.oRST_0(DLY_RST_0),
 							.oRST_1(DLY_RST_1),
 							.oRST_2(DLY_RST_2),
@@ -249,7 +146,9 @@ Reset_Delay			u2	(
 							.oRST_4(DLY_RST_4)
 						);
 
-												
+
+
+
 sdram_pll 			u6	(
 							.refclk(CLOCK_50),
 							.rst(1'b0),
@@ -259,7 +158,7 @@ sdram_pll 			u6	(
 							.outclk_3(VGA_CLK)        //25M
 						);
 
-	
+
 //logic [256:0][256:0][4:0] fb_r, fb_g, fb_b;
 
 
@@ -269,20 +168,20 @@ logic [12:0] vga_x, vga_y;
 
 logic [1:0]  state, nxt_state;
 logic write, synced;
-logic [9:0] count;		
+logic [9:0] count;
 
-assign rst = ~rst_n;
+assign rst = ~KEY[0];
 
 
 assign LEDR  = state;
 
 
-//assign synced = (vga_x == 12'd0) && (vga_y == 12'd0) && (read_count == '0);	
+//assign synced = (vga_x == 12'd0) && (vga_y == 12'd0) && (read_count == '0);
 
 
 
-assign nxt_state 	= (state == 2'h0) & fb_dfb & (read_count == 16'hFFFF)? 2'h1 
-						: (state == 2'h0) & fb_wfb & (read_count == 16'hFFFF)? 2'h3
+assign nxt_state 	= (state == 2'h0) & ~KEY[1] & (read_count == 16'hFFFF)? 2'h1
+						: (state == 2'h0) & ~KEY[2] & (read_count == 16'hFFFF)? 2'h3
 						: (state == 2'h1) & (write_count == 16'hFFFF)? 2'h2
 						: (state == 2'h2) & (vga_x == '0) & (vga_y == '0) ? 2'h0
 						: (state == 2'h3) & (write_count == 16'hFFFF)? 2'h2
@@ -291,15 +190,15 @@ assign nxt_state 	= (state == 2'h0) & fb_dfb & (read_count == 16'hFFFF)? 2'h1
 
 
 always @ (posedge CLOCK_50) begin
-		
+
 	state <= rst ? 1'b0 : nxt_state;
 	//count <= (state == 2'h1) ? count + 10'h1 : 10'h0;
-		
-end		
-						
-						
-						
-logic [15:0] write_data, currentw1_addr, currentr1_addr;			
+
+end
+
+
+
+logic [15:0] write_data, currentw1_addr, currentr1_addr;
 logic [7:0] currentw1_x, currentw1_y;
 
 
@@ -309,12 +208,12 @@ assign currentw1_y = write_count[15:8];
 
 
 
-	
+
 
 logic dval, dval_nxt;
 logic [15:0] write_count, read_count;
-	
-	
+
+
 	//count writes
 always @(posedge CLOCK_50) begin
 	write_count <= (nxt_state != state) & (nxt_state == 2'h1)  ? 16'h0
@@ -322,12 +221,12 @@ always @(posedge CLOCK_50) begin
 					: (write_count >= 16'hFFFF) ? 16'h0
 					: write_count + 16'h1;
 end
-	
-	
+
+
 	//count reads
 always @(posedge VGA_CTRL_CLK) begin
 	read_count <= (nxt_state != state) 	? '0
-					: (read_count >= (256*256)) | ((vga_x == '0) & (vga_y == '0))? '0	
+					: (read_count >= (256*256)) | ((vga_x == '0) & (vga_y == '0))? '0
 					: Read ? read_count + 16'h1
 					: read_count;
 end
@@ -337,51 +236,52 @@ logic [15:0] data_to_write, pixel_number;
 
 
 assign data_to_write = {1'b0, 5'hFF, 5'hFF, 5'h00};
-assign pixel_number = fb_px;
-			
-			
-			
+assign pixel_number = 16'd540;
+
+
+
 //assign write_data = {1'h0, fb_r[currentw1_x][currentw1_y], fb_g[currentw1_x][currentw1_y], fb_b[currentw1_x][currentw1_y]};
-assign write_data = {1'b0,fb_r[currentw1_y][currentw1_x],3'h0,fb_g[currentw1_y][currentw1_x],3'h0,fb_b[currentw1_y][currentw1_x],3'h0};
-			
-			
-			
-	
-logic [255:0][255:0][1:0] fb_r = '0;	
+assign write_data = SW[9] ? (currentw1_x <= (10)) && (currentw1_y <= (10)) && (currentw1_x > 0) && (currentw1_y > 0) ? {1'b0,5'h00,5'h7F,5'h00} : {1'b0,5'h00,5'h00,5'h7F}
+						: {1'b0,fb_r[currentw1_y][currentw1_x],3'h0,fb_g[currentw1_y][currentw1_x],3'h0,fb_b[currentw1_y][currentw1_x],3'h0};
+
+
+
+
+logic [255:0][255:0][1:0] fb_r = '0;
 logic [255:0][255:0][1:0] fb_g = '0;
 logic [255:0][255:0][1:0] fb_b = '0;
 
 
 
-		
+
 logic [15:0] pixnum;
 
-assign pixnum = fb_px;
+assign pixnum = {6'h0,SW[8:0],1'h0};
 
-	
+
 always@(posedge CLOCK_50) begin
-	
-	fb_r[pixnum[15:8]][pixnum[7:0]] <= rst ? '0 
-												:~fb_wfb ? 5'red : fb_r;
+
+	fb_r[pixnum[15:8]][pixnum[7:0]] <= rst ? '0
+												:~KEY[2] ? 5'hFF : fb_r;
 	fb_g[pixnum[15:8]][pixnum[7:0]] <= rst ? '0
-												:~fb_wfb ? 5'green : fb_g;
-	fb_b[pixnum[15:8]][pixnum[7:0]] <= rst ? '0 
-												:~fb_wfb ? 5'blue : fb_b;
+												:~KEY[2] ? 5'hFF : fb_g;
+	fb_b[pixnum[15:8]][pixnum[7:0]] <= rst ? '0
+												:~KEY[2] ? 5'hFF : fb_b;
 
 end
-			
-			
-			
+
+
+
 //must initialize all data first
-			
-			
+
+
 //SDRam Read and Write as Frame Buffer
-Sdram_Control	   u7	(	// HOST Side						
-							.RESET_N(rst_n),
+Sdram_Control	   u7	(	// HOST Side
+							.RESET_N(KEY[0]),
 							.CLK(sdram_ctrl_clk),
 							.currentw1_addr(currentw1_addr),
 							.currentr1_addr(currentr1_addr),
-							
+
 							//used for copy
 							// FIFO Write Side 1
 							.WR1_DATA(write_data),
@@ -414,8 +314,8 @@ Sdram_Control	   u7	(	// HOST Side
 							.RD1_LENGTH(8'h40),
 							.RD1_LOAD(!DLY_RST_0),
 							.RD1_CLK(~VGA_CTRL_CLK),
-							
-						
+
+
 							//used for copying
 							// FIFO Read Side 2
 							.RD2_DATA(write_data1),
@@ -425,7 +325,7 @@ Sdram_Control	   u7	(	// HOST Side
 							.RD2_LENGTH(8'h40),
 							.RD2_LOAD(!DLY_RST_0),
 							.RD2_CLK(~CLOCK_50),
-							
+
 							// SDRAM Side
 							.SA(DRAM_ADDR),
 							.BA(DRAM_BA),
@@ -437,11 +337,11 @@ Sdram_Control	   u7	(	// HOST Side
 							.DQ(DRAM_DQ),
 							.DQM({DRAM_UDQM,DRAM_LDQM})
 						);
-						
-							
-								
-				
-				
+
+
+
+
+
 //D5M I2C control
 I2C_CCD_Config 		u8	(	// Host Side
 							.iCLK(CLOCK2_50),
@@ -453,14 +353,14 @@ I2C_CCD_Config 		u8	(	// Host Side
 							.I2C_SCLK(D5M_SCLK),
 							.I2C_SDAT(D5M_SDATA)
 						);
-						
-						
-						
-						
+
+
+
+
 			//how to reset without taking forever
-			//wait until vga is at 0,0 
-						
-						
+			//wait until vga is at 0,0
+
+
 //VGA DISPLAY
 VGA_Controller	  	u1	(	// Host Side
 							.oRequest(Read),
@@ -469,7 +369,7 @@ VGA_Controller	  	u1	(	// Host Side
 							.iblue({Read_DATA1[4:0], 5'h0}),
 							.vga_x(vga_x),
 							.vga_y(vga_y),
-						
+
 							// VGA Side
 							.oVGA_R(oVGA_R),
 							.oVGA_G(oVGA_G),

@@ -72,7 +72,7 @@ assign { fb_r, fb_g, fb_b } = (cmd_op == `SPRITE_DS) ? { sb_o_r[cmd_sprite_reg],
 // 															0;
 // WFB: cmd x/y
 // CS/DS: cmd x/y + sprite px
-assign fb_px = { cmd_y, cmd_x } + sb_px_count;
+assign fb_px = { cmd_y + sb_px_count[5:3], cmd_x + sb_px_count[2:0] };
 
 sprite_command_fifo sprite_command_fifo(
 	.clk(clk),

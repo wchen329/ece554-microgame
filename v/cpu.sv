@@ -14,10 +14,9 @@ module cpu
 	output [7:0] vga_g,
 	output [7:0] vga_b,
 	
-	// TODO REMOVE ME
-	output [10:0] pc_report,
-	output [4:0] opcode_report,
-	output [9:0] result_report
+	// TODO
+	output reg [2:0] sprite_op_a, sprite_op_b, sprite_op_c
+	// TODO
 );
 
 
@@ -161,14 +160,6 @@ always_ff @(posedge clk or negedge rst_n) begin
 end
 
 
-// TODO REMOVE ME
-assign pc_report = ifid_pc;
-
-
-// TODO REMOVE ME
-assign opcode_report = ifid_instruction[31:27];
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // Instruction Decode
 /////////////////////////////////////////////////////////////////////////////
@@ -257,12 +248,6 @@ end
 
 // register 32 is RGB register, otherwise general-purpose
 assign rf_rgb = rf[31];
-
-// TODO delete me TODO
-//assign result_report = rf[5'b00100][9:0];
-// TODO TODO TODO
-
-assign result_report = {5'b0, user_input};
 
 
 // control signals for all stages here and beyond
@@ -978,8 +963,6 @@ assign sprite_command = {
 	memwb_result1
 };
 
-logic [41:0] dont_care;
-
 sprite_command_controller sprite_fifo(
 	.clk(clk),
 	.rst_n(rst_n),
@@ -994,6 +977,23 @@ sprite_command_controller sprite_fifo(
 	.fb_g(vga_g),
 	.fb_b(vga_b)
 );
+
+
+// TODO TODO REMOVE ME
+
+always_ff @(posedge clk or negedge rst_n) begin
+	if(!rst_n) begin
+		sprite_op_a <= 3'b111;
+		sprite_op_b <= 3'b111;
+		sprite_op_c <= 3'b111;
+	end else if(wb_control.sprite_produce && ~memwb_is_no_op) begin
+		sprite_op_a <= wb_control.sprite_op;
+		sprite_op_b <= sprite_op_a;
+		sprite_op_c <= sprite_op_b;
+	end
+end
+
+// TODO TODO REMOVE ME
 
 
 ///////////////////////////////////////////////////////////////////////////////

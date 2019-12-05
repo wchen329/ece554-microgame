@@ -23,13 +23,14 @@ module sprite_command_controller(
 	// memory
 	input [31:0] mem_in,
 	output logic [15:0] mem_address,
-	output logic mem_read,
 	// frame buffer
-	input fb_busy,
 	output logic fb_wfb, fb_dfb,
 	output logic [15:0] fb_px,
 	output logic [7:0] fb_r, fb_g, fb_b
 );
+
+logic fb_busy;
+assign fb_busy = 1'b0;
 
 // cmd signals
 logic [42:0] new_cmd, curr_cmd;
@@ -71,7 +72,7 @@ assign { fb_r, fb_g, fb_b } = (cmd_op == `SPRITE_DS) ? { sb_o_r[cmd_sprite_reg],
 // 															0;
 // WFB: cmd x/y
 // CS/DS: cmd x/y + sprite px
-assign fb_px = { cmd_y, cmd_x } + sb_px_count;
+assign fb_px = { cmd_y + sb_px_count[5:3], cmd_x + sb_px_count[2:0] };
 
 sprite_command_fifo sprite_command_fifo(
 	.clk(clk),
@@ -84,7 +85,7 @@ sprite_command_fifo sprite_command_fifo(
 
 genvar i;
 generate
-	for(i = 0; i < `SPRITE_BUFFERS; i = i + 1) begin
+	for(i = 0; i < `SPRITE_BUFFERS; i = i + 1) begin : gen_sprites
 		sprite_buffer sprite_buffer(
 			.clk(clk),
 			.rst_n(rst_n),
@@ -169,7 +170,6 @@ always_comb begin
 	sb_write = 0;
 	sb_read = 0;
 	fifo_read = 0;
-	mem_read = 0;
 
 	case(state)
 		IDLE: begin
@@ -186,7 +186,6 @@ always_comb begin
 					next_state = LS;
 					sb_set_ori[cmd_sprite_reg] = 1;
 					sb_write[cmd_sprite_reg] = 1;
-					mem_read = 1;
 				end
 				`SPRITE_DS: begin
 					next_state = DS;
@@ -214,7 +213,6 @@ always_comb begin
 				fifo_read = 1;
 			else begin
 				next_state = LS;
-				mem_read = 1;
 			end
 		end
 		DS: begin

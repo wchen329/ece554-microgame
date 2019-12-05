@@ -7,10 +7,16 @@ module cpu
 	input clk, rst_n,
 	input [35:0] gpio,
 	
-	// TODO REMOVE ME
-	output [10:0] pc_report,
-	output [4:0] opcode_report,
-	output [9:0] result_report
+	output vga_write,
+	output vga_display,
+	output [15:0] vga_pixnum,
+	output [7:0] vga_r,
+	output [7:0] vga_g,
+	output [7:0] vga_b,
+	
+	// TODO
+	output reg [2:0] sprite_op_a, sprite_op_b, sprite_op_c
+	// TODO
 );
 
 
@@ -114,9 +120,6 @@ logic [31:0] instruction;
 logic [31:0] mem_sprite_out;
 logic [INSTRUCTION_ADDRESS_WIDTH-1:0] mem_sprite_address;
 
-// TODO actually wire to sprite stuff
-assign mem_sprite_address = 0;
-
 instruction_memory #(INSTRUCTION_ADDRESS_WIDTH) instruction_memory(
 	.clk(clk),
 	.address_a(pc),
@@ -155,14 +158,6 @@ always_ff @(posedge clk or negedge rst_n) begin
 		ifid_is_no_op <= instruction == 32'b0;
 	end
 end
-
-
-// TODO REMOVE ME
-assign pc_report = ifid_pc;
-
-
-// TODO REMOVE ME
-assign opcode_report = ifid_instruction[31:27];
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -253,10 +248,6 @@ end
 
 // register 32 is RGB register, otherwise general-purpose
 assign rf_rgb = rf[31];
-
-// TODO delete me TODO
-assign result_report = rf[5'b00100][9:0];
-// TODO TODO TODO
 
 
 // control signals for all stages here and beyond
@@ -748,13 +739,14 @@ logic [NUM_INPUT_BITS-1:0] user_input;
 
 user_input_buffer stimulus(
 	.clk(clk),
-	.rst(ex_control.select_input),
+	.clr(ex_control.select_input),
 	.GPIO(gpio),
 	.up(user_input[4]),
 	.right(user_input[3]),
 	.down(user_input[2]),
 	.left(user_input[1]),
-	.space(user_input[0])
+	.space(user_input[0]),
+	.rst_n(rst_n)
 );
 
 
@@ -971,12 +963,37 @@ assign sprite_command = {
 	memwb_result1
 };
 
-sprite_command_fifo_front_end sprite_fifo(
+sprite_command_controller sprite_fifo(
 	.clk(clk),
 	.rst_n(rst_n),
 	.cmd(sprite_command),
-	.write(wb_control.sprite_produce && ~memwb_is_no_op)
+	.write_cmd(wb_control.sprite_produce && ~memwb_is_no_op),
+	.mem_in(mem_sprite_out),
+	.mem_address(mem_sprite_address),
+	.fb_wfb(vga_write),
+	.fb_dfb(vga_display),
+	.fb_px(vga_pixnum),
+	.fb_r(vga_r),
+	.fb_g(vga_g),
+	.fb_b(vga_b)
 );
+
+
+// TODO TODO REMOVE ME
+
+always_ff @(posedge clk or negedge rst_n) begin
+	if(!rst_n) begin
+		sprite_op_a <= 3'b111;
+		sprite_op_b <= 3'b111;
+		sprite_op_c <= 3'b111;
+	end else if(wb_control.sprite_produce && ~memwb_is_no_op) begin
+		sprite_op_a <= wb_control.sprite_op;
+		sprite_op_b <= sprite_op_a;
+		sprite_op_c <= sprite_op_b;
+	end
+end
+
+// TODO TODO REMOVE ME
 
 
 ///////////////////////////////////////////////////////////////////////////////

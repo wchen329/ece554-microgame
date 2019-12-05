@@ -14,7 +14,6 @@ logic [7:0] r, g, b;
 // mem
 logic [31:0] mem_in;
 logic [15:0] mem_address;
-logic mem_read;
 // frame buffer
 logic fb_busy;
 logic fb_wfb, fb_dfb;
@@ -76,7 +75,6 @@ sprite_command_controller sprite_command_controller(
 	.cmd({sprite_op, sprite_reg, orientation, r, g, b, x, y, 16'h0, address}),
 	.mem_in(mem_in),
 	.mem_address(mem_address),
-	.mem_read(mem_read),
 	.fb_busy(fb_busy),
 	.fb_wfb(fb_wfb),
 	.fb_dfb(fb_dfb),
@@ -235,14 +233,14 @@ task check_sprite_frame(input integer isprite_addr, [7:0] ix, iy);
 	integer i;
 
 	for(i = 0; i < 64; i++) begin
-		// assert (frame_buffer[{iy, ix}+i] == (ix < 8 || iy < 8 || ix > 248 || iy > 248) ? 0 : sprite_mem[isprite_addr+i][23:0])
-		assert (frame_buffer[{iy, ix}+i] == sprite_mem[isprite_addr+i][23:0])
+		// assert (frame_buffer[{iy+i[5:3], ix+i[2:0]}] == (ix < 8 || iy < 8 || ix > 248 || iy > 248) ? 0 : sprite_mem[isprite_addr+i][23:0])
+		assert (frame_buffer[{iy+i[5:3], ix+i[2:0]}] == sprite_mem[isprite_addr+i][23:0])
 		else begin
 			$display(
 				"Expected frame_buffer[%d (%d)] to be %d,%d,%d not %d,%d,%d",
-				i, {iy, ix}+i,
+				i, {iy+i[5:3], ix+i[2:0]},
 				sprite_mem[isprite_addr+i][23:16], sprite_mem[isprite_addr+i][15:8], sprite_mem[isprite_addr+i][7:0],
-				frame_buffer[{iy, ix}+i][23:16], frame_buffer[{iy, ix}+i][15:8], frame_buffer[{iy, ix}+i][7:0]
+				frame_buffer[{iy+i[5:3], ix+i[2:0]}][23:16], frame_buffer[{iy+i[5:3], ix+i[2:0]}][15:8], frame_buffer[{iy+i[5:3], ix+i[2:0]}][7:0]
 			);
 			$stop();
 		end
@@ -253,12 +251,12 @@ task check_frame_zero(input [7:0] ix, iy);
 	integer i;
 
 	for(i = 0; i < 64; i++) begin
-		assert (frame_buffer[{iy, ix}+i] == 0)
+		assert (frame_buffer[{iy+i[5:3], ix+i[2:0]}] == 0)
 		else begin
 			$display(
 				"Expected frame_buffer[%d (%d)] to be 0 not %d,%d,%d",
-				i, {iy, ix}+i,
-				frame_buffer[{iy, ix}+i][23:16], frame_buffer[{iy, ix}+i][15:8], frame_buffer[{iy, ix}+i][7:0]
+				i, {iy+i[5:3], ix+i[2:0]},
+				frame_buffer[{iy+i[5:3], ix+i[2:0]}][23:16], frame_buffer[{iy+i[5:3], ix+i[2:0]}][15:8], frame_buffer[{iy+i[5:3], ix+i[2:0]}][7:0]
 			);
 			$stop();
 		end

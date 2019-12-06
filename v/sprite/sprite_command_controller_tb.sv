@@ -22,7 +22,10 @@ logic [7:0] fb_r, fb_g, fb_b;
 
 // sprite mem
 logic [31:0] sprite_mem[0:255];
-assign mem_in = sprite_mem[mem_address];
+// assign mem_in = sprite_mem[mem_address];
+
+always_ff @(posedge clk)
+	mem_in <= sprite_mem[mem_address];
 
 // frame buffer
 logic [23:0] frame_buffer[0:65535];
@@ -75,7 +78,6 @@ sprite_command_controller sprite_command_controller(
 	.cmd({sprite_op, sprite_reg, orientation, r, g, b, x, y, 16'h0, address}),
 	.mem_in(mem_in),
 	.mem_address(mem_address),
-	.fb_busy(fb_busy),
 	.fb_wfb(fb_wfb),
 	.fb_dfb(fb_dfb),
 	.fb_px(fb_px),
@@ -109,6 +111,7 @@ initial begin
 	// write px
 	$display("Writing one pixel...");
 	wfb(0, 0, 'hFF, 'hFF, 'hFF);
+	dfb();
 
 	// wait for cmd to propagate
 	@(posedge clk);

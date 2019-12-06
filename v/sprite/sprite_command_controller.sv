@@ -51,7 +51,7 @@ logic fifo_read;
 logic [7:0] sb_read, sb_write, sb_set_ori;
 logic [7:0] sb_r, sb_g, sb_b;
 logic [7:0] sb_o_r[8], sb_o_g[8], sb_o_b[8];
-logic [5:0] sb_px_count;
+logic [5:0] sb_px_count, ls_mem_cnt;
 
 typedef enum logic [2:0] { IDLE, DFB, LS, DS, CS } state_t;
 state_t state, next_state;
@@ -150,9 +150,16 @@ always_ff @(posedge clk)
 	else
 		sb_px_count <= 0;
 
+// sp_px_count for sprite r/w
+always_ff @(posedge clk)
+	if(next_state == LS || state == LS)
+		ls_mem_cnt <= ls_mem_cnt + 1;
+	else
+		ls_mem_cnt <= 0;
+
 // read from mem
 // colors are stored as { 8'?, 8'r, 8'g, 8'b }
-assign mem_address = cmd_address + sb_px_count;
+assign mem_address = cmd_address + ls_mem_cnt;
 assign { sb_r, sb_g, sb_b } = mem_in[23:0];
 
 // SM

@@ -264,7 +264,7 @@ namespace asmrunner
 				if(jump_syms.has(args[3]))
 				{
 					priscas::BW_32 label_PC = static_cast<int32_t>(jump_syms.lookup_from_sym(std::string(args[3].c_str())));
-					imm = label_PC.AsInt32();
+					imm = (label_PC.AsInt32() >> 2);
 				}
 
 				else

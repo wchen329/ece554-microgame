@@ -1,3 +1,5 @@
+`include "constants.sv"
+
 module cpu
 #(
 	parameter INSTRUCTION_ADDRESS_WIDTH=11,
@@ -470,38 +472,38 @@ always_comb begin
 			// wfb
 			init_ex_control.zero_as_op2 = 1;
 
-			init_wb_control.sprite_op = 3'b000;
+			init_wb_control.sprite_op = `SPRITE_WFB;
 			init_wb_control.sprite_produce = 1;
 		end
 		5'b10110:begin
 			// dfb
-			init_wb_control.sprite_op = 3'b001;
+			init_wb_control.sprite_op = `SPRITE_DFB;
 			init_wb_control.sprite_produce = 1;
 		end
 		5'b10111:begin
 			// ls
 			init_ex_control.select_immediate = 1;
 
-			init_wb_control.sprite_op = 3'b010;
+			init_wb_control.sprite_op = `SPRITE_LS;
 			init_wb_control.sprite_produce = 1;
 		end
 		5'b11000:begin
 			// ds
 			init_ex_control.zero_as_op2 = 1;
 
-			init_wb_control.sprite_op = 3'b011;
+			init_wb_control.sprite_op = `SPRITE_DS;
 			init_wb_control.sprite_produce = 1;
 		end
 		5'b11001:begin
 			// cs
 			init_ex_control.zero_as_op2 = 1;
 
-			init_wb_control.sprite_op = 3'b100;
+			init_wb_control.sprite_op = `SPRITE_CS;
 			init_wb_control.sprite_produce = 1;
 		end
 		5'b11010:begin
 			// rs
-			init_wb_control.sprite_op = 3'b101;
+			init_wb_control.sprite_op = `SPRITE_RS;
 			init_wb_control.sprite_produce = 1;
 		end
 		5'b11011:begin
@@ -1028,6 +1030,7 @@ assign memwb_fw_mem_enable = (wb_control.dest_reg == mem_control.source) && wb_c
 logic hazard_use_after_load;
 logic hazard_branch_after_cc_update;
 logic hazard_rf_read_after_load;
+logic hazard_rgb_read_after_load;
 
 // for when ex is using operand just read from data memory
 assign hazard_use_after_load =
@@ -1039,13 +1042,19 @@ assign hazard_branch_after_cc_update =
 assign hazard_rf_read_after_load = 
 	((check_wb_in_idex.dest_reg == rf_reg1_address || check_wb_in_idex.dest_reg == rf_reg2_address) && (check_wb_in_idex.write_lower || check_wb_in_idex.write_upper)) ||
 	((check_wb_in_exmem.dest_reg == rf_reg1_address || check_wb_in_exmem.dest_reg == rf_reg2_address) && (check_wb_in_exmem.write_lower || check_wb_in_exmem.write_upper));
+// for when DFB is issued after a lui or lli
+assign hazard_rgb_read_after_load =
+	(check_wb_in_idex.dest_reg == 5'b11111 && (check_wb_in_idex.write_lower || check_wb_in_idex.write_upper) && init_wb_control.sprite_op == `SPRITE_WFB) ||
+	(check_wb_in_exmem.dest_reg == 5'b11111 && (check_wb_in_exmem.write_lower || check_wb_in_exmem.write_upper) && init_wb_control.sprite_op == `SPRITE_WFB);
+
 
 logic hazard;
 
 assign hazard =
 	hazard_use_after_load ||
 	hazard_branch_after_cc_update ||
-	hazard_rf_read_after_load;
+	hazard_rf_read_after_load ||
+	hazard_rgb_read_after_load;
 
 
 // stalling logic

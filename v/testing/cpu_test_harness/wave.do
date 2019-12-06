@@ -1,5 +1,14 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
+add wave -noupdate /cpu_tb/cpu/instruction_memory/clk
+add wave -noupdate /cpu_tb/cpu/instruction_memory/address_a
+add wave -noupdate /cpu_tb/cpu/instruction_memory/address_b
+add wave -noupdate /cpu_tb/cpu/instruction_memory/data_a
+add wave -noupdate /cpu_tb/cpu/instruction_memory/data_b
+add wave -noupdate /cpu_tb/cpu/instruction_memory/fd
+add wave -noupdate /cpu_tb/cpu/instruction_memory/i
+add wave -noupdate /cpu_tb/cpu/instruction_memory/addr
+add wave -noupdate -divider instr
 add wave -noupdate /cpu_tb/clk
 add wave -noupdate /cpu_tb/cpu/pc
 add wave -noupdate /cpu_tb/cpu/instruction
@@ -65,7 +74,7 @@ add wave -noupdate /cpu_tb/cpu/user_memory_data_out
 add wave -noupdate /cpu_tb/cpu/memwb_fw_mem_enable
 add wave -noupdate /cpu_tb/cpu/memwb_fw_mem
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {1246 ns} 0}
+WaveRestoreCursors {{Cursor 1} {1089 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 189
 configure wave -valuecolwidth 91

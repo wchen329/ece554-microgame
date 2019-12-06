@@ -1,7 +1,4 @@
-module data_memory
-#(
-	parameter JUNK=16'b0
-)(
+module data_memory(
 	input clk, rst_n,
 	input [15:0] address,
 	input [31:0] data_in,

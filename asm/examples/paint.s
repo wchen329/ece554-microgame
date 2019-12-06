@@ -40,27 +40,35 @@ SET_DOWN:
 
 WRITE_MAGENTA:
 	ds %0, $s0, $s1
+	ret
 
 WRITE_RED:
 	ds %1, $s0, $s1
+	ret
 
 WRITE_GREEN:
 	ds %2, $s0, $s1
+	ret
 
 WRITE_BLUE:
 	ds %3, $s0, $s1
+	ret
 
 WRITE_BLACK:
 	ds %4, $s0, $s1
+	ret
 
 WRITE_WHITE:
 	ds %5, $s0, $s1
+	ret
 
 WRITE_BROWN:
 	ds %6, $s0, $s1
+	ret
 
 WRITE_YELLOW:
 	ds %7, $s0, $s1
+	ret
 
 
 GAME:

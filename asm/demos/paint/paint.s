@@ -75,19 +75,21 @@ GAME:
 	# Load Keyboard Input
 	lk $1 # Get last keystroke
 
-	# Set up comparisons
+	# Set up comparisons, move cursor or change color to draw
 	andi $2, $1, b00001  # LEFT
+	beq SET_LEFT
+
 	andi $3, $1, b00010  # RIGHT
+	beq SET_RIGHT
+
 	andi $4, $1, b01000  # DOWN
+	beq SET_DOWN
+
 	andi $5, $1, b00100  # UP
+	beq SET_UP
+
 	andi $6, $1, b10000 # SPACE (RANDOM)
-	
-	# Move Cursors or Randomize Cursor Color
-	beq $1, $2, SET_LEFT
-	beq $1, $3, SET_RIGHT
-	beq $1, $4, SET_DOWN
-	beq $1, $5, SET_UP
-	beq $1, $6, CYCLE_COLOR
+	beq CYCLE_COLOR
 
 	# Write Sprite
 	sub $10, $7, $2

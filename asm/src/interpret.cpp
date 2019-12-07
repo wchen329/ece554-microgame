@@ -150,6 +150,7 @@ namespace asmrunner
 			{
 				if(current_op == WFB || current_op == CS)
 				{
+					if((rt = priscas::friendly_to_numerical(args[1].c_str())) <= priscas::INVALID)
 					rt = get_reg_num(args[1].c_str());
 				}
 
@@ -225,11 +226,13 @@ namespace asmrunner
 			{
 				if(current_op == WFB || current_op == CS)
 				{
+					if((rs = priscas::friendly_to_numerical(args[2].c_str())) <= priscas::INVALID)
 					rs = get_reg_num(args[2].c_str());
 				}
 
 				else if(current_op == DS)
 				{
+					if((rt = priscas::friendly_to_numerical(args[2].c_str())) <= priscas::INVALID)
 					rt = get_reg_num(args[2].c_str());
 				}
 
@@ -256,7 +259,8 @@ namespace asmrunner
 
 			else if(current_op == DS)
 			{
-				rs = get_reg_num(args[3].c_str());
+				if((rs = priscas::friendly_to_numerical(args[3].c_str())) <= priscas::INVALID)
+					rs = get_reg_num(args[3].c_str());
 			}
 
 			else if(current_op == LS)

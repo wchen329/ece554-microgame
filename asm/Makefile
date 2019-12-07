@@ -28,3 +28,6 @@ test: mgassemble
 	./mgassemble -i tests/allinst.s -f hl -o test.hl # -g tests/testspmap.st
 	$(CC) tests/testpkg.cpp -o testmgassemble
 	./testmgassemble
+
+demo: mgassemble
+	cd demos; $(MAKE)

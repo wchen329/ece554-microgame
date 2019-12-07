@@ -77,19 +77,19 @@ GAME:
 
 	# Set up comparisons, move cursor or change color to draw
 	andi $2, $1, b00001  # LEFT
-	beq SET_LEFT
+	blne SET_LEFT
 
 	andi $3, $1, b00010  # RIGHT
-	beq SET_RIGHT
+	blne SET_RIGHT
 
 	andi $4, $1, b01000  # DOWN
-	beq SET_DOWN
+	blne SET_DOWN
 
 	andi $5, $1, b00100  # UP
-	beq SET_UP
+	blne SET_UP
 
 	andi $6, $1, b10000 # SPACE (RANDOM)
-	beq CYCLE_COLOR
+	blne CYCLE_COLOR
 
 	# Write Sprite
 	sub $10, $7, $2

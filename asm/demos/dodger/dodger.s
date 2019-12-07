@@ -16,7 +16,7 @@
 # $20 user input register (LK)
 # $21 setup completed bit
 
-addi $1, $zero, 5 # The amount of rocks concurrently in play
+addi $1, $zero, 20 # The amount of rocks concurrently in play
 ls %0, 0, SHIP	# Cache sprites
 ls %1, 0, ROCK
 ori $16, $zero, 16 # Load a shift by 16

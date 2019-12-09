@@ -1,0 +1,69 @@
+
+State Machine - |FPGA_test|state
+Name state.11 state.10 state.01 state.00 
+state.00 0 0 0 0 
+state.01 0 0 1 1 
+state.10 0 1 0 1 
+state.11 1 0 0 1 
+
+State Machine - |FPGA_test|cpu:processor|sprite_command_controller:sprite_fifo|state
+Name state.DS state.LS state.DFB state.IDLE state.CS 
+state.IDLE 0 0 0 0 0 
+state.DFB 0 0 1 1 0 
+state.LS 0 1 0 1 0 
+state.DS 1 0 0 1 0 
+state.CS 0 0 0 1 1 
+
+State Machine - |FPGA_test|cpu:processor|sprite_command_controller:sprite_fifo|sprite_buffer:gen_sprites[7].sprite_buffer|state
+Name state.IDLE state.READ state.WRITE 
+state.IDLE 0 0 0 
+state.WRITE 1 0 1 
+state.READ 1 1 0 
+
+State Machine - |FPGA_test|cpu:processor|sprite_command_controller:sprite_fifo|sprite_buffer:gen_sprites[6].sprite_buffer|state
+Name state.IDLE state.READ state.WRITE 
+state.IDLE 0 0 0 
+state.WRITE 1 0 1 
+state.READ 1 1 0 
+
+State Machine - |FPGA_test|cpu:processor|sprite_command_controller:sprite_fifo|sprite_buffer:gen_sprites[5].sprite_buffer|state
+Name state.IDLE state.READ state.WRITE 
+state.IDLE 0 0 0 
+state.WRITE 1 0 1 
+state.READ 1 1 0 
+
+State Machine - |FPGA_test|cpu:processor|sprite_command_controller:sprite_fifo|sprite_buffer:gen_sprites[4].sprite_buffer|state
+Name state.IDLE state.READ state.WRITE 
+state.IDLE 0 0 0 
+state.WRITE 1 0 1 
+state.READ 1 1 0 
+
+State Machine - |FPGA_test|cpu:processor|sprite_command_controller:sprite_fifo|sprite_buffer:gen_sprites[3].sprite_buffer|state
+Name state.IDLE state.READ state.WRITE 
+state.IDLE 0 0 0 
+state.WRITE 1 0 1 
+state.READ 1 1 0 
+
+State Machine - |FPGA_test|cpu:processor|sprite_command_controller:sprite_fifo|sprite_buffer:gen_sprites[2].sprite_buffer|state
+Name state.IDLE state.READ state.WRITE 
+state.IDLE 0 0 0 
+state.WRITE 1 0 1 
+state.READ 1 1 0 
+
+State Machine - |FPGA_test|cpu:processor|sprite_command_controller:sprite_fifo|sprite_buffer:gen_sprites[1].sprite_buffer|state
+Name state.IDLE state.READ state.WRITE 
+state.IDLE 0 0 0 
+state.WRITE 1 0 1 
+state.READ 1 1 0 
+
+State Machine - |FPGA_test|cpu:processor|sprite_command_controller:sprite_fifo|sprite_buffer:gen_sprites[0].sprite_buffer|state
+Name state.IDLE state.READ state.WRITE 
+state.IDLE 0 0 0 
+state.WRITE 1 0 1 
+state.READ 1 1 0 
+
+State Machine - |FPGA_test|cpu:processor|user_input_buffer:stimulus|driver:driver0|user_io_cpu:CPU0|received
+Name received.00 received.10 received.01 
+received.00 0 0 0 
+received.01 1 0 1 
+received.10 1 1 0 

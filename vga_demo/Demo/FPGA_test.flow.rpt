@@ -1,0 +1,136 @@
+Flow report for FPGA_test
+Mon Dec 09 14:27:15 2019
+Quartus Prime Version 18.1.0 Build 625 09/12/2018 SJ Lite Edition
+
+
+---------------------
+; Table of Contents ;
+---------------------
+  1. Legal Notice
+  2. Flow Summary
+  3. Flow Settings
+  4. Flow Non-Default Global Settings
+  5. Flow Elapsed Time
+  6. Flow OS Summary
+  7. Flow Log
+  8. Flow Messages
+  9. Flow Suppressed Messages
+
+
+
+----------------
+; Legal Notice ;
+----------------
+Copyright (C) 2018  Intel Corporation. All rights reserved.
+Your use of Intel Corporation's design tools, logic functions 
+and other software and tools, and its AMPP partner logic 
+functions, and any output files from any of the foregoing 
+(including device programming or simulation files), and any 
+associated documentation or information are expressly subject 
+to the terms and conditions of the Intel Program License 
+Subscription Agreement, the Intel Quartus Prime License Agreement,
+the Intel FPGA IP License Agreement, or other applicable license
+agreement, including, without limitation, that your use is for
+the sole purpose of programming logic devices manufactured by
+Intel and sold by Intel or its authorized distributors.  Please
+refer to the applicable agreement for further details.
+
+
+
++-------------------------------------------------------------------------------+
+; Flow Summary                                                                  ;
++---------------------------------+---------------------------------------------+
+; Flow Status                     ; Successful - Mon Dec 09 14:26:49 2019       ;
+; Quartus Prime Version           ; 18.1.0 Build 625 09/12/2018 SJ Lite Edition ;
+; Revision Name                   ; FPGA_test                                   ;
+; Top-level Entity Name           ; FPGA_test                                   ;
+; Family                          ; Cyclone V                                   ;
+; Device                          ; 5CSEMA5F31C6                                ;
+; Timing Models                   ; Final                                       ;
+; Logic utilization (in ALMs)     ; 7,324 / 32,070 ( 23 % )                     ;
+; Total registers                 ; 12700                                       ;
+; Total pins                      ; 182 / 457 ( 40 % )                          ;
+; Total virtual pins              ; 0                                           ;
+; Total block memory bits         ; 1,138,176 / 4,065,280 ( 28 % )              ;
+; Total DSP Blocks                ; 0 / 87 ( 0 % )                              ;
+; Total HSSI RX PCSs              ; 0                                           ;
+; Total HSSI PMA RX Deserializers ; 0                                           ;
+; Total HSSI TX PCSs              ; 0                                           ;
+; Total HSSI PMA TX Serializers   ; 0                                           ;
+; Total PLLs                      ; 1 / 6 ( 17 % )                              ;
+; Total DLLs                      ; 0 / 4 ( 0 % )                               ;
++---------------------------------+---------------------------------------------+
+
+
++-----------------------------------------+
+; Flow Settings                           ;
++-------------------+---------------------+
+; Option            ; Setting             ;
++-------------------+---------------------+
+; Start date & time ; 12/09/2019 14:22:12 ;
+; Main task         ; Compilation         ;
+; Revision Name     ; FPGA_test           ;
++-------------------+---------------------+
+
+
++---------------------------------------------------------------------------------------------------------------------------------------------+
+; Flow Non-Default Global Settings                                                                                                            ;
++-------------------------------------+------------------------------------------------------------+---------------+-------------+------------+
+; Assignment Name                     ; Value                                                      ; Default Value ; Entity Name ; Section Id ;
++-------------------------------------+------------------------------------------------------------+---------------+-------------+------------+
+; COMPILER_SIGNATURE_ID               ; 118933446294583.157592293207576                            ; --            ; --          ; --         ;
+; MAX_CORE_JUNCTION_TEMP              ; 85                                                         ; --            ; --          ; --         ;
+; MIN_CORE_JUNCTION_TEMP              ; 0                                                          ; --            ; --          ; --         ;
+; MISC_FILE                           ; ../../ece554-microgame/v/memory/instruction_memory_8k_bb.v ; --            ; --          ; --         ;
+; MISC_FILE                           ; ../../ece554-microgame/v/memory/data_memory_8k_bb.v        ; --            ; --          ; --         ;
+; MISC_FILE                           ; v/sdram_pll.cmp                                            ; --            ; --          ; --         ;
+; MISC_FILE                           ; v/Line_Buffer1.bsf                                         ; --            ; --          ; --         ;
+; MISC_FILE                           ; vga_clk.cmp                                                ; --            ; --          ; --         ;
+; MISC_FILE                           ; vga_clk_sim/vga_clk.vo                                     ; --            ; --          ; --         ;
+; MISC_FILE                           ; ../../ece554-microgame/v/memory/frame_buffer_bb.v          ; --            ; --          ; --         ;
+; PARTITION_COLOR                     ; -- (Not supported for targeted family)                     ; --            ; --          ; Top        ;
+; PARTITION_FITTER_PRESERVATION_LEVEL ; -- (Not supported for targeted family)                     ; --            ; --          ; Top        ;
+; PARTITION_NETLIST_TYPE              ; -- (Not supported for targeted family)                     ; --            ; --          ; Top        ;
+; POWER_BOARD_THERMAL_MODEL           ; None (CONSERVATIVE)                                        ; --            ; --          ; --         ;
+; POWER_PRESET_COOLING_SOLUTION       ; 23 MM HEAT SINK WITH 200 LFPM AIRFLOW                      ; --            ; --          ; --         ;
+; SPD_FILE                            ; vga_clk.spd                                                ; --            ; --          ; --         ;
+; SYNTHESIS_ONLY_QIP                  ; On                                                         ; --            ; --          ; --         ;
+; SYNTHESIS_ONLY_QIP                  ; On                                                         ; --            ; --          ; --         ;
++-------------------------------------+------------------------------------------------------------+---------------+-------------+------------+
+
+
++--------------------------------------------------------------------------------------------------------------------------+
+; Flow Elapsed Time                                                                                                        ;
++----------------------+--------------+-------------------------+---------------------+------------------------------------+
+; Module Name          ; Elapsed Time ; Average Processors Used ; Peak Virtual Memory ; Total CPU Time (on all processors) ;
++----------------------+--------------+-------------------------+---------------------+------------------------------------+
+; Analysis & Synthesis ; 00:00:32     ; 2.0                     ; 5072 MB             ; 00:00:54                           ;
+; Fitter               ; 00:03:45     ; 1.3                     ; 7392 MB             ; 00:10:37                           ;
+; Assembler            ; 00:00:12     ; 1.0                     ; 5009 MB             ; 00:00:13                           ;
+; Timing Analyzer      ; 00:00:25     ; 2.8                     ; 5636 MB             ; 00:01:01                           ;
+; Total                ; 00:04:54     ; --                      ; --                  ; 00:12:45                           ;
++----------------------+--------------+-------------------------+---------------------+------------------------------------+
+
+
++------------------------------------------------------------------------------------+
+; Flow OS Summary                                                                    ;
++----------------------+------------------+------------+------------+----------------+
+; Module Name          ; Machine Hostname ; OS Name    ; OS Version ; Processor type ;
++----------------------+------------------+------------+------------+----------------+
+; Analysis & Synthesis ; CMPELABS-205     ; Windows 10 ; 10.0       ; x86_64         ;
+; Fitter               ; CMPELABS-205     ; Windows 10 ; 10.0       ; x86_64         ;
+; Assembler            ; CMPELABS-205     ; Windows 10 ; 10.0       ; x86_64         ;
+; Timing Analyzer      ; CMPELABS-205     ; Windows 10 ; 10.0       ; x86_64         ;
++----------------------+------------------+------------+------------+----------------+
+
+
+------------
+; Flow Log ;
+------------
+quartus_map --read_settings_files=on --write_settings_files=off FPGA_test -c FPGA_test
+quartus_fit --read_settings_files=off --write_settings_files=off FPGA_test -c FPGA_test
+quartus_asm --read_settings_files=off --write_settings_files=off FPGA_test -c FPGA_test
+quartus_sta FPGA_test -c FPGA_test
+
+
+

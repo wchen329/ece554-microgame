@@ -1,16 +1,24 @@
 module instruction_memory
 #(
-	parameter MAX_INSTRUCTIONS=64
+	parameter DATA_WIDTH_BLAH_BLAH_BLAH=16,
+	localparam MAX_INSTRUCTIONS=256
 )(
-	input clk, rst_n,
-	input [15:0] address,
-	output [31:0] data
+	input clk,
+	input [15:0] address_a, address_b,
+	output [31:0] data_a, data_b
 );
 
 int fd;
 
 integer i;
 reg [31:0] instructions[MAX_INSTRUCTIONS-1:0];
+
+reg [31:0] addr;
+
+always_ff @(posedge clk) begin
+	addr <= {21'b0, address_a[10:0]};
+end
+
 
 // read in fake instuction memory file
 // make sure to add delay so this can complete
@@ -25,6 +33,7 @@ initial begin
 	// clear memory
 	for(i=0; i<MAX_INSTRUCTIONS; i=i+1) begin
 		instructions[i] = 32'b0;
+		$display("%d", i);
 	end
 
 	i = 0;
@@ -36,6 +45,8 @@ initial begin
 	$fclose(fd);
 end
 
-assign data = address >= MAX_INSTRUCTIONS ? 32'b0 : instructions[address];
+assign data_a = addr >= MAX_INSTRUCTIONS ? 32'b0 : instructions[addr];
+
+assign data_b = 16'h0000;
 
 endmodule

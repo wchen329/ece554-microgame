@@ -1,6 +1,7 @@
 module instruction_memory
 #(
-	parameter MAX_INSTRUCTIONS=64
+	parameter DATA_WIDTH_BLAH_BLAH_BLAH=16,
+	localparam MAX_INSTRUCTIONS=256
 )(
 	input clk,
 	input [15:0] address_a, address_b,

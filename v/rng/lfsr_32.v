@@ -14,7 +14,7 @@ module lfsr_32(input clk, input rst_n, input set_seed, input[31:0] seed_in, outp
 
 		// Reset if asserted
 		if(!rst_n) begin
-			v <= 32'd0;
+			v <= 32'hCCCCCCCC;
 		end
 
 		// Set seed as necessary

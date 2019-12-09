@@ -159,9 +159,9 @@ assign x_index = x > 13'd192 ? x - 13'd192 : '0;
 assign y_index = y > 13'd112 ? y - 13'd112 : '0;
 
 //only write pixels when in 256x256 box
-assign	mVGA_R	= 	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? ired 		:	10'hF0F;
-assign	mVGA_G	=	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? igreen 	:	10'hF0F;
-assign	mVGA_B	=	((x >= 13'd192) & (x <  13'd448) & (y >= 13'd112) & (y < 13'd368)) ? iblue 	:	10'hF0F;
+assign	mVGA_R	= 	((x >= 13'd194) & (x <  13'd450) & (y >= 13'd112) & (y < 13'd368)) ? ired 		:	10'hF0F;
+assign	mVGA_G	=	((x >= 13'd194) & (x <  13'd450) & (y >= 13'd112) & (y < 13'd368)) ? igreen 	:	10'hF0F;
+assign	mVGA_B	=	((x >= 13'd194) & (x <  13'd450) & (y >= 13'd112) & (y < 13'd368)) ? iblue 	:	10'hF0F;
 
 
 //============================================================

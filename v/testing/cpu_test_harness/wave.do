@@ -9,8 +9,12 @@ add wave -noupdate /cpu_tb/cpu/instruction_memory/fd
 add wave -noupdate /cpu_tb/cpu/instruction_memory/i
 add wave -noupdate /cpu_tb/cpu/instruction_memory/addr
 add wave -noupdate -divider instr
+add wave -noupdate /cpu_tb/cpu/rst_n
 add wave -noupdate /cpu_tb/clk
+add wave -noupdate /cpu_tb/cpu/pc_reset
+add wave -noupdate /cpu_tb/cpu/pc_stall
 add wave -noupdate /cpu_tb/cpu/pc
+add wave -noupdate /cpu_tb/cpu/pc_ghost
 add wave -noupdate /cpu_tb/cpu/instruction
 add wave -noupdate /cpu_tb/cpu/op
 add wave -noupdate /cpu_tb/cpu/ifid_instruction
@@ -73,8 +77,18 @@ add wave -noupdate /cpu_tb/cpu/user_memory_data_in
 add wave -noupdate /cpu_tb/cpu/user_memory_data_out
 add wave -noupdate /cpu_tb/cpu/memwb_fw_mem_enable
 add wave -noupdate /cpu_tb/cpu/memwb_fw_mem
+add wave -noupdate -divider Sprites
+add wave -noupdate /cpu_tb/cpu/instruction_memory/clk
+add wave -noupdate /cpu_tb/cpu/sc_produce
+add wave -noupdate /cpu_tb/cpu/sc_op
+add wave -noupdate /cpu_tb/cpu/sc_reg
+add wave -noupdate /cpu_tb/cpu/sc_orientation
+add wave -noupdate /cpu_tb/cpu/sc_rgb
+add wave -noupdate /cpu_tb/cpu/sc_x
+add wave -noupdate /cpu_tb/cpu/sc_y
+add wave -noupdate /cpu_tb/cpu/sc_address
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {1089 ns} 0}
+WaveRestoreCursors {{Cursor 1} {1180 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 189
 configure wave -valuecolwidth 91
@@ -90,4 +104,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {1009 ns} {1557 ns}
+WaveRestoreZoom {713 ns} {1647 ns}

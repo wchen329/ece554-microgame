@@ -151,7 +151,8 @@ always_ff @(posedge clk or negedge rst_n) begin
 		ifid_instruction <= 0;
 		ifid_pc <= 0;
 		ifid_is_no_op <= 1;
-	end else if(ifid_flush) begin
+	// pc_reset is also an edge case for startup
+	end else if(ifid_flush || pc_reset) begin
 		ifid_instruction <= 0;
 		// empty edge case, but neat
 		ifid_pc <= pc_ghost;

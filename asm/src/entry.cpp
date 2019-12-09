@@ -37,6 +37,5 @@ int main(int argc, char ** argv)
 
 	asmrunner::Shell runtime;
 	runtime.SetArgs(args);
-	runtime.Run();
-	return 0;
+	return runtime.Run();
 }

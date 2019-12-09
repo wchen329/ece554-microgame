@@ -42,7 +42,7 @@ namespace asmrunner
 	 *
 	 * wchen329
 	 */
-	void Shell::Run()
+	int Shell::Run()
 	{
 
 		WriteToOutput("Microgame Binary Assembler 1.0\n");
@@ -60,7 +60,7 @@ namespace asmrunner
 			if(!shEnv.get_Option_AsmInputSpecified())
 			{
 				WriteToError("Error: An input file is required (specified through -i [input file] ) in order to run in batch mode.\n");
-				return;
+				return -1;
 			}
 
 			else
@@ -95,7 +95,7 @@ namespace asmrunner
 						WriteToError("\t- mif (default)\n");
 						WriteToError("\t- hexlist / hl\n");
 						WriteToError("\t- bin\n");
-						return;
+						return -2;
 					}
 				}
 				else
@@ -116,7 +116,7 @@ namespace asmrunner
 			if(inst_file == NULL)
 			{
 				WriteToError("Error: The file specified cannot be opened or doesn't exist.\n");
-				return;
+				return -3;
 			}
 
 		}
@@ -124,7 +124,7 @@ namespace asmrunner
 		else
 		{
 			WriteToOutput("Usage: mgassemble -i [source filename] -o [binary output filename] -g [sprite table file] -f [format]\n");
-			return;
+			return -4;
 		}
 
 		/* First, if an input file was specified
@@ -182,7 +182,7 @@ namespace asmrunner
 			{
 				WriteToOutput("An error has occurred when writing debugging symbols and assigning directives:\n\t");
 				WriteToOutput(e.get_err().c_str());
-				return;
+				return -4;
 			}
 
 			priscas::BW_32 asm_pc = 0;
@@ -207,7 +207,7 @@ namespace asmrunner
 					std::string msg_2 = 
 						(std::string("\t") + lines[itr] + std::string("\n"));
 					WriteToError(msg_2);
-					return;
+					return -5;
 				}
 
 				priscas::BW_32& thirty_two = dynamic_cast<priscas::BW_32&>(*inst);
@@ -228,6 +228,7 @@ namespace asmrunner
 		}
 
 		WriteToOutput(("Operation completed successfully.\n"));
+		return 0;
 	}
 
 	/* Takes an input string and breaks that string into a vector of several

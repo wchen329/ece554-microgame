@@ -26,7 +26,8 @@ module sprite_command_controller(
 	// frame buffer
 	output logic fb_wfb, fb_dfb,
 	output logic [15:0] fb_px,
-	output logic [7:0] fb_r, fb_g, fb_b
+	output logic [7:0] fb_r, fb_g, fb_b,
+	input border_en
 );
 
 logic fb_busy;
@@ -59,9 +60,19 @@ state_t state, next_state;
 // DS: read from sprite
 // WFB: use cmd
 // CS / other: 0
-assign { fb_r, fb_g, fb_b } = (cmd_op == `SPRITE_DS) ? { sb_o_r[cmd_sprite_reg], sb_o_g[cmd_sprite_reg], sb_o_b[cmd_sprite_reg] } :
+always_comb
+	if(border_en)
+		{ fb_r, fb_g, fb_b } = (cmd_op == `SPRITE_WFB) ? { cmd_r, cmd_g, cmd_b } :
+ 															(cmd_op == `SPRITE_DS && fb_px[7:0] > 6 && fb_px[15:8] > 6 && fb_px[7:0] < 249 && fb_px[15:8] < 249) ? { sb_o_r[cmd_sprite_reg], sb_o_g[cmd_sprite_reg], sb_o_b[cmd_sprite_reg] } :
+ 															0;
+	else
+		{ fb_r, fb_g, fb_b } = (cmd_op == `SPRITE_DS) ? { sb_o_r[cmd_sprite_reg], sb_o_g[cmd_sprite_reg], sb_o_b[cmd_sprite_reg] } :
 															(cmd_op == `SPRITE_WFB) ? { cmd_r, cmd_g, cmd_b } :
 															0;
+
+// assign { fb_r, fb_g, fb_b } = (cmd_op == `SPRITE_DS) ? { sb_o_r[cmd_sprite_reg], sb_o_g[cmd_sprite_reg], sb_o_b[cmd_sprite_reg] } :
+//															(cmd_op == `SPRITE_WFB) ? { cmd_r, cmd_g, cmd_b } :
+//															0;
 // block top/left 7 rows/cols for DS
 // assign { fb_r, fb_g, fb_b } = (cmd_op == `SPRITE_WFB) ? { cmd_r, cmd_g, cmd_b } :
 // 															(cmd_op == `SPRITE_DS && cmd_x > 7 && cmd_y > 7) ? { sb_o_r[cmd_sprite_reg], sb_o_g[cmd_sprite_reg], sb_o_b[cmd_sprite_reg] } :
@@ -221,7 +232,7 @@ always_comb begin
 			else begin
 				next_state = LS;
 			end
-		end
+		end 
 		DS: begin
 			// wait until done reading/writing from/to sprite/frame buffer
 			fb_wfb = 1;

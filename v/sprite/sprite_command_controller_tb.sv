@@ -13,7 +13,7 @@ logic [15:0] address;
 logic [7:0] r, g, b;
 // mem
 logic [31:0] mem_in;
-logic [15:0] mem_address;
+logic [15:0] mem_address, addr;
 // frame buffer
 logic fb_busy;
 logic fb_wfb, fb_dfb;
@@ -22,10 +22,11 @@ logic [7:0] fb_r, fb_g, fb_b;
 
 // sprite mem
 logic [31:0] sprite_mem[0:255];
-// assign mem_in = sprite_mem[mem_address];
 
 always_ff @(posedge clk)
-	mem_in <= sprite_mem[mem_address];
+	addr <= mem_address;
+
+assign mem_in = sprite_mem[addr];
 
 // frame buffer
 logic [23:0] frame_buffer[0:65535];
@@ -126,6 +127,20 @@ initial begin
 
 	// draw a sprite
 	$display("Drawing sprite...");
+	ls(0, 0, 0);
+	ds(0, 0, 0);
+
+	repeat(2) wait_done();
+	check_sprite_frame(0, 0, 0);
+
+	// reset
+	rst_n = 0;
+	@(posedge clk);
+	@(negedge clk);
+	rst_n = 1;
+
+	// draw a sprite
+	$display("Drawing sprite after reset...");
 	ls(0, 0, 0);
 	ds(0, 0, 0);
 

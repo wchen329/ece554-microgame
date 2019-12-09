@@ -47,7 +47,7 @@ namespace asmrunner
 	{
 
 		public:
-			void Run();
+			int Run();
 			void SetArgs(std::vector<std::string> & args) { this->args = args; }
 			Shell();
 		private:

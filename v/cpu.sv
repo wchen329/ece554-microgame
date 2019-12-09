@@ -17,7 +17,10 @@ module cpu
 	output [7:0] vga_b,
 	
 	// TODO
-	output reg [2:0] sprite_op_a, sprite_op_b, sprite_op_c
+	output logic [15:0] addr,
+	output reg [2:0] sprite_op_a, sprite_op_b, sprite_op_c,
+	output [7:0] the_time,
+	input border_en
 	// TODO
 );
 
@@ -250,6 +253,11 @@ end
 
 // register 32 is RGB register, otherwise general-purpose
 assign rf_rgb = rf[31];
+
+
+// TODO REMOVE
+assign the_time = rf[1];
+// TODO
 
 
 // control signals for all stages here and beyond
@@ -977,7 +985,8 @@ sprite_command_controller sprite_fifo(
 	.fb_px(vga_pixnum),
 	.fb_r(vga_r),
 	.fb_g(vga_g),
-	.fb_b(vga_b)
+	.fb_b(vga_b),
+	.border_en(border_en)
 );
 
 
@@ -985,9 +994,17 @@ sprite_command_controller sprite_fifo(
 
 always_ff @(posedge clk or negedge rst_n) begin
 	if(!rst_n) begin
-		sprite_op_a <= 3'b111;
-		sprite_op_b <= 3'b111;
-		sprite_op_c <= 3'b111;
+		addr <= 0;
+	end else if(wb_control.sprite_produce && ~memwb_is_no_op && wb_control.sprite_op == `SPRITE_LS) begin
+		addr <= memwb_result1;
+	end
+end
+
+always_ff @(posedge clk or negedge rst_n) begin
+	if(!rst_n) begin
+		sprite_op_a <= 3'b000;
+		sprite_op_b <= 3'b000;
+		sprite_op_c <= 3'b000;
 	end else if(wb_control.sprite_produce && ~memwb_is_no_op) begin
 		sprite_op_a <= wb_control.sprite_op;
 		sprite_op_b <= sprite_op_a;

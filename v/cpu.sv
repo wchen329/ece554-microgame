@@ -989,11 +989,15 @@ assign sprite_command = {
 	sc_address
 };
 
+logic sc_produce;
+
+assign sc_produce = wb_control.sprite_produce && ~memwb_is_no_op;
+
 sprite_command_controller sprite_fifo(
 	.clk(clk),
 	.rst_n(rst_n),
 	.cmd(sprite_command),
-	.write_cmd(wb_control.sprite_produce && ~memwb_is_no_op),
+	.write_cmd(sc_produce),
 	.mem_in(mem_sprite_out),
 	.mem_address(mem_sprite_address),
 	.fb_wfb(vga_write),

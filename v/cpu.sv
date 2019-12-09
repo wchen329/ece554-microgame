@@ -963,14 +963,30 @@ assign rf_write_upper = wb_control.write_upper;
 // { command, reg, orientation, rgb, x, y, address }
 logic [79:0] sprite_command;
 
+logic [2:0]  sc_op;
+logic [2:0]  sc_reg;
+logic [1:0]  sc_orientation;
+logic [23:0] sc_rgb;
+logic [7:0]  sc_x;
+logic [7:0]  sc_y;
+logic [31:0] sc_address;
+
+assign sc_op          = wb_control.sprite_op;
+assign sc_reg         = wb_control.dest_reg[4:2];
+assign sc_orientation = wb_control.dest_reg[1:0];
+assign sc_rgb         = wb_control.rgb;
+assign sc_x           = memwb_result1[7:0];
+assign sc_y           = memwb_result2[7:0];
+assign sc_address     = memwb_result1;
+
 assign sprite_command = {
-	wb_control.sprite_op,
-	wb_control.dest_reg[4:2],
-	wb_control.dest_reg[1:0],
-	wb_control.rgb,
-	memwb_result1[7:0],
-	memwb_result2[7:0],
-	memwb_result1
+	sc_op,
+	sc_reg,
+	sc_orientation,
+	sc_rgb,
+	sc_x,
+	sc_y,
+	sc_address
 };
 
 sprite_command_controller sprite_fifo(

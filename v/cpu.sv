@@ -782,6 +782,7 @@ logic [31:0] random;
 
 lfsr_32 randy(
 	.clk(clk),
+	.rst_n(rst_n),
 	.set_seed(ex_control.set_seed),
 	// alu op for forwarding
 	.seed_in(alu_op2),

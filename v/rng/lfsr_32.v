@@ -3,17 +3,17 @@
  *
  * wchen329
  */
-module lfsr_32(input clk, input rst, input set_seed, input[31:0] seed_in, output[31:0] out);
+module lfsr_32(input clk, input rst_n, input set_seed, input[31:0] seed_in, output[31:0] out);
 
 	wire[31:0] sbo;
 	wire[31:0] next_state;
 	reg[31:0] v; // Current "random" value
 
 	// Sequential logics
-	always @(posedge clk) begin
+	always @(posedge clk, negedge rst_n) begin
 
 		// Reset if asserted
-		if(rst) begin
+		if(!rst_n) begin
 			v <= 32'd0;
 		end
 

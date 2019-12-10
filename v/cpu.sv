@@ -11,17 +11,8 @@ module cpu
 	
 	output vga_write,
 	output vga_display,
-	output [15:0] vga_pixnum,
-	output [7:0] vga_r,
-	output [7:0] vga_g,
-	output [7:0] vga_b,
-	
-	// TODO
-	output logic [15:0] addr,
-	output reg [2:0] sprite_op_a, sprite_op_b, sprite_op_c,
-	output [7:0] the_time,
-	input border_en
-	// TODO
+	output [7:0] vga_x, vga_y,
+	output [7:0] vga_r, vga_g, vga_b
 );
 
 
@@ -995,46 +986,21 @@ logic sc_produce;
 
 assign sc_produce = wb_control.sprite_produce && ~memwb_is_no_op;
 
-sprite_command_controller sprite_fifo(
+sprite_control sprite_fifo(
 	.clk(clk),
 	.rst_n(rst_n),
-	.cmd(sprite_command),
-	.write_cmd(sc_produce),
-	.mem_in(mem_sprite_out),
-	.mem_address(mem_sprite_address),
-	.fb_wfb(vga_write),
-	.fb_dfb(vga_display),
-	.fb_px(vga_pixnum),
-	.fb_r(vga_r),
-	.fb_g(vga_g),
-	.fb_b(vga_b),
-	.border_en(border_en)
+	.command(sprite_command),
+	.produce(sc_produce),
+	.sprite_mem_out(mem_sprite_out),
+	.sprite_mem_address(mem_sprite_address),
+	.vga_write(vga_write),
+	.vga_display(vga_display),
+	.vga_x(vga_x),
+	.vga_y(vga_y),
+	.vga_r(vga_r),
+	.vga_g(vga_g),
+	.vga_b(vga_b)
 );
-
-
-// TODO TODO REMOVE ME
-
-always_ff @(posedge clk or negedge rst_n) begin
-	if(!rst_n) begin
-		addr <= 0;
-	end else if(wb_control.sprite_produce && ~memwb_is_no_op && wb_control.sprite_op == `SPRITE_LS) begin
-		addr <= memwb_result1;
-	end
-end
-
-always_ff @(posedge clk or negedge rst_n) begin
-	if(!rst_n) begin
-		sprite_op_a <= 3'b000;
-		sprite_op_b <= 3'b000;
-		sprite_op_c <= 3'b000;
-	end else if(wb_control.sprite_produce && ~memwb_is_no_op) begin
-		sprite_op_a <= wb_control.sprite_op;
-		sprite_op_b <= sprite_op_a;
-		sprite_op_c <= sprite_op_b;
-	end
-end
-
-// TODO TODO REMOVE ME
 
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -1,3 +1,5 @@
+`include "constants.sv"
+
 module cpu
 #(
 	parameter INSTRUCTION_ADDRESS_WIDTH=11,
@@ -7,10 +9,10 @@ module cpu
 	input clk, rst_n,
 	input [35:0] gpio,
 	
-	// TODO REMOVE ME
-	output [10:0] pc_report,
-	output [4:0] opcode_report,
-	output [9:0] result_report
+	output vga_write,
+	output vga_display,
+	output [7:0] vga_x, vga_y,
+	output [7:0] vga_r, vga_g, vga_b
 );
 
 
@@ -140,7 +142,8 @@ always_ff @(posedge clk or negedge rst_n) begin
 		ifid_instruction <= 0;
 		ifid_pc <= 0;
 		ifid_is_no_op <= 1;
-	end else if(ifid_flush) begin
+	// pc_reset is also an edge case for startup
+	end else if(ifid_flush || pc_reset) begin
 		ifid_instruction <= 0;
 		// empty edge case, but neat
 		ifid_pc <= pc_ghost;
@@ -152,14 +155,6 @@ always_ff @(posedge clk or negedge rst_n) begin
 		ifid_is_no_op <= instruction == 32'b0;
 	end
 end
-
-
-// TODO REMOVE ME
-assign pc_report = ifid_pc;
-
-
-// TODO REMOVE ME
-assign opcode_report = ifid_instruction[31:27];
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -251,11 +246,10 @@ end
 // register 32 is RGB register, otherwise general-purpose
 assign rf_rgb = rf[31];
 
-// TODO delete me TODO
-//assign result_report = rf[5'b00100][9:0];
-// TODO TODO TODO
 
-assign result_report = {5'b0, user_input};
+// TODO REMOVE
+assign the_time = rf[1];
+// TODO
 
 
 // control signals for all stages here and beyond
@@ -478,38 +472,38 @@ always_comb begin
 			// wfb
 			init_ex_control.zero_as_op2 = 1;
 
-			init_wb_control.sprite_op = 3'b000;
+			init_wb_control.sprite_op = `SPRITE_WFB;
 			init_wb_control.sprite_produce = 1;
 		end
 		5'b10110:begin
 			// dfb
-			init_wb_control.sprite_op = 3'b001;
+			init_wb_control.sprite_op = `SPRITE_DFB;
 			init_wb_control.sprite_produce = 1;
 		end
 		5'b10111:begin
 			// ls
 			init_ex_control.select_immediate = 1;
 
-			init_wb_control.sprite_op = 3'b010;
+			init_wb_control.sprite_op = `SPRITE_LS;
 			init_wb_control.sprite_produce = 1;
 		end
 		5'b11000:begin
 			// ds
 			init_ex_control.zero_as_op2 = 1;
 
-			init_wb_control.sprite_op = 3'b011;
+			init_wb_control.sprite_op = `SPRITE_DS;
 			init_wb_control.sprite_produce = 1;
 		end
 		5'b11001:begin
 			// cs
 			init_ex_control.zero_as_op2 = 1;
 
-			init_wb_control.sprite_op = 3'b100;
+			init_wb_control.sprite_op = `SPRITE_CS;
 			init_wb_control.sprite_produce = 1;
 		end
 		5'b11010:begin
 			// rs
-			init_wb_control.sprite_op = 3'b101;
+			init_wb_control.sprite_op = `SPRITE_RS;
 			init_wb_control.sprite_produce = 1;
 		end
 		5'b11011:begin
@@ -779,6 +773,7 @@ logic [31:0] random;
 
 lfsr_32 randy(
 	.clk(clk),
+	.rst_n(rst_n),
 	.set_seed(ex_control.set_seed),
 	// alu op for forwarding
 	.seed_in(alu_op2),
@@ -961,33 +956,50 @@ assign rf_write_upper = wb_control.write_upper;
 // { command, reg, orientation, rgb, x, y, address }
 logic [79:0] sprite_command;
 
+logic [2:0]  sc_op;
+logic [2:0]  sc_reg;
+logic [1:0]  sc_orientation;
+logic [23:0] sc_rgb;
+logic [7:0]  sc_x;
+logic [7:0]  sc_y;
+logic [31:0] sc_address;
+
+assign sc_op          = wb_control.sprite_op;
+assign sc_reg         = wb_control.dest_reg[4:2];
+assign sc_orientation = wb_control.dest_reg[1:0];
+assign sc_rgb         = wb_control.rgb;
+assign sc_x           = memwb_result1[7:0];
+assign sc_y           = memwb_result2[7:0];
+assign sc_address     = memwb_result1;
+
 assign sprite_command = {
-	wb_control.sprite_op,
-	wb_control.dest_reg[4:2],
-	wb_control.dest_reg[1:0],
-	wb_control.rgb,
-	memwb_result1[7:0],
-	memwb_result2[7:0],
-	memwb_result1
+	sc_op,
+	sc_reg,
+	sc_orientation,
+	sc_rgb,
+	sc_x,
+	sc_y,
+	sc_address
 };
 
-logic [41:0] dont_care;
+logic sc_produce;
+
+assign sc_produce = wb_control.sprite_produce && ~memwb_is_no_op;
 
 sprite_command_controller sprite_fifo(
 	.clk(clk),
 	.rst_n(rst_n),
-	.cmd(sprite_command),
-	.write_cmd(wb_control.sprite_produce && ~memwb_is_no_op),
-	.mem_in(mem_sprite_out),
-	.mem_address(mem_sprite_address),
-	// TODO get these signals from VGA
-	.fb_busy(1'b0),
-	.fb_wfb(dont_care[41]),
-	.fb_dfb(dont_care[40]),
-	.fb_px(dont_care[39:24]),
-	.fb_r(dont_care[23:16]),
-	.fb_g(dont_care[15:8]),
-	.fb_b(dont_care[7:0])
+	.command(sprite_command),
+	.produce(sc_produce),
+	.sprite_mem_out(mem_sprite_out),
+	.sprite_mem_address(mem_sprite_address),
+	.vga_write(vga_write),
+	.vga_display(vga_display),
+	.vga_x(vga_x),
+	.vga_y(vga_y),
+	.vga_r(vga_r),
+	.vga_g(vga_g),
+	.vga_b(vga_b)
 );
 
 
@@ -1023,6 +1035,7 @@ assign memwb_fw_mem_enable = (wb_control.dest_reg == mem_control.source) && wb_c
 logic hazard_use_after_load;
 logic hazard_branch_after_cc_update;
 logic hazard_rf_read_after_load;
+logic hazard_rgb_read_after_load;
 
 // for when ex is using operand just read from data memory
 assign hazard_use_after_load =
@@ -1034,13 +1047,19 @@ assign hazard_branch_after_cc_update =
 assign hazard_rf_read_after_load = 
 	((check_wb_in_idex.dest_reg == rf_reg1_address || check_wb_in_idex.dest_reg == rf_reg2_address) && (check_wb_in_idex.write_lower || check_wb_in_idex.write_upper)) ||
 	((check_wb_in_exmem.dest_reg == rf_reg1_address || check_wb_in_exmem.dest_reg == rf_reg2_address) && (check_wb_in_exmem.write_lower || check_wb_in_exmem.write_upper));
+// for when DFB is issued after a lui or lli
+assign hazard_rgb_read_after_load =
+	(check_wb_in_idex.dest_reg == 5'b11111 && (check_wb_in_idex.write_lower || check_wb_in_idex.write_upper) && init_wb_control.sprite_op == `SPRITE_WFB) ||
+	(check_wb_in_exmem.dest_reg == 5'b11111 && (check_wb_in_exmem.write_lower || check_wb_in_exmem.write_upper) && init_wb_control.sprite_op == `SPRITE_WFB);
+
 
 logic hazard;
 
 assign hazard =
 	hazard_use_after_load ||
 	hazard_branch_after_cc_update ||
-	hazard_rf_read_after_load;
+	hazard_rf_read_after_load ||
+	hazard_rgb_read_after_load;
 
 
 // stalling logic

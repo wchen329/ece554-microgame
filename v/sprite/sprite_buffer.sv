@@ -27,7 +27,8 @@ module sprite_buffer(
 	input [7:0] i_r, i_g, i_b,
 	input set_orientation,
 	input [1:0] orientation,
-	output logic [7:0] o_r, o_g, o_b
+	output logic [7:0] o_r, o_g, o_b,
+	output logic [5:0] px
 );
 
 logic [1:0] ori;
@@ -41,6 +42,7 @@ state_t state, next_state;
 // pixel = row * 8 + col
 assign sprite_px_ptr = (ori == `UP || ori == `DOWN) ? { a, b } : { b, a };
 assign {o_r, o_g, o_b} = buffer[sprite_px_ptr];
+assign px = buffer_ptr;
 
 // read ori logic
 always_ff @(posedge clk)

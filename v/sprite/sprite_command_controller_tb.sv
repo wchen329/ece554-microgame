@@ -116,6 +116,7 @@ initial begin
 	$display("Writing one pixel...");
 	wfb(0, 0, 'hFF, 'hFF, 'hFF);
 	dfb();
+	wait_done();
 
 	// wait for cmd to propagate
 	@(posedge clk);
@@ -129,14 +130,50 @@ initial begin
 	end
 
 	// draw a sprite
+	ls(1, 0, 0);
+	wait_done();
 	for(i = 0; i < 8; i++) begin
 		$display("Drawing sprite at %d,%d", i, i);
-		ls(7, 0, 0);
-		ds(7, i, i);
+		ds(1, i, i);
 
-		repeat(2) wait_done();
+		wait_done();
 		check_sprite_frame(0, i, i);
 	end
+
+	// draw a sprite
+	$display("Drawing sprite a lot");
+	ls(1, 1, 0);
+	ls(0, 0, 0);
+	for(i = 0; i < 8; i++) begin
+		ds(0, 10, 10);
+	end
+
+	repeat(10) wait_done();
+	check_sprite_frame(0, 10, 10);
+
+	// draw a sprite
+	$display("Drawing sprite a lot then clearing");
+	ls(1, 1, 0);
+	ls(0, 0, 0);
+	for(i = 0; i < 8; i++) begin
+		ds(0, 10, 10);
+	end
+	cs(10, 10);
+
+	repeat(11) wait_done();
+	check_frame_zero(10, 10);
+
+	// draw a sprite
+	$display("Drawing and clearing sprite a lot");
+	ls(1, 1, 0);
+	ls(0, 0, 0);
+	for(i = 0; i < 8; i++) begin
+		ds(0, 10, 10);
+		cs(10, 10);
+	end
+
+	repeat(16) wait_done();
+	check_frame_zero(10, 10);
 
 	// reset
 	rst_n = 0;
@@ -257,7 +294,7 @@ task check_sprite_frame(input integer isprite_addr, [7:0] ix, iy);
 
 	for(i = 0; i < 64; i++) begin
 		// assert (frame_buffer[{iy+i[5:3], ix+i[2:0]}] == (ix < 8 || iy < 8 || ix > 248 || iy > 248) ? 0 : sprite_mem[isprite_addr+i][23:0])
-		assert (frame_buffer[{iy+i[5:3], ix+i[2:0]}] == sprite_mem[isprite_addr+i][23:0])
+		assert (sprite_mem[isprite_addr+i][23:0] ? frame_buffer[{iy+i[5:3], ix+i[2:0]}] == sprite_mem[isprite_addr+i][23:0] : 1)
 		else begin
 			$display(
 				"Expected frame_buffer[%d (%d)] to be %d,%d,%d not %d,%d,%d",

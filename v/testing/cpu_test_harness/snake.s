@@ -30,7 +30,7 @@ TICK:
 	add $29, $29, $2
 
 	# clear previous snake location
-	# cs $3, $4
+	cs $3, $4
 
 	# get new direction
 	lk $7

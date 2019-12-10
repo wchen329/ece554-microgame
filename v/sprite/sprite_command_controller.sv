@@ -235,7 +235,10 @@ always_comb begin
 		end 
 		DS: begin
 			// wait until done reading/writing from/to sprite/frame buffer
-			fb_wfb = 1;
+			// only write if color is not black
+			if(|{ sb_o_r[cmd_sprite_reg], sb_o_g[cmd_sprite_reg], sb_o_b[cmd_sprite_reg] })
+				fb_wfb = 1;
+			
 			if(sb_px_count == 63)
 				fifo_read = 1;
 			else

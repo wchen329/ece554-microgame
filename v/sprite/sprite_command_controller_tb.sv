@@ -84,13 +84,16 @@ sprite_command_controller sprite_command_controller(
 	.fb_px(fb_px),
 	.fb_r(fb_r),
 	.fb_g(fb_g),
-	.fb_b(fb_b)
+	.fb_b(fb_b),
+	.border_en(0)
 );
 
 always #20ns clk = ~clk;
 
 initial begin
+	integer i;
 	$readmemh("sprite/sprite_buffer_mem.hex", sprite_mem);
+	// $readmemh("sprite/sprite_buffer_mem2.hex", sprite_mem);
 	clk = 0;
 	rst_n = 0;
 	sprite_op = 0;
@@ -126,12 +129,14 @@ initial begin
 	end
 
 	// draw a sprite
-	$display("Drawing sprite...");
-	ls(0, 0, 0);
-	ds(0, 0, 0);
+	for(i = 0; i < 8; i++) begin
+		$display("Drawing sprite at %d,%d", i, i);
+		ls(7, 0, 0);
+		ds(7, i, i);
 
-	repeat(2) wait_done();
-	check_sprite_frame(0, 0, 0);
+		repeat(2) wait_done();
+		check_sprite_frame(0, i, i);
+	end
 
 	// reset
 	rst_n = 0;

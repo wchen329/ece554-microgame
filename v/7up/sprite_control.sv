@@ -99,8 +99,8 @@ always_ff @(posedge clk or negedge rst_n) begin
 end
 
 
-reg [5:0] address_offset;
-logic [5:0] next_address_offset;
+reg [31:0] address_offset;
+logic [31:0] next_address_offset;
 
 always_ff @(posedge clk or negedge rst_n) begin
 	if(!rst_n) begin
@@ -178,9 +178,9 @@ always_comb begin
 			{vga_r, vga_g, vga_b} = reg_rgb_out;
 			reg_select = curr_command.register;
 			{reg_y, reg_x} =
-				reg_orientation_out == 2'b00 ? address_offset :
+				reg_orientation_out == 2'b00 ? address_offset[5:0] :
 				reg_orientation_out == 2'b01 ? {~address_offset[2:0], address_offset[5:3]} :
-				reg_orientation_out == 2'b10 ? ~address_offset :
+				reg_orientation_out == 2'b10 ? ~address_offset[5:0] :
 				{address_offset[2:0], ~address_offset[5:3]};
 		end
 		CS:begin
@@ -198,7 +198,7 @@ always_comb begin
 			vga_b = 8'h00;
 		end
 		LS:begin
-			if(address_offset == 63) begin
+			if(address_offset == 64) begin
 				next_state = IDLE;
 				next_address_offset = 0;
 			end else begin
@@ -207,7 +207,7 @@ always_comb begin
 			end
 			sprite_mem_address = curr_command.address + address_offset;
 			reg_select = curr_command.register;
-			{reg_y, reg_x} = address_offset;
+			{reg_y, reg_x} = address_offset[5:0] - 1;
 			reg_rgb_in = sprite_mem_out[23:0];
 			reg_orientation_in = curr_command.orientation;
 			reg_write = 1;

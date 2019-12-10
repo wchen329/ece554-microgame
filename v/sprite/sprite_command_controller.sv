@@ -53,8 +53,9 @@ logic [7:0] sb_read, sb_write, sb_set_ori;
 logic [7:0] sb_r, sb_g, sb_b;
 logic [7:0] sb_o_r[8], sb_o_g[8], sb_o_b[8];
 logic [5:0] sb_px_count, ls_mem_cnt;
+logic [5:0] sb_px[8];
 
-typedef enum logic [2:0] { IDLE, DFB, LS, DS, CS } state_t;
+typedef enum logic [2:0] { IDLE, DFB, LS, DS, CS, DONE } state_t;
 state_t state, next_state;
 
 // DS: read from sprite
@@ -109,7 +110,8 @@ generate
 			.orientation(cmd_orientation),
 			.o_r(sb_o_r[i]),
 			.o_b(sb_o_b[i]),
-			.o_g(sb_o_g[i])
+			.o_g(sb_o_g[i]),
+			.px(sb_px[i])
 		);
 	end
 endgenerate
@@ -221,26 +223,26 @@ always_comb begin
 		DFB: begin
 			// wait until frame buffer done being busy
 			if(!fb_busy)
-				fifo_read = 1;
+				next_state = DONE;
 			else
 				next_state = DFB;
 		end
 		LS: begin
 			// wait until done writing to sprite buffer
 			if(sb_px_count == 63)
-				fifo_read = 1;
+				next_state = DONE;
 			else begin
 				next_state = LS;
 			end
-		end 
+		end
 		DS: begin
 			// wait until done reading/writing from/to sprite/frame buffer
 			// only write if color is not black
 			if(|{ sb_o_r[cmd_sprite_reg], sb_o_g[cmd_sprite_reg], sb_o_b[cmd_sprite_reg] })
 				fb_wfb = 1;
-			
+
 			if(sb_px_count == 63)
-				fifo_read = 1;
+				next_state = DONE;
 			else
 				next_state = DS;
 		end
@@ -248,9 +250,12 @@ always_comb begin
 			// wait until done writing to frame buffer
 			fb_wfb = 1;
 			if(sb_px_count == 63)
-				fifo_read = 1;
+				next_state = DONE;
 			else
 				next_state = CS;
+		end
+		DONE: begin
+			fifo_read = 1;
 		end
 	endcase
 end

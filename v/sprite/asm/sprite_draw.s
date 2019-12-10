@@ -46,6 +46,7 @@ dfb
 # draw rotated 0
 ls %0, 0, SPRITE
 ls %1, 0, SQ_SPRITE
+ls %2, 0, PARTIAL_SPRITE
 lli $1, 20
 lli $2, 10
 ds %1, $1, $2
@@ -91,9 +92,41 @@ ds %0, $1, $2
 
 dfb
 
+# clear sprite
 cs $1, $2
 dfb
 
+WAIT:
+	tim $4
+	addi $4, $4, h200
+
+	COUNT:
+	tim $5
+	sub $5, $4, $5
+	bge COUNT
+	ret
+
+# test transparent sprite
+lli $1, 124
 LOOP:
-andi $1, $1, 0
-beq LOOP
+rs %2, 0
+ds %1, $1, $1
+ds %2, $1, $1
+b WAIT
+
+rs %2, 1
+ds %1, $1, $1
+ds %2, $1, $1
+b WAIT
+
+rs %2, 2
+ds %1, $1, $1
+ds %2, $1, $1
+b WAIT
+
+rs %2, 3
+ds %1, $1, $1
+ds %2, $1, $1
+b WAIT
+
+b LOOP

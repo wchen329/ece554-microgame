@@ -112,21 +112,21 @@ LOOP:
 rs %2, 0
 ds %1, $1, $1
 ds %2, $1, $1
-b WAIT
+bl WAIT
 
 rs %2, 1
 ds %1, $1, $1
 ds %2, $1, $1
-b WAIT
+bl WAIT
 
 rs %2, 2
 ds %1, $1, $1
 ds %2, $1, $1
-b WAIT
+bl WAIT
 
 rs %2, 3
 ds %1, $1, $1
 ds %2, $1, $1
-b WAIT
+bl WAIT
 
 b LOOP

@@ -85,7 +85,7 @@ GAME:
 TICK:
 	# get time so we know when this frame should end
 	tim $29
-	addi $29, $29, h0018
+	addi $29, $29, h1
 
 	# Load Keyboard Input
 	andi $1, $1, 0

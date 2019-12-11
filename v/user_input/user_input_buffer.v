@@ -27,7 +27,7 @@ assign right = ops[3];
 assign space = ops[4];
 
 wire rst;
-assign rst = (clr && (ops != 5'b0)) || ~rst_n;
+assign rst = ~rst_n;
 
 wire txd;
 wire rxd;
@@ -43,10 +43,13 @@ wire [4:0] get_ops;
 
 always @(posedge clk) begin
 	if (rst) begin
-		ops = 5'b0;
+		ops <= 5'b0;
 	end
-	if (get_ops != 5'b0) begin
-		ops = get_ops | ops;
+	else if (clr) begin
+		ops <= 5'h0;
+	end
+	else if (get_ops != 5'b0) begin
+		ops <= get_ops;
 	end
 end
 
@@ -77,7 +80,7 @@ spart spart0(   .clk(clk),
 
 // Instantiate your driver here
 driver driver0( .clk(clk),
-                .rst(~rst_n), 
+                .rst(~rst_n | clr), 
                 .br_cfg(br_cfg),
                 .iocs(iocs),
                 .iorw(iorw),

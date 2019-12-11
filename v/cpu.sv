@@ -247,11 +247,6 @@ end
 assign rf_rgb = rf[31];
 
 
-// TODO REMOVE
-assign the_time = rf[1];
-// TODO
-
-
 // control signals for all stages here and beyond
 
 typedef struct packed {

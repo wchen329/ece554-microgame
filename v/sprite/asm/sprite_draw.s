@@ -101,10 +101,10 @@ WAIT:
 	addi $4, $4, h200
 
 	COUNT:
-	tim $5
-	sub $5, $4, $5
-	bge COUNT
-	ret
+		tim $5
+		sub $5, $4, $5
+		bgt COUNT
+		ret
 
 # test transparent sprite
 lli $1, 124

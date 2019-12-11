@@ -25,7 +25,7 @@ initial begin
 
 	rst_n = 1;
 
-	#4000;
+	#40000;
 
 	$finish();
 end

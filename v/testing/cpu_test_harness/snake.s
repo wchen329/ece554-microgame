@@ -18,6 +18,7 @@ lli $4, 120
 ds %0, $3, $4
 lli $7, 8
 sll $7, $3, $7
+or $7, $7, $4
 sw $7, 0
 
 # intital snake direction is 0 (up)
@@ -29,6 +30,7 @@ lli $8, 0
 lli $16, 1
 # initial snake head index
 lli $17, 0
+lui $17, 0
 
 # food begins in random location on screen
 bl RANDOM_FOOD

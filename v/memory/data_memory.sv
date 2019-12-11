@@ -22,14 +22,14 @@ reg state;
 always_ff @(posedge clk or negedge rst_n) begin
 	if(~rst_n) begin
 		state <= 0;
-	end else if(~state && (read || write)) begin
+	end else if(~state && read) begin
 		state <= 1;
 	end else begin
 		state <= 0;
 	end
 end
 
-assign stall = ~state && (read || write);
+assign stall = ~state && read;
 
 
 data_memory_8k user_space(

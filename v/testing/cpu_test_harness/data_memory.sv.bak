@@ -13,14 +13,18 @@ module data_memory
 
 assign data_out = 32'h555555555;
 
+reg state;
+
 always_ff @(posedge clk, negedge rst_n) begin
 	if(~rst_n) begin
-		stall <= 0;
-	end else if((read || write) && ~stall) begin
-		stall <= 1;
-	end else if(stall) begin
-		stall <= 0;
+		state <= 0;
+	end else if((read || write) && ~state) begin
+		state <= 1;
+	end else begin
+		state <= 0;
 	end
 end
+
+assign stall = ~state && (read | write);
 
 endmodule

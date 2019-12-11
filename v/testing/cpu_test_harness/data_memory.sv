@@ -18,13 +18,13 @@ reg state;
 always_ff @(posedge clk, negedge rst_n) begin
 	if(~rst_n) begin
 		state <= 0;
-	end else if((read || write) && ~state) begin
+	end else if(read && ~state) begin
 		state <= 1;
 	end else begin
 		state <= 0;
 	end
 end
 
-assign stall = ~state && (read | write);
+assign stall = ~state && read;
 
 endmodule

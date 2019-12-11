@@ -14,10 +14,21 @@ lli $3, 120
 # y
 lli $4, 120
 
+# init draw snake
+ds %0, $3, $4
+lli $7, 8
+sll $7, $3, $7
+sw $7, 0
+
 # intital snake direction is 0 (up)
 lli $8, 0
 
-# one is stored in $15
+# $7 and $15 are temp regs also $18 and $19
+
+# initial snake length
+lli $16, 1
+# initial snake head index
+lli $17, 0
 
 # food begins in random location on screen
 bl RANDOM_FOOD
@@ -28,9 +39,6 @@ TICK:
 	# get time so we know when this frame should end
 	tim $29
 	add $29, $29, $2
-
-	# clear previous snake location
-	cs $3, $4
 
 	# get new direction
 	lk $7
@@ -52,7 +60,7 @@ TICK:
 	addi $15, $15, 1
 	srl $14, $14, $15
 
-UP_DOWN:
+	UP_DOWN:
 
 	and $7, $11, $13
 	# both held means we do nothing
@@ -63,14 +71,14 @@ UP_DOWN:
 	lli $8, 0
 	b INPUT_DONE	
 
-DOWN:
+	DOWN:
 
 	addi $13, $13, 0
 	beq LEFT_RIGHT
 	lli $8, 2
 	b INPUT_DONE
 
-LEFT_RIGHT:
+	LEFT_RIGHT:
 
 	and $7, $12, $14
 	# both held means we do nothing
@@ -81,35 +89,78 @@ LEFT_RIGHT:
 	lli $8, 1
 	b INPUT_DONE
 
-LEFT:
+	LEFT:
 
 	addi $14, $14, 0
 	beq INPUT_DONE
 	lli $8, 3
 
-INPUT_DONE:
-
-	# for debugging
-	addi $1, $8, 0
+	INPUT_DONE:
 
 	bl UPDATE_SNAKE_HEAD
+
+	bl HANDLE_POSSIBLE_EAT
 
 	# draw snake
 	ds %0, $3, $4
 
 	# draw food
-	ds %2, $5, $6
+	ds %1, $5, $6
 
 	# refresh screen
 	dfb
 
-WAIT:
+	WAIT:
 
 	# wait until end of tick
 	tim $28
 	sub $0, $29, $28
 	bgt WAIT
 	b TICK
+
+HANDLE_POSSIBLE_EAT:
+
+	# check if snake head is actually on top of food
+	sub $0, $3, $5
+	bne NO_EAT
+	sub $0, $4, $6
+	bne NO_EAT
+
+	# snake ate the food, place new food
+	r $7
+	andi $5, $7, h00f8
+	r $7
+	andi $6, $7, h00f8
+
+	# grow the snake
+	addi $16, $16, 1
+
+	# we don't remove tail here
+	ret
+
+	NO_EAT:
+	
+	# remove tail
+	lwo $15, 0($17)
+	andi $19, $15, h00FF
+	andi $18, $15, hFF00
+	lli $15, 8
+	lui $15, 0
+	srl $18, $18, $15
+	andi $18, $18, h00FF
+	cs $18, $19
+	
+	# increment tail address
+	addi $17, $17, 1
+	sub $0, $16, $17
+	beq BACK_TO_TAIL
+	ret
+
+	BACK_TO_TAIL:
+
+	andi $17, $17, 0
+
+	ret
 
 RANDOM_FOOD:
 	

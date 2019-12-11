@@ -1032,14 +1032,12 @@ assign memwb_fw_mem_enable = (wb_control.dest_reg == mem_control.source) && wb_c
 
 // hazard detection
 
-logic hazard_use_after_load;
 logic hazard_branch_after_cc_update;
 logic hazard_rf_read_after_load;
 logic hazard_rgb_read_after_load;
 
-// for when ex is using operand just read from data memory
-assign hazard_use_after_load =
-	((ex_control.source1 == check_wb_in_exmem.dest_reg) || (ex_control.source2 == check_wb_in_exmem.dest_reg)) && check_wb_in_exmem.write_reg && ~exmem_is_no_op && mem_control.use_memory_result;
+logic hazard_use_after_load;
+
 // for when a branch occurs immediately after a conditional update
 assign hazard_branch_after_cc_update =
 	id_control.branch && ex_control.update_conditionals && ~idex_is_no_op;
@@ -1052,21 +1050,28 @@ assign hazard_rgb_read_after_load =
 	(check_wb_in_idex.dest_reg == 5'b11111 && (check_wb_in_idex.write_lower || check_wb_in_idex.write_upper) && init_wb_control.sprite_op == `SPRITE_WFB) ||
 	(check_wb_in_exmem.dest_reg == 5'b11111 && (check_wb_in_exmem.write_lower || check_wb_in_exmem.write_upper) && init_wb_control.sprite_op == `SPRITE_WFB);
 
+// for when ex is using operand just read from data memory
+// because RF is write-through this can only stall for one cycle in ex
+assign hazard_use_after_load =
+	((ex_control.source1 == check_wb_in_exmem.dest_reg) || (ex_control.source2 == check_wb_in_exmem.dest_reg)) && check_wb_in_exmem.write_reg && ~exmem_is_no_op && mem_control.use_memory_result;
 
-logic hazard;
+logic id_hazard;
+logic ex_hazard;
 
-assign hazard =
-	hazard_use_after_load ||
+assign id_hazard =
 	hazard_branch_after_cc_update ||
 	hazard_rf_read_after_load ||
 	hazard_rgb_read_after_load;
+	
+assign ex_hazard =
+	hazard_use_after_load;
 
 
 // stalling logic
 
 assign exmem_stall = mem_stall_request && ~exmem_is_no_op;
-assign idex_stall = (ex_stall_request || exmem_stall) && ~idex_is_no_op;
-assign ifid_stall = (hazard || idex_stall) && ~ifid_is_no_op;
+assign idex_stall = (ex_hazard || ex_stall_request || exmem_stall) && ~idex_is_no_op;
+assign ifid_stall = (id_hazard || idex_stall) && ~ifid_is_no_op;
 assign pc_stall = ifid_stall;
 
 

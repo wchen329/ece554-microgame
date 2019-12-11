@@ -72,11 +72,21 @@ add wave -noupdate /cpu_tb/cpu/exmem_is_no_op
 add wave -noupdate /cpu_tb/cpu/memwb_is_no_op
 add wave -noupdate -divider memory
 add wave -noupdate -expand /cpu_tb/cpu/mem_control
+add wave -noupdate /cpu_tb/cpu/mem_stall_request
 add wave -noupdate /cpu_tb/cpu/user_memory_address
 add wave -noupdate /cpu_tb/cpu/user_memory_data_in
 add wave -noupdate /cpu_tb/cpu/user_memory_data_out
 add wave -noupdate /cpu_tb/cpu/memwb_fw_mem_enable
 add wave -noupdate /cpu_tb/cpu/memwb_fw_mem
+add wave -noupdate -divider {data memory}
+add wave -noupdate /cpu_tb/cpu/data_memory/clk
+add wave -noupdate /cpu_tb/cpu/data_memory/rst_n
+add wave -noupdate /cpu_tb/cpu/data_memory/address
+add wave -noupdate /cpu_tb/cpu/data_memory/data_in
+add wave -noupdate /cpu_tb/cpu/data_memory/read
+add wave -noupdate /cpu_tb/cpu/data_memory/write
+add wave -noupdate /cpu_tb/cpu/data_memory/data_out
+add wave -noupdate /cpu_tb/cpu/data_memory/stall
 add wave -noupdate -divider Sprites
 add wave -noupdate /cpu_tb/cpu/instruction_memory/clk
 add wave -noupdate /cpu_tb/cpu/sc_produce
@@ -87,8 +97,41 @@ add wave -noupdate /cpu_tb/cpu/sc_rgb
 add wave -noupdate /cpu_tb/cpu/sc_x
 add wave -noupdate /cpu_tb/cpu/sc_y
 add wave -noupdate /cpu_tb/cpu/sc_address
+add wave -noupdate -divider my_sprites
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/clk
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/rst_n
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/command
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/produce
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/sprite_mem_out
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/sprite_mem_address
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/vga_write
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/vga_display
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/vga_x
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/vga_y
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/vga_r
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/vga_g
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/vga_b
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/consume
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/next_command
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/fifo_empty
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/curr_command_raw
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/curr_command
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/reg_select
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/reg_x
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/reg_y
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/reg_rgb_in
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/reg_orientation_in
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/reg_write
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/reg_rgb_out_raw
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/reg_rgb_out
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/reg_orientation_out_raw
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/reg_orientation_out
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/curr_state
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/next_state
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/address_offset
+add wave -noupdate /cpu_tb/cpu/sprite_fifo/next_address_offset
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {1180 ns} 0}
+WaveRestoreCursors {{Cursor 1} {4786 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 189
 configure wave -valuecolwidth 91
@@ -104,4 +147,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {713 ns} {1647 ns}
+WaveRestoreZoom {4780 ns} {5100 ns}

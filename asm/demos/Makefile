@@ -1,6 +1,9 @@
 MGA=../mgassemble
 
-all: dodger.mif paint.mif paint_px.mif
+all: dodger.mif paint.mif paint_px.mif loadstore.mif
+
+loadstore.mif: loadstore/loadstore.s
+	@if $(MGA) -i loadstore/loadstore.s -o loadstore.mif -g loadstore/loadstore.st; then echo "Loadstore built."; else rm loadstore.mif; fi 
 
 paint.mif: paint/paint.s
 	@if $(MGA) -i paint/paint.s -o paint.mif -g paint/paint.st; then echo "Paint built."; else rm paint.mif; fi 

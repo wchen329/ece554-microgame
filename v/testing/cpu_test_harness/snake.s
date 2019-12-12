@@ -1,251 +1,121 @@
-# initialization
+MAIN:
 
-ls %0, 0, SNAKE
-ls %1, 0, FOOD
-ls %2, 0, TEST
+	INIT:
 
-# constant for number of ms in frame (200)
-lli $2, h00c8
-lui $2, 0
+		ls %0, 0, SNAKE
+		ls %1, 0, FOOD
 
-# snake starts in center of screen
-# x
-lli $3, 120
-# y
-lli $4, 120
+		# snake location is $1, $2
+		lli $1, 124
+		lui $1, 0
+		lli $2, 124
+		lui $2, 0
 
-# init draw snake
-ds %0, $3, $4
-lli $7, 8
-sll $7, $3, $7
-or $7, $7, $4
-sw $7, 0
+		# food location is $3, $4
+		# randomized
+		bl NEW_FOOD
 
-# intital snake direction is 0 (up)
-lli $8, 0
+		# track number of ticks since game start in $5
+		lli $5, 0
+		lui $5, 0
 
-# $7 and $15 are temp regs also $18 and $19
+		# food orientation is tracked in $6
+		lli $6, 0
+		lui $6, 0
 
-# initial snake length
-lli $16, 1
-# initial snake tail index
-lli $17, 0
-lui $17, 0
-# initial snake head index
-lli $20, 0
-lui $20, 0
+		# snake movement direction is tracked in $7
+		# initially moving upwards (0)
+		lli $7, 1
+		lui $7, 0
 
-# food begins in random location on screen
-bl RANDOM_FOOD
+		# temp regs:
+		# $29, $28, $27, $26
 
-START:
-TICK:
+	TICK:
+		
+		tim $30
+		# calculate time for this frame to end
+		addi $30, $30, h64
 
-	# get time so we know when this frame should end
-	tim $29
-	add $29, $29, $2
+		# clear all sprites
+		# snake
+		cs $1, $2
+		# food
+		cs $3, $4
 
-	# get new direction
-	lk $7
-	# up
-	andi $11, $7, h0002
-	lli $15, 1
-	lui $15, 0
-	srl $11, $11, $15
-	# right
-	andi $12, $7, h0004
-	addi $15, $15, 1
-	srl $12, $12, $15
-	# down
-	andi $13, $7, h0008
-	addi $15, $15, 1
-	srl $13, $13, $15
-	# left
-	andi $14, $7, h0010
-	addi $15, $15, 1
-	srl $14, $14, $15
+		# food orientation changes every 8 frames
+		addi $29, $0, 3
+		srl $29, $5, $29
+		andi $29, $29, h0001
+		add $6, $6, $29
 
-	UP_DOWN:
+		ROTATE_FOOD:
 
-	and $7, $11, $13
-	# both held means we do nothing
-	bgt LEFT_RIGHT
+			ROTATE_FOOD_0:
 
-	addi $11, $11, 0
-	beq DOWN
-	lli $8, 0
-	b INPUT_DONE	
+			addi $0, $6, 0
+			bne ROTATE_FOOD_1
+			rs %1, 0
+			b END_ROTATE_FOOD
 
-	DOWN:
+			ROTATE_FOOD_1:
 
-	addi $13, $13, 0
-	beq LEFT_RIGHT
-	lli $8, 2
-	b INPUT_DONE
+			addi $0, $6, -1
+			bne ROTATE_FOOD_2
+			rs %1, 1
+			b END_ROTATE_FOOD
 
-	LEFT_RIGHT:
+			ROTATE_FOOD_2:
 
-	and $7, $12, $14
-	# both held means we do nothing
-	bgt INPUT_DONE
+			addi $0, $6, -2
+			bne ROTATE_FOOD_3
+			rs %1, 2
+			b END_ROTATE_FOOD
 
-	addi $12, $12, 0
-	beq LEFT
-	lli $8, 1
-	b INPUT_DONE
+			ROTATE_FOOD_3:
+			
+			rs %1, 3
 
-	LEFT:
+		END_ROTATE_FOOD:	
 
-	addi $14, $14, 0
-	beq INPUT_DONE
-	lli $8, 3
-
-	INPUT_DONE:
-
-	bl UPDATE_SNAKE_HEAD
-
-	bl HANDLE_POSSIBLE_EAT
-
-	# draw snake
-	ds %0, $3, $4
-	lli $7, 8
-	lui $7, 0
-	sll $7, $3, $7
-	and $7, $7, $4
-	swo $7, 0($20)
-
-	addi $20, $20, 1
-	sub $0, $16, $20
-	bne PASS
-	andi $20, $20, 0
-
-	PASS:
-
-	# draw food
-	ds %1, $5, $6
-
-	# refresh screen
-	dfb
+		# draw all sprites
+		# snake
+		ds %0, $1, $2
+		# food
+		ds %1, $3, $4
 
 	WAIT:
 
-	# wait until end of tick
-	tim $28
-	sub $0, $29, $28
-	bgt WAIT
-	b TICK
+		# wait til we reach tick end time
+		tim $29
+		sub $0, $30, $29
+		addi $5, $5, 1
+		blt TICK
+		b WAIT
 
-HANDLE_POSSIBLE_EAT:
 
-	# check if snake head is actually on top of food
-	sub $0, $3, $5
-	bne NO_EAT
-	sub $0, $4, $6
-	bne NO_EAT
 
-	# snake ate the food, place new food
-	r $7
-	andi $5, $7, h00f8
-	r $7
-	andi $6, $7, h00f8
+NEW_FOOD:
 
-	# grow the snake
-	addi $16, $16, 1
-
-	# we don't remove tail here
-	ret
-
-	NO_EAT:
-	
-	# remove tail
-	lwo $15, 0($17)
-	andi $19, $15, h00FF
-	andi $18, $15, hFF00
-	lli $15, 8
-	lui $15, 0
-	srl $18, $18, $15
-	andi $18, $18, h00FF
-	cs $18, $19
-	
-	# increment tail address
-	addi $17, $17, 1
-	sub $0, $16, $17
-	beq BACK_TO_TAIL
-	ret
-
-	BACK_TO_TAIL:
-
-	andi $17, $17, 0
-
-	ret
-
-RANDOM_FOOD:
-	
-	# places new x and y grid locales in $5, $6 for new food
-	
-	r $7
-	# x
-	andi $5, $7, h00f8
-	r $7
-	#y
-	andi $6, $7, h00f8
-
-	ret
-
-UPDATE_SNAKE_HEAD:
-
-	# snake is $3, $4 with $8 as direction
-
-	USH_UP:
-
-		addi $0, $8, 0
-		bne USH_RIGHT
-		addi $4, $4, -8
-		blt USH_FIX_UP
+		r $3
+		andi $3, $3, h00FF
+		r $4
+		andi $4, $4, h00FF
 		ret
 
-		USH_FIX_UP:
 
-			andi $4, $4, 0
-			ret
 
-	USH_RIGHT:
-
-		addi $0, $8, -1
-		bne USH_DOWN
-		addi $3, $3, 8
-		addi $0, $3, -256
-		beq USH_FIX_RIGHT
-		ret
-
-		USH_FIX_RIGHT:
-
-			lli $3, 248
-			lui $3, 0
-			ret
-
-	USH_DOWN:
-
-		addi $0, $8, -2
-		bne USH_LEFT
-		addi $4, $4, 8
-		addi $0, $4, -256
-		beq USH_FIX_DOWN
-		ret
-
-		USH_FIX_DOWN:
+MOVE_SNAKE:
+	
+		# snake is in $1, $2, and moves based on keys
+		# snake movement direction is tracked in $7
+		lk $29
+		lli $28, 1
+		lui $28, 0
 		
-			lli $4, 248,
-			lui $4, 0
-			ret
+		srl $29, $29, $28
+		
 
-	USH_LEFT:
 
-		addi $3, $3, -8
-		blt USH_FIX_LEFT
-		ret
-	
-		USH_FIX_LEFT:
-	
-			andi $3, $3, 0
-			ret
+
+

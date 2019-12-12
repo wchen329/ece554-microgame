@@ -1,5 +1,6 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
+add wave -noupdate -divider something
 add wave -noupdate /cpu_tb/cpu/instruction_memory/clk
 add wave -noupdate /cpu_tb/cpu/instruction_memory/address_a
 add wave -noupdate /cpu_tb/cpu/instruction_memory/address_b
@@ -16,6 +17,7 @@ add wave -noupdate /cpu_tb/cpu/pc_stall
 add wave -noupdate /cpu_tb/cpu/pc
 add wave -noupdate /cpu_tb/cpu/pc_ghost
 add wave -noupdate /cpu_tb/cpu/instruction
+add wave -noupdate -divider {in ifid btw}
 add wave -noupdate /cpu_tb/cpu/op
 add wave -noupdate /cpu_tb/cpu/ifid_instruction
 add wave -noupdate -divider control
@@ -40,6 +42,18 @@ add wave -noupdate /cpu_tb/cpu/rf_write_data
 add wave -noupdate /cpu_tb/cpu/rf
 add wave -noupdate /cpu_tb/cpu/rf_write_lower
 add wave -noupdate /cpu_tb/cpu/rf_write_upper
+add wave -noupdate -divider collision
+add wave -noupdate /cpu_tb/cpu/cd_a_x
+add wave -noupdate /cpu_tb/cpu/cd_a_y
+add wave -noupdate /cpu_tb/cpu/cd_a_width
+add wave -noupdate /cpu_tb/cpu/cd_a_height
+add wave -noupdate /cpu_tb/cpu/cd_b_x
+add wave -noupdate /cpu_tb/cpu/cd_b_y
+add wave -noupdate /cpu_tb/cpu/cd_b_width
+add wave -noupdate /cpu_tb/cpu/cd_b_height
+add wave -noupdate /cpu_tb/cpu/cd_collision
+add wave -noupdate /cpu_tb/cpu/ex_control.select_collision
+add wave -noupdate /cpu_tb/cpu/ex_stall_request
 add wave -noupdate -divider forwarding
 add wave -noupdate /cpu_tb/cpu/memwb_fw_ex_enable_op1
 add wave -noupdate /cpu_tb/cpu/memwb_fw_ex_enable_op2
@@ -64,7 +78,6 @@ add wave -noupdate -divider hazards
 add wave -noupdate /cpu_tb/cpu/hazard_use_after_load
 add wave -noupdate /cpu_tb/cpu/hazard_branch_after_cc_update
 add wave -noupdate /cpu_tb/cpu/hazard_rf_read_after_load
-add wave -noupdate /cpu_tb/cpu/hazard
 add wave -noupdate -divider noop
 add wave -noupdate /cpu_tb/cpu/ifid_is_no_op
 add wave -noupdate /cpu_tb/cpu/idex_is_no_op
@@ -131,7 +144,7 @@ add wave -noupdate /cpu_tb/cpu/sprite_fifo/next_state
 add wave -noupdate /cpu_tb/cpu/sprite_fifo/address_offset
 add wave -noupdate /cpu_tb/cpu/sprite_fifo/next_address_offset
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {4786 ns} 0}
+WaveRestoreCursors {{Cursor 1} {1360 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 189
 configure wave -valuecolwidth 91
@@ -147,4 +160,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {4780 ns} {5100 ns}
+WaveRestoreZoom {734 ns} {1866 ns}

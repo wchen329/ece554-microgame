@@ -28,9 +28,12 @@ lli $8, 0
 
 # initial snake length
 lli $16, 1
-# initial snake head index
+# initial snake tail index
 lli $17, 0
 lui $17, 0
+# initial snake head index
+lli $20, 0
+lui $20, 0
 
 # food begins in random location on screen
 bl RANDOM_FOOD
@@ -105,6 +108,18 @@ TICK:
 
 	# draw snake
 	ds %0, $3, $4
+	lli $7, 8
+	lui $7, 0
+	sll $7, $3, $7
+	and $7, $7, $4
+	swo $7, 0($20)
+
+	addi $20, $20, 1
+	sub $0, $16, $20
+	bne PASS
+	andi $20, $20, 0
+
+	PASS:
 
 	# draw food
 	ds %1, $5, $6

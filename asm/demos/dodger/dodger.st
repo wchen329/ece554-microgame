@@ -1,2 +1,10 @@
 ROCK: rock.sprite
 SHIP: ship.sprite
+GO_0: game_over_0.data
+GO_1: game_over_1.data
+GO_2: game_over_2.data
+GO_3: game_over_3.data
+GO_4: game_over_4.data
+GO_5: game_over_5.data
+GO_6: game_over_6.data
+GO_7: game_over_7.data

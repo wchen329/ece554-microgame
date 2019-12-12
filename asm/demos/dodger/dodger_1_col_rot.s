@@ -18,21 +18,7 @@ ls %1, 0, ROCK
 addi $1, $zero, 128
 addi $2, $zero, 240
 bl GEN_ROCK
-
-# wait for input
-WAIT_INPUT:
-	tim $29
-	addi $29, $29, h1
-
-	lk $1
-	addi $1, $1, 0
-	bne GAME
-
-	WAIT_I:
-	 	tim $28
-	 	sub $0, $29, $28
-	 	bgt WAIT_I
-	b WAIT_INPUT
+b GAME
 
 SET_LEFT:
 	addi $1, $1, -2
@@ -115,9 +101,6 @@ GAME:
 	andi $10, $6, h04
 	blne SET_RIGHT
 
-	andi $10, $6, h01
-	bne END
-
 	# move rock
 	addi $4, $4, 2
 	addi $10, $4, -250
@@ -157,40 +140,4 @@ GAME:
 	b GAME
 
 END:
-ls %0, 0, GO_0
-ls %1, 0, GO_1
-ls %2, 0, GO_2
-ls %3, 0, GO_3
-ls %4, 0, GO_4
-ls %5, 0, GO_5
-ls %6, 0, GO_6
-ls %7, 0, GO_7
-
-andi $10, $10, 0
-andi $11, $11, 0
-lli $10, 90
-lli $11, 120
-# GAME
-ds %0, $10, $11
-addi $10, $10, 9
-ds %1, $10, $11
-addi $10, $10, 9
-ds %2, $10, $11
-addi $10, $10, 9
-ds %3, $10, $11
-addi $10, $10, 18
-
-# OVER
-ds %4, $10, $11
-addi $10, $10, 9
-ds %5, $10, $11
-addi $10, $10, 9
-ds %3, $10, $11
-addi $10, $10, 9
-ds %7, $10, $11
-addi $10, $10, 9
-
-dfb
-
-END_LOOP:
-	b END_LOOP
+	b END

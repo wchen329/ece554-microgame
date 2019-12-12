@@ -38,11 +38,16 @@ START:
 	andi $6, $6, h01ff
 	andi $7, $7, h01ff
 	andi $8, $8, h01ff
+
+	#mask x and y location to be between 0 and 255
+	andi $3, $3, h01ff
+	andi $4, $4, h01ff
+	andi $5, $5, h01ff
 	
 	#store x y and color at random location
 	swo $3, 0($6)
 	swo $4, 0($7)
-	swo $5, 0($7)
+	swo $5, 0($8)
 	
 	#read x y coordinates from store location
 	lwo $9, 0($6)

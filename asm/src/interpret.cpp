@@ -121,8 +121,10 @@ namespace asmrunner
 			// Now first argument parsing
 			if(r_inst(current_op) || (m_inst(current_op)))
 			{
-					if((rd = priscas::friendly_to_numerical(args[1].c_str())) <= priscas::INVALID)
-						rd = priscas::get_reg_num(args[1].c_str());
+					
+					int & r1 = current_op == DC ? rs : rd;
+					if((r1 = priscas::friendly_to_numerical(args[1].c_str())) <= priscas::INVALID)
+						r1 = priscas::get_reg_num(args[1].c_str());
 			}
 
 			else if(i_inst(current_op))
@@ -172,8 +174,9 @@ namespace asmrunner
 		{
 			if(r_inst(current_op))
 			{
-				if((rs = priscas::friendly_to_numerical(args[2].c_str())) <= priscas::INVALID)
-					rs = priscas::get_reg_num(args[2].c_str());
+				int & r2 = current_op == DC ? rt : rs;
+				if((r2 = priscas::friendly_to_numerical(args[2].c_str())) <= priscas::INVALID)
+					r2 = priscas::get_reg_num(args[2].c_str());
 			}
 						
 			else if(i_inst(current_op))

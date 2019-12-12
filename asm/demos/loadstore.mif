@@ -1,12 +1,20 @@
 -- Microgame Assembler generated .mif file
 WIDTH=32;
+<<<<<<< HEAD
 DEPTH=97;
+=======
+DEPTH=94;
+>>>>>>> updated dodger
 
 ADDRESS_RADIX=UNS;
 DATA_RADIX=HEX;
 
 CONTENT BEGIN
+<<<<<<< HEAD
 	0 : B9000021;
+=======
+	0 : B900001E;
+>>>>>>> updated dodger
 	1 : 20420000;
 	2 : 0882DEAD;
 	3 : F8800000;
@@ -28,6 +36,7 @@ CONTENT BEGIN
 	19 : 7A4C0000;
 	20 : 7A8E0000;
 	21 : 7AD00000;
+<<<<<<< HEAD
 	22 : 3AD65000;
 	23 : 88000008;
 	24 : C112A000;
@@ -39,6 +48,19 @@ CONTENT BEGIN
 	30 : 8A00FFFD;
 	31 : 8F00FFE4;
 	32 : 8F00FFFF;
+=======
+	22 : C112A000;
+	23 : B0000000;
+	24 : ED400000;
+	25 : 0D6A0018;
+	26 : ED000000;
+	27 : 152B4000;
+	28 : 8A00FFFD;
+	29 : 8F00FFE6;
+	30 : 00FF0000;
+	31 : 00FF0000;
+	32 : 00FF0000;
+>>>>>>> updated dodger
 	33 : 00FF0000;
 	34 : 00FF0000;
 	35 : 00FF0000;
@@ -100,7 +122,10 @@ CONTENT BEGIN
 	91 : 00FF0000;
 	92 : 00FF0000;
 	93 : 00FF0000;
+<<<<<<< HEAD
 	94 : 00FF0000;
 	95 : 00FF0000;
 	96 : 00FF0000;
+=======
+>>>>>>> updated dodger
 END;

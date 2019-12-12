@@ -53,7 +53,11 @@ START:
 	lwo $9, 0($6)
 	lwo $10, 0($7)
 	lwo $11, 0($8)
-	
+
+	#if read word is not the same as stored word stop
+	xor $11, $11, $5		
+	bne END
+
 	#draw to screen at x y coordinates
 	ds %1,$9, $10 
 	dfb
@@ -68,3 +72,6 @@ LOOP:
 	
 	#repeat
 	b START
+
+END:
+	b END

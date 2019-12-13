@@ -753,11 +753,12 @@ logic set_tone;
 logic [31:0] tone;
 
 assign tone = alu_op2;
+assign set_tone = ex_control.set_tone;
 
 audio_controller audio(
 	.clk(clk),
 	.rst_n(rst_n),
-	.set_tone(ex_control.set_tone),
+	.set_tone(set_tone),
 	.tone(tone)
 );
 

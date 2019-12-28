@@ -1,3 +1,7 @@
-# Microgame Board and Assembler
+# Microgame
 
-Microgame is a placeholder name- we'll change it when we agree on a suitable name...
+The following repository contains the Verilog source for the "Microgame" board and the corresponding assembler which can be used to create programs which will run on the Microgame CPU. The CPU targets the Terasic DE1-SoC FPGA board.
+
+Files corresponding to the CPU are in /v
+
+Files corresponding to the assembler are in /asm
